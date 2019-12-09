@@ -20,20 +20,20 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
     uint64 private blockNumber;
     uint64 private blockTimestamp;
 
-    uint public price0;
-    uint public price1;
+    uint public price0; // daily average price of token0 / token1
+    uint public price1; // daily average price of token1 / token0
     uint constant public period = 24 hours;
 
     constructor(address factory, address tokenA, address tokenB) public {
         exchangeAddress = IUniswapV2Factory(factory).getExchange(tokenA, tokenB);
     }
 
-    function quote0(uint128 amount0) public view returns (uint amount1) {
-        amount1 = UQ128x128.decode(price1.qmul(amount0));
+    function quote0(uint amount0) public view returns (uint amount1) {
+        amount1 = UQ128x128.decode(price1.mul(amount0));
     }
 
-    function quote1(uint128 amount1) public view returns (uint amount0) {
-        amount0 = UQ128x128.decode(price0.qmul(amount1));
+    function quote1(uint amount1) public view returns (uint amount0) {
+        amount0 = UQ128x128.decode(price0.mul(amount1));
     }
 
     function initialize() public {
@@ -75,8 +75,8 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
         uint price1New = priceCumulative1Delta / blocksElapsed;
         uint secondsElapsed = block.timestamp - blockTimestamp; // solium-disable-line security/no-block-members
         if (secondsElapsed < period) {
-            price0 = (price0.mul(period.sub(secondsElapsed)).add(price0New.mul(secondsElapsed))) / period;
-            price1 = (price1.mul(period.sub(secondsElapsed)).add(price1New.mul(secondsElapsed))) / period;
+            price0 = price0.mul(period.sub(secondsElapsed)).add(price0New.mul(secondsElapsed)) / period;
+            price1 = price1.mul(period.sub(secondsElapsed)).add(price1New.mul(secondsElapsed)) / period;
         } else {
             price0 = price0New;
             price1 = price1New;
