@@ -1,6 +1,6 @@
 pragma solidity 0.5.13;
 
-import "../interfaces/IUniswapV2Factory.sol";
+import "./interfaces/IUniswapV2Factory.sol";
 import "./UniswapV2.sol";
 
 contract UniswapV2Factory is IUniswapV2Factory {

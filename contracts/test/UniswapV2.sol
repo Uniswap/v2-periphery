@@ -1,26 +1,24 @@
 pragma solidity 0.5.13;
 
-import "../interfaces/IUniswapV2.sol";
+import "./interfaces/IUniswapV2.sol";
 import "./libraries/Math.sol";
-import "./libraries/UQ128x128.sol";
+import "./libraries/UQ112x112.sol";
 import "./token/ERC20.sol";
 import "./token/SafeTransfer.sol";
 
 contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTransfer {
     using SafeMath  for uint;
-    using UQ128x128 for uint;
+    using UQ112x112 for uint224;
 
     address public factory;
     address public token0;
     address public token1;
 
-    uint128 public reserve0;
-    uint128 public reserve1;
+    uint112 public reserve0;
+    uint112 public reserve1;
+    uint32  public blockNumberLast;
     uint    public priceCumulative0;
     uint    public priceCumulative1;
-    uint64  public priceCumulative0Overflow;
-    uint64  public priceCumulative1Overflow;
-    uint64  public blockNumber;
 
     uint private invariantLast;
 
@@ -59,14 +57,17 @@ contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTran
         uint128 reserve1,
         address input
     );
+    event FeeLiquidityMinted(uint liquidity);
 
     constructor() public {
         factory = msg.sender;
+        blockNumberLast = uint32(block.number % 2**32);
     }
 
     function initialize(address _token0, address _token1) external {
         require(msg.sender == factory && token0 == address(0) && token1 == address(0), 'UniswapV2: FORBIDDEN');
-        (token0, token1) = (_token0, _token1);
+        token0 = _token0;
+        token1 = _token1;
     }
 
     function getInputPrice(uint inputAmount, uint inputReserve, uint outputReserve) public pure returns (uint) {
@@ -77,45 +78,44 @@ contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTran
         return numerator / denominator;
     }
 
-    function mintFees() private {
-        uint invariant = Math.sqrt(uint(reserve0).mul(reserve1));
-        if (invariant > invariantLast) {
-            uint numerator = invariant.mul(200);
-            uint denominator = invariant - (invariant - invariantLast).mul(200);
-            uint liquidity = numerator / denominator - 1;
-            mint(factory, liquidity);
-            emit LiquidityMinted(msg.sender, factory, 0, 0, reserve0, reserve1, liquidity);
+    function update(uint balance0, uint balance1) private {
+        uint32 blockNumber = uint32(block.number % 2**32);
+        uint32 blocksElapsed = blockNumber - blockNumberLast; // overflow is desired
+        if (blocksElapsed > 0 && reserve0 != 0 && reserve1 != 0) {
+            // in the following 2 lines, * never overflows, + overflow is desired
+            priceCumulative0 += uint256(UQ112x112.encode(reserve0).qdiv(reserve1)) * blocksElapsed;
+            priceCumulative1 += uint256(UQ112x112.encode(reserve1).qdiv(reserve0)) * blocksElapsed;
         }
+        reserve0 = balance0.clamp112();
+        reserve1 = balance1.clamp112();
+        blockNumberLast = blockNumber;
     }
 
-    function update(uint balance0, uint balance1) private {
-        if (block.number > blockNumber) {
-            if (reserve0 != 0 && reserve1 != 0) {
-                uint blocksElapsed = block.number - blockNumber;
-                (uint p0, uint po0) = Math.mul512(UQ128x128.encode(reserve0).qdiv(reserve1), blocksElapsed);
-                (uint p1, uint po1) = Math.mul512(UQ128x128.encode(reserve1).qdiv(reserve0), blocksElapsed);
-                uint pc0o; uint pc1o;
-                (priceCumulative0, pc0o) = Math.add512(priceCumulative0, priceCumulative0Overflow, p0, po0);
-                (priceCumulative1, pc1o) = Math.add512(priceCumulative1, priceCumulative1Overflow, p1, po1);
-                (priceCumulative0Overflow, priceCumulative1Overflow) = (uint64(pc0o), uint64(pc1o));
-            }
-            blockNumber = uint64(block.number); // doesn't overflow until >the end of time
+    // mint liquidity equivalent to 20% of accumulated fees
+    function mintFeeLiquidity() private {
+        uint invariant = Math.sqrt(uint(reserve0).mul(reserve1));
+        if (invariant > invariantLast) {
+            uint numerator = totalSupply.mul(invariant.sub(invariantLast));
+            uint denominator = uint256(4).mul(invariant).add(invariantLast);
+            uint liquidity = numerator / denominator;
+            _mint(factory, liquidity); // factory is just a placeholder
+            emit FeeLiquidityMinted(liquidity);
         }
-        (reserve0, reserve1) = (balance0.clamp128(), balance1.clamp128()); // update reserves
     }
 
     function mintLiquidity(address recipient) external lock returns (uint liquidity) {
-        mintFees();
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
+        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), "UniswapV2: EXCESS_LIQUIDITY");
         uint amount0 = balance0.sub(reserve0);
         uint amount1 = balance1.sub(reserve1);
 
+        mintFeeLiquidity();
         liquidity = totalSupply == 0 ?
             Math.sqrt(amount0.mul(amount1)) :
             Math.min(amount0.mul(totalSupply) / reserve0, amount1.mul(totalSupply) / reserve1);
         require(liquidity > 0, "UniswapV2: INSUFFICIENT_VALUE");
-        mint(recipient, liquidity);
+        _mint(recipient, liquidity);
 
         update(balance0, balance1);
         invariantLast = Math.sqrt(uint(reserve0).mul(reserve1));
@@ -123,14 +123,18 @@ contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTran
     }
 
     function burnLiquidity(address recipient) external lock returns (uint amount0, uint amount1) {
-        mintFees();
         uint liquidity = balanceOf[address(this)];
+        uint balance0 = IERC20(token0).balanceOf(address(this));
+        uint balance1 = IERC20(token1).balanceOf(address(this));
+        require(balance0 >= reserve0 && balance0 >= reserve1, "UniswapV2: INSUFFICIENT_BALANCE");
 
-        amount0 = liquidity.mul(reserve0) / totalSupply;
-        amount1 = liquidity.mul(reserve1) / totalSupply;
+        mintFeeLiquidity();
+        amount0 = liquidity.mul(balance0) / totalSupply; // intentionally using balances not reserves
+        amount1 = liquidity.mul(balance1) / totalSupply; // intentionally using balances not reserves
         require(amount0 > 0 && amount1 > 0, "UniswapV2: INSUFFICIENT_VALUE");
         safeTransfer(token0, recipient, amount0);
         safeTransfer(token1, recipient, amount1);
+        _burn(address(this), liquidity);
 
         update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)));
         invariantLast = Math.sqrt(uint(reserve0).mul(reserve1));
@@ -139,6 +143,7 @@ contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTran
 
     function swap0(address recipient) external lock returns (uint amount1) {
         uint balance0 = IERC20(token0).balanceOf(address(this));
+        require(balance0 <= uint112(-1), "UniswapV2: EXCESS_BALANCE");
         uint amount0 = balance0.sub(reserve0);
 
         amount1 = getInputPrice(amount0, reserve0, reserve1);
@@ -151,6 +156,7 @@ contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTran
 
     function swap1(address recipient) external lock returns (uint amount0) {
         uint balance1 = IERC20(token1).balanceOf(address(this));
+        require(balance1 <= uint112(-1), "UniswapV2: EXCESS_BALANCE");
         uint amount1 = balance1.sub(reserve1);
 
         amount0 = getInputPrice(amount1, reserve1, reserve0);
@@ -161,8 +167,13 @@ contract UniswapV2 is IUniswapV2, ERC20("Uniswap V2", "UNI-V2", 18, 0), SafeTran
         emit Swap(msg.sender, recipient, amount0, amount1, reserve0, reserve1, token1);
     }
 
-    // almost certainly never needs to be called, it's for weird tokens
+    // almost never _needs_ to be called, it's for weird tokens and can also be helpful for oracles
     function sync() external lock {
         update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)));
+    }
+
+    function sweep() external lock {
+        mintFeeLiquidity();
+        invariantLast = Math.sqrt(uint(reserve0).mul(reserve1));
     }
 }
