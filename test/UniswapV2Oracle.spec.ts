@@ -22,7 +22,7 @@ describe('UniswapV2OracleExample', () => {
   let exchange: Contract
   let oracle: Contract
   beforeEach(async function() {
-    this.timeout(4000)
+    this.timeout(10000)
     const { factory, token0: _token0, token1: _token1, exchange: _exchange }: ExchangeFixture = await loadFixture(
       exchangeFixture as any
     )
