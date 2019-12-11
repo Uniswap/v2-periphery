@@ -53,14 +53,14 @@ describe('UniswapV2OracleExample', () => {
     await oracle.initialize()
     await oracle.update()
 
-    expect((await oracle.price0()).toString()).to.eq(
+    expect((await oracle.priceAverage0()).toString()).to.eq(
       bigNumberify(2)
-        .pow(127)
+        .pow(111)
         .toString()
     )
-    expect((await oracle.price1()).toString()).to.eq(
+    expect((await oracle.priceAverage1()).toString()).to.eq(
       bigNumberify(2)
-        .pow(129)
+        .pow(113)
         .toString()
     )
   })
