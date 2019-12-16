@@ -8,7 +8,7 @@ import "./interfaces/IUniswapV2.sol";
 contract UniswapV2OracleExample is IUniswapV2OracleExample {
     using UQ112x112 for uint224;
 
-    address public exchangeAddress;
+    address public exchange;
 
     uint    private price0CumulativeLast;
     uint    private price1CumulativeLast;
@@ -23,7 +23,7 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
     bool public initialized;
 
     constructor(address factory, address tokenA, address tokenB) public {
-        exchangeAddress = IUniswapV2Factory(factory).getExchange(tokenA, tokenB);
+        exchange = IUniswapV2Factory(factory).getExchange(tokenA, tokenB);
     }
 
     function quote0(uint amount0) public view returns (uint amount1) {
@@ -36,7 +36,7 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
 
     function initialize() public {
         require(!initialized, "UniswapV2OracleExample: ALREADY_INITIALIZED");
-        IUniswapV2 uniswap = IUniswapV2(exchangeAddress);
+        IUniswapV2 uniswap = IUniswapV2(exchange);
         price0CumulativeLast = uniswap.price0CumulativeLast();
         price1CumulativeLast = uniswap.price1CumulativeLast();
         blockNumberLast = uniswap.blockNumberLast();
@@ -46,7 +46,7 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
 
     function update() public {
         require(initialized, "UniswapV2OracleExample: NOT_INITIALIZED");
-        IUniswapV2 uniswap = IUniswapV2(exchangeAddress);
+        IUniswapV2 uniswap = IUniswapV2(exchange);
 
         uint32 blockNumber = uint32(block.number % 2**32);
         require(blockNumber != blockNumberLast, "UniswapV2OracleExample: ALREADY_UPDATED");
