@@ -1,9 +1,9 @@
-pragma solidity 0.5.13;
+pragma solidity 0.5.14;
 
 interface IUniswapV2OracleExample {
     function exchangeAddress() external returns (address);
-    function priceAverage0() external returns (uint224);
-    function priceAverage1() external returns (uint224);
+    function price0Average() external returns (uint224);
+    function price1Average() external returns (uint224);
     function period() external returns (uint);
     function initialized() external returns (bool);
 

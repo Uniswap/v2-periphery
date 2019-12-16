@@ -1,4 +1,4 @@
-pragma solidity 0.5.13;
+pragma solidity 0.5.14;
 
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint value);
@@ -12,7 +12,7 @@ interface IERC20 {
     function allowance(address owner, address spender) external view returns (uint);
 
     function DOMAIN_SEPARATOR() external view returns (bytes32);
-    function APPROVE_TYPEHASH() external pure returns (bytes32);
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
     function nonces(address owner) external view returns (uint);
 
     function transfer(address to, uint value) external returns (bool);
@@ -20,8 +20,7 @@ interface IERC20 {
     function approve(address spender, uint value) external returns (bool);
     function transferFrom(address from, address to, uint value) external returns (bool);
     function burnFrom(address from, uint value) external;
-
-    function approveMeta(
+    function permit(
         address owner, address spender, uint value, uint nonce, uint expiration, uint8 v, bytes32 r, bytes32 s
     )
         external;

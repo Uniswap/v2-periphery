@@ -22,7 +22,6 @@ describe('UniswapV2OracleExample', () => {
   let exchange: Contract
   let oracle: Contract
   beforeEach(async function() {
-    this.timeout(10000)
     const { factory, token0: _token0, token1: _token1, exchange: _exchange }: ExchangeFixture = await loadFixture(
       exchangeFixture as any
     )
@@ -53,12 +52,12 @@ describe('UniswapV2OracleExample', () => {
     await oracle.initialize()
     await oracle.update()
 
-    expect((await oracle.priceAverage0()).toString()).to.eq(
+    expect((await oracle.price0Average()).toString()).to.eq(
       bigNumberify(2)
         .pow(111)
         .toString()
     )
-    expect((await oracle.priceAverage1()).toString()).to.eq(
+    expect((await oracle.price1Average()).toString()).to.eq(
       bigNumberify(2)
         .pow(113)
         .toString()
