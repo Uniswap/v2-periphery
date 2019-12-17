@@ -6,6 +6,7 @@ import { expandTo18Decimals } from './utilities'
 import ERC20 from '../../build/ERC20.json'
 import UniswapV2 from '../../build/UniswapV2.json'
 import UniswapV2Factory from '../../build/UniswapV2Factory.json'
+import WETH9 from '../../build/WETH9.json'
 
 export interface FactoryFixture {
   bytecode: string
@@ -25,6 +26,9 @@ export interface ExchangeFixture extends FactoryFixture {
   token0: Contract
   token1: Contract
   exchange: Contract
+  wETH: Contract
+  wETHPair: Contract
+  wETHExchange: Contract
 }
 
 export async function exchangeFixture(provider: providers.Web3Provider, [wallet]: Wallet[]): Promise<ExchangeFixture> {
@@ -32,14 +36,19 @@ export async function exchangeFixture(provider: providers.Web3Provider, [wallet]
 
   const tokenA = await deployContract(wallet, ERC20, ['Test Token A', 'TESTA', 18, expandTo18Decimals(1000)])
   const tokenB = await deployContract(wallet, ERC20, ['Test Token B', 'TESTB', 18, expandTo18Decimals(1000)])
-
   await factory.createExchange(tokenA.address, tokenB.address)
   const exchangeAddress = await factory.getExchange(tokenA.address, tokenB.address)
   const exchange = new Contract(exchangeAddress, JSON.stringify(UniswapV2.abi), provider)
+
+  const wETH = await deployContract(wallet, WETH9)
+  const wETHPair = await deployContract(wallet, ERC20, ['Test Token', 'TEST', 18, expandTo18Decimals(1000)])
+  await factory.createExchange(wETH.address, wETHPair.address)
+  const wETHExchangeAddress = await factory.getExchange(wETH.address, wETHPair.address)
+  const wETHExchange = new Contract(wETHExchangeAddress, JSON.stringify(UniswapV2.abi), provider)
 
   const [token0Address] = await factory.getTokens(exchangeAddress)
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  return { bytecode, factory, token0, token1, exchange }
+  return { bytecode, factory, token0, token1, exchange, wETH, wETHPair, wETHExchange }
 }
