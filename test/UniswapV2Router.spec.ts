@@ -51,80 +51,80 @@ describe('UniswapV2Router', () => {
     await exchange.connect(wallet).mintLiquidity(wallet.address)
   }
 
-  it('swapExactTokensForTokens', async () => {
-    const token0Amount = expandTo18Decimals(5)
-    const token1Amount = expandTo18Decimals(10)
-    await addLiquidity(token0Amount, token1Amount)
+  // it('swapExactTokensForTokens', async () => {
+  //   const token0Amount = expandTo18Decimals(5)
+  //   const token1Amount = expandTo18Decimals(10)
+  //   await addLiquidity(token0Amount, token1Amount)
 
-    await token0.approve(router.address, MaxUint256)
-    const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('1662497915624478906')
-    await expect(
-      router.swapExactTokensForTokens(
-        token0.address,
-        swapAmount,
-        token1.address,
-        wallet.address,
-        expectedOutputAmount,
-        MaxUint256
-      )
-    )
-      .to.emit(exchange, 'Swap')
-      .withArgs(router.address, wallet.address, token0.address, swapAmount, expectedOutputAmount)
-  })
+  //   await token0.approve(router.address, MaxUint256)
+  //   const swapAmount = expandTo18Decimals(1)
+  //   const expectedOutputAmount = bigNumberify('1662497915624478906')
+  //   await expect(
+  //     router.swapExactTokensForTokens(
+  //       token0.address,
+  //       swapAmount,
+  //       token1.address,
+  //       wallet.address,
+  //       expectedOutputAmount,
+  //       MaxUint256
+  //     )
+  //   )
+  //     .to.emit(exchange, 'Swap')
+  //     .withArgs(router.address, wallet.address, token0.address, swapAmount, expectedOutputAmount)
+  // })
 
-  it('swapExactTokensForTokens:fail', async () => {
-    const token0Amount = expandTo18Decimals(5)
-    const token1Amount = expandTo18Decimals(10)
-    await addLiquidity(token0Amount, token1Amount)
+  // it('swapExactTokensForTokens:fail', async () => {
+  //   const token0Amount = expandTo18Decimals(5)
+  //   const token1Amount = expandTo18Decimals(10)
+  //   await addLiquidity(token0Amount, token1Amount)
 
-    await token0.approve(router.address, MaxUint256)
-    const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('1662497915624478906')
+  //   await token0.approve(router.address, MaxUint256)
+  //   const swapAmount = expandTo18Decimals(1)
+  //   const expectedOutputAmount = bigNumberify('1662497915624478906')
 
-    await expect(
-      router.swapExactTokensForTokens(
-        token0.address,
-        swapAmount,
-        token1.address,
-        wallet.address,
-        expectedOutputAmount,
-        Math.floor(Date.now() / 1000) - 1
-      )
-    ).to.be.revertedWith('UniswapV2Router: EXPIRED')
+  //   await expect(
+  //     router.swapExactTokensForTokens(
+  //       token0.address,
+  //       swapAmount,
+  //       token1.address,
+  //       wallet.address,
+  //       expectedOutputAmount,
+  //       Math.floor(Date.now() / 1000) - 1
+  //     )
+  //   ).to.be.revertedWith('UniswapV2Router: EXPIRED')
 
-    await expect(
-      router.swapExactTokensForTokens(
-        token0.address,
-        swapAmount,
-        token1.address,
-        wallet.address,
-        expectedOutputAmount.add(1),
-        MaxUint256
-      )
-    ).to.be.revertedWith('UniswapV2Router: MINIMUM_NOT_EXCEEDED')
-  })
+  //   await expect(
+  //     router.swapExactTokensForTokens(
+  //       token0.address,
+  //       swapAmount,
+  //       token1.address,
+  //       wallet.address,
+  //       expectedOutputAmount.add(1),
+  //       MaxUint256
+  //     )
+  //   ).to.be.revertedWith('UniswapV2Router: MINIMUM_NOT_EXCEEDED')
+  // })
 
-  async function addwETHLiquidity(wETHAmount: BigNumber, wETHPairAmount: BigNumber) {
-    await wETH.deposit({ value: wETHAmount })
-    await wETH.transfer(wETHExchange.address, wETHAmount)
-    await wETHPair.transfer(wETHExchange.address, wETHPairAmount)
-    await wETHExchange.connect(wallet).mintLiquidity(wallet.address)
-  }
+  // async function addwETHLiquidity(wETHAmount: BigNumber, wETHPairAmount: BigNumber) {
+  //   await wETH.deposit({ value: wETHAmount })
+  //   await wETH.transfer(wETHExchange.address, wETHAmount)
+  //   await wETHPair.transfer(wETHExchange.address, wETHPairAmount)
+  //   await wETHExchange.connect(wallet).mintLiquidity(wallet.address)
+  // }
 
-  it('swapExactETHForTokens', async () => {
-    const wETHAmount = expandTo18Decimals(5)
-    const wETHPairAmount = expandTo18Decimals(10)
-    await addwETHLiquidity(wETHAmount, wETHPairAmount)
+  // it('swapExactETHForTokens', async () => {
+  //   const wETHAmount = expandTo18Decimals(5)
+  //   const wETHPairAmount = expandTo18Decimals(10)
+  //   await addwETHLiquidity(wETHAmount, wETHPairAmount)
 
-    const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('1662497915624478906')
-    await expect(
-      router.swapExactETHForTokens(wETHPair.address, wallet.address, expectedOutputAmount, MaxUint256, {
-        value: swapAmount
-      })
-    )
-      .to.emit(exchange, 'Swap')
-      .withArgs(router.address, wallet.address, wETH.address, expectedOutputAmount, swapAmount) // wETH is token1
-  })
+  //   const swapAmount = expandTo18Decimals(1)
+  //   const expectedOutputAmount = bigNumberify('1662497915624478906')
+  //   await expect(
+  //     router.swapExactETHForTokens(wETHPair.address, wallet.address, expectedOutputAmount, MaxUint256, {
+  //       value: swapAmount
+  //     })
+  //   )
+  //     .to.emit(exchange, 'Swap')
+  //     .withArgs(router.address, wallet.address, wETH.address, expectedOutputAmount, swapAmount) // wETH is token1
+  // })
 })

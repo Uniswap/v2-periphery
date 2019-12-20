@@ -12,6 +12,10 @@ import UniswapV2OracleExample from '../build/UniswapV2OracleExample.json'
 chai.use(solidity)
 const { expect } = chai
 
+const overrides = {
+  gasLimit: 1000000
+}
+
 describe('UniswapV2OracleExample', () => {
   const provider = createMockProvider(path.join(__dirname, '..', 'waffle.json'))
   const [wallet] = getWallets(provider)
@@ -35,7 +39,7 @@ describe('UniswapV2OracleExample', () => {
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
     await token0.transfer(exchange.address, token0Amount)
     await token1.transfer(exchange.address, token1Amount)
-    await exchange.connect(wallet).mintLiquidity(wallet.address)
+    await exchange.connect(wallet).make(overrides)
   }
 
   it('initialize', async () => {
@@ -71,7 +75,7 @@ describe('UniswapV2OracleExample', () => {
     await oracle.initialize()
     await oracle.update()
 
-    expect((await oracle.quote0(token0Amount)).toString()).to.eq(token1Amount)
-    expect((await oracle.quote1(token1Amount)).toString()).to.eq(token0Amount)
+    expect((await oracle.quote(token0.address, token0Amount)).toString()).to.eq(token1Amount)
+    expect((await oracle.quote(token1.address, token1Amount)).toString()).to.eq(token0Amount)
   })
 })

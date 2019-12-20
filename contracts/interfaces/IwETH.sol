@@ -1,6 +1,6 @@
-pragma solidity 0.5.14;
+pragma solidity 0.5.15;
 
 interface IwETH {
     function deposit() external payable;
-    function withdraw(uint value) external;
+    function withdraw(uint) external;
 }
