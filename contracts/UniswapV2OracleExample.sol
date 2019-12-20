@@ -37,7 +37,7 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
         }
     }
 
-    function initialize() public {
+    function initialize() external {
         require(!initialized, "UniswapV2OracleExample: FORBIDDEN");
         price0CumulativeLast = IUniswapV2(exchange).price0CumulativeLast();
         price1CumulativeLast = IUniswapV2(exchange).price1CumulativeLast();
@@ -46,7 +46,7 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
         initialized = true;
     }
 
-    function update() public {
+    function update() external {
         require(initialized, "UniswapV2OracleExample: FORBIDDEN");
         uint32 blockNumber = uint32(block.number % 2**32);
         require(blockNumber != blockNumberLast, "UniswapV2OracleExample: ALREADY_UPDATED");
