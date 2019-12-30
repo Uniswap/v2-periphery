@@ -20,6 +20,12 @@
           "internalType": "uint256",
           "name": "amount1",
           "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         }
       ],
       "name": "Burn",
@@ -76,6 +82,12 @@
           "internalType": "uint256",
           "name": "amountOut",
           "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         }
       ],
       "name": "Swap",
@@ -117,7 +129,13 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
       "name": "burn",
       "outputs": [
         {
@@ -172,7 +190,13 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
       "name": "mint",
       "outputs": [
         {
@@ -247,7 +271,13 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
       "name": "skim",
       "outputs": [],
       "payable": false,
@@ -266,6 +296,11 @@
           "internalType": "uint256",
           "name": "amountOut",
           "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         }
       ],
       "name": "swap",
@@ -349,6 +384,12 @@
           "internalType": "uint256",
           "name": "amount1",
           "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         }
       ],
       "name": "Burn",
@@ -405,6 +446,12 @@
           "internalType": "uint256",
           "name": "amountOut",
           "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         }
       ],
       "name": "Swap",
@@ -446,7 +493,13 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
       "name": "burn",
       "outputs": [
         {
@@ -501,7 +554,13 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
       "name": "mint",
       "outputs": [
         {
@@ -576,7 +635,13 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
       "name": "skim",
       "outputs": [],
       "payable": false,
@@ -595,6 +660,11 @@
           "internalType": "uint256",
           "name": "amountOut",
           "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         }
       ],
       "name": "swap",

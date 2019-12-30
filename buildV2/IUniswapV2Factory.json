@@ -126,7 +126,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "feeRecipient",
+      "name": "feeTo",
       "outputs": [
         {
           "internalType": "address",
@@ -337,7 +337,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "feeRecipient",
+      "name": "feeTo",
       "outputs": [
         {
           "internalType": "address",
