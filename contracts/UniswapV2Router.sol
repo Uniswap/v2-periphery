@@ -35,7 +35,7 @@ contract UniswapV2Router is IUniswapV2Router {
 
     function _checkDeadline(uint deadline) private view {
         // solium-disable-next-line security/no-block-members
-        require(deadline > block.timestamp, "UniswapV2Router: EXPIRED");
+        require(deadline >= block.timestamp, "UniswapV2Router: EXPIRED");
     }
 
 
@@ -95,7 +95,7 @@ contract UniswapV2Router is IUniswapV2Router {
             _sendToExchange(tokenA, exchange, amountAIn);
             _sendToExchange(tokenB, exchange, amountBBest);
         }
-        liquidity = IUniswapV2(exchange).make();
+        liquidity = IUniswapV2(exchange).mint();
         _sendToSenderLiquidity(exchange, liquidity);
     }
     function addLiquidityETH(address token, uint amountTokenIn, uint amountTokenMin, uint amountETHMin, uint deadline)
@@ -118,7 +118,7 @@ contract UniswapV2Router is IUniswapV2Router {
             _sendToExchange(token, exchange, amountTokenIn);
             _sendToExchangeETH(exchange, amountETHBest);
         }
-        liquidity = IUniswapV2(exchange).make();
+        liquidity = IUniswapV2(exchange).mint();
         _sendToSenderLiquidity(exchange, liquidity);
         if (amountETHBest > 0) _sendToSenderETH(amountETHIn.sub(amountETHBest)); // if any, refund dust eth
     }
@@ -135,7 +135,7 @@ contract UniswapV2Router is IUniswapV2Router {
         _checkDeadline(deadline);
         address exchange = _getExchange(tokenA, tokenB);
         _sendToExchangeLiquidity(exchange, msg.sender, liquidity);
-        (uint amount0, uint amount1) = IUniswapV2(exchange).made();
+        (uint amount0, uint amount1) = IUniswapV2(exchange).burn();
         (amountA, amountB) = tokenA == IUniswapV2(exchange).token0() ? (amount0, amount1) : (amount1, amount0);
         require(amountA > amountAMin, "UniswapV2Router: INSUFFICIENT_A_AMOUNT");
         require(amountB > amountBMin, "UniswapV2Router: INSUFFICIENT_B_AMOUNT");
@@ -148,7 +148,7 @@ contract UniswapV2Router is IUniswapV2Router {
         _checkDeadline(deadline);
         address exchange = _getExchange(token, WETH);
         _sendToExchangeLiquidity(exchange, msg.sender, liquidity);
-        (uint amount0, uint amount1) = IUniswapV2(exchange).made();
+        (uint amount0, uint amount1) = IUniswapV2(exchange).burn();
         (amountToken, amountETH) = token == IUniswapV2(exchange).token0() ? (amount0, amount1) : (amount1, amount0);
         require(amountToken > amountTokenMin, "UniswapV2Router: INSUFFICIENT_TOKEN_AMOUNT");
         require(amountETH > amountETHMin, "UniswapV2Router: INSUFFICIENT_ETH_AMOUNT");
@@ -163,8 +163,8 @@ contract UniswapV2Router is IUniswapV2Router {
         uint denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
     }
-    function _move(address exchange, address tokenIn, uint amountOut) private {
-        IUniswapV2(exchange).move(tokenIn, amountOut);
+    function _swap(address exchange, address tokenIn, uint amountOut) private {
+        IUniswapV2(exchange).swap(tokenIn, amountOut);
     }
     function swapExactTokensForTokens(
         address tokenIn, uint amountIn, address tokenOut, uint amountOutMin, uint deadline
@@ -177,7 +177,7 @@ contract UniswapV2Router is IUniswapV2Router {
         uint amountOut = _getAmountOut(amountIn, reserveIn, reserveOut);
         require(amountOut > amountOutMin, "UniswapV2Router: MINIMUM_NOT_EXCEEDED");
         _sendToExchange(tokenIn, exchange, amountIn);
-        _move(exchange, tokenIn, amountOut);
+        _swap(exchange, tokenIn, amountOut);
         _sendToSender(tokenOut, amountOut);
     }
 

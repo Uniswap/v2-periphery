@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": "^10"
+    "node": ">=10"
   },
   "dependencies": {
     "solc": "0.5.15"
@@ -12,14 +12,16 @@
     "ethereum-waffle": "^2.3.0-istanbul.0",
     "ethereumjs-util": "^6.2.0",
     "mocha": "^6.2.2",
+    "ncp": "^2.0.0",
     "prettier": "^1.19.1",
+    "rimraf": "^3.0.0",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.3"
   },
   "scripts": {
     "prettier:check": "yarn prettier ./test/*.ts --check",
     "prettier:write": "yarn prettier ./test/*.ts --write",
-    "compile": "rm -rf ./build/ && waffle waffle.json && cp -r ./buildV2/* ./build",
+    "compile": "rimraf ./build/ && waffle waffle.json && ncp ./buildV2 ./build",
     "test": "mocha"
   },
   "license": "GPL-3.0-or-later"

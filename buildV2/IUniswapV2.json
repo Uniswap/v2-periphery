@@ -22,7 +22,7 @@
           "type": "uint256"
         }
       ],
-      "name": "Made",
+      "name": "Burn",
       "type": "event"
     },
     {
@@ -47,7 +47,7 @@
           "type": "uint256"
         }
       ],
-      "name": "Make",
+      "name": "Mint",
       "type": "event"
     },
     {
@@ -78,7 +78,7 @@
           "type": "uint256"
         }
       ],
-      "name": "Move",
+      "name": "Swap",
       "type": "event"
     },
     {
@@ -113,6 +113,26 @@
       ],
       "payable": false,
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "burn",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount0",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount1",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -153,27 +173,7 @@
     {
       "constant": false,
       "inputs": [],
-      "name": "made",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "amount0",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount1",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "make",
+      "name": "mint",
       "outputs": [
         {
           "internalType": "uint256",
@@ -181,26 +181,6 @@
           "type": "uint256"
         }
       ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenIn",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amountOut",
-          "type": "uint256"
-        }
-      ],
-      "name": "move",
-      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -269,6 +249,26 @@
       "constant": false,
       "inputs": [],
       "name": "skim",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountOut",
+          "type": "uint256"
+        }
+      ],
+      "name": "swap",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -351,7 +351,7 @@
           "type": "uint256"
         }
       ],
-      "name": "Made",
+      "name": "Burn",
       "type": "event"
     },
     {
@@ -376,7 +376,7 @@
           "type": "uint256"
         }
       ],
-      "name": "Make",
+      "name": "Mint",
       "type": "event"
     },
     {
@@ -407,7 +407,7 @@
           "type": "uint256"
         }
       ],
-      "name": "Move",
+      "name": "Swap",
       "type": "event"
     },
     {
@@ -442,6 +442,26 @@
       ],
       "payable": false,
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "burn",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount0",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount1",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -482,27 +502,7 @@
     {
       "constant": false,
       "inputs": [],
-      "name": "made",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "amount0",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount1",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "make",
+      "name": "mint",
       "outputs": [
         {
           "internalType": "uint256",
@@ -510,26 +510,6 @@
           "type": "uint256"
         }
       ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenIn",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amountOut",
-          "type": "uint256"
-        }
-      ],
-      "name": "move",
-      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -598,6 +578,26 @@
       "constant": false,
       "inputs": [],
       "name": "skim",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountOut",
+          "type": "uint256"
+        }
+      ],
+      "name": "swap",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

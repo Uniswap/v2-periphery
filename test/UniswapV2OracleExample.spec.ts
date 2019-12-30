@@ -39,7 +39,7 @@ describe('UniswapV2OracleExample', () => {
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
     await token0.transfer(exchange.address, token0Amount)
     await token1.transfer(exchange.address, token1Amount)
-    await exchange.connect(wallet).make(overrides)
+    await exchange.connect(wallet).mint(overrides)
   }
 
   it('initialize', async () => {

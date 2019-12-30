@@ -154,6 +154,21 @@
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [
         {
@@ -162,7 +177,7 @@
           "type": "uint256"
         }
       ],
-      "name": "burn",
+      "name": "forfeit",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -182,25 +197,10 @@
           "type": "uint256"
         }
       ],
-      "name": "burnFrom",
+      "name": "forfeitFrom",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "decimals",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -546,6 +546,21 @@
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [
         {
@@ -554,7 +569,7 @@
           "type": "uint256"
         }
       ],
-      "name": "burn",
+      "name": "forfeit",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -574,25 +589,10 @@
           "type": "uint256"
         }
       ],
-      "name": "burnFrom",
+      "name": "forfeitFrom",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "decimals",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
       "type": "function"
     },
     {
