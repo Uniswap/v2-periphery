@@ -30,10 +30,10 @@ contract UniswapV2OracleExample is IUniswapV2OracleExample {
 
     function quote(address tokenIn, uint amountIn) external view returns (uint amountOut) {
         if (tokenIn == token0) {
-            amountOut = UQ112x112.decode(price1Average.qmul(amountIn));
+            amountOut = UQ112x112.decode(price0Average.qmul(amountIn));
         } else {
             require(tokenIn == token1, "UniswapV2OracleExample: INVALID_INPUT_TOKEN");
-            amountOut = UQ112x112.decode(price0Average.qmul(amountIn));
+            amountOut = UQ112x112.decode(price1Average.qmul(amountIn));
         }
     }
 
