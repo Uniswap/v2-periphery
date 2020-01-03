@@ -72,49 +72,48 @@ contract UniswapV2Router is IUniswapV2Router {
         address to,
         uint deadline
     )
-        external returns (uint amountAOut, uint amountBOut, uint liquidity)
+        external returns (uint amountA, uint amountB, uint liquidity)
     {
         _checkDeadline(deadline);
         address exchange = IUniswapV2Factory(factory).getExchange(tokenA, tokenB);
         if (exchange == address(0)) exchange = IUniswapV2Factory(factory).createExchange(tokenA, tokenB);
         (uint112 reserveA, uint112 reserveB) = _getReserves(exchange, tokenA);
-        uint amountABest = amountBIn.mul(reserveA) / reserveB;
-        if (amountABest <= amountAIn) { // send amountABest and amountB
-            require(amountABest >= amountAMin, "UniswapV2Router: INSUFFICIENT_A_AMOUNT");
-            _safeTransferFrom(tokenA, msg.sender, exchange, amountAOut = amountABest);
-            _safeTransferFrom(tokenB, msg.sender, exchange, amountBOut = amountBIn);
+        amountA = amountBIn.mul(reserveA) / reserveB;
+        if (amountA <= amountAIn) { // send amountA and amountBIn
+            require(amountA >= amountAMin, "UniswapV2Router: INSUFFICIENT_A_AMOUNT");
+            _safeTransferFrom(tokenA, msg.sender, exchange, amountA);
+            _safeTransferFrom(tokenB, msg.sender, exchange, amountB = amountBIn);
         } else {
-            uint amountBBest = amountAIn.mul(reserveB) / reserveA;
-            require(amountBBest >= amountBMin, "UniswapV2Router: INSUFFICIENT_B_AMOUNT");
-            _safeTransferFrom(tokenA, msg.sender, exchange, amountAOut = amountAIn);
-            _safeTransferFrom(tokenB, msg.sender, exchange, amountBOut = amountBBest);
+            amountB = amountAIn.mul(reserveB) / reserveA;
+            require(amountB >= amountBMin, "UniswapV2Router: INSUFFICIENT_B_AMOUNT");
+            _safeTransferFrom(tokenA, msg.sender, exchange, amountA = amountAIn);
+            _safeTransferFrom(tokenB, msg.sender, exchange, amountB);
         }
         liquidity = IUniswapV2(exchange).mint(to);
     }
     function addLiquidityETH(
         address token, uint amountTokenIn, uint amountTokenMin, uint amountETHMin, address to, uint deadline
     )
-        external payable returns (uint amountTokenOut, uint amountETHOut, uint liquidity)
+        external payable returns (uint amountToken, uint amountETH, uint liquidity)
     {
         uint amountETHIn = msg.value;
         _checkDeadline(deadline);
         address exchange = IUniswapV2Factory(factory).getExchange(token, WETH);
         if (exchange == address(0)) exchange = IUniswapV2Factory(factory).createExchange(token, WETH);
         (uint112 reserveToken, uint112 reserveETH) = _getReserves(exchange, token);
-        uint amountTokenBest = amountETHIn.mul(reserveToken) / reserveETH;
-        uint amountETHBest;
-        if (amountTokenBest <= amountTokenIn) { // send amountTokenBest and amountETH
-            require(amountTokenBest >= amountTokenMin, "UniswapV2Router: INSUFFICIENT_TOKEN_AMOUNT");
-            _safeTransferFrom(token, msg.sender, exchange, amountTokenOut = amountTokenBest);
-            _sendETHAsWETH(exchange, amountETHOut = amountETHIn);
+        amountToken = amountETHIn.mul(reserveToken) / reserveETH;
+        if (amountToken <= amountTokenIn) { // send amountToken and amountETHIn
+            require(amountToken >= amountTokenMin, "UniswapV2Router: INSUFFICIENT_TOKEN_AMOUNT");
+            _safeTransferFrom(token, msg.sender, exchange, amountToken);
+            _sendETHAsWETH(exchange, amountETH = amountETHIn);
         } else {
-            amountETHBest = amountTokenIn.mul(reserveETH) / reserveToken;
-            require(amountETHBest >= amountETHMin, "UniswapV2Router: INSUFFICIENT_ETH_AMOUNT");
-            _safeTransferFrom(token, msg.sender, exchange, amountTokenOut = amountTokenIn);
-            _sendETHAsWETH(exchange, amountETHOut = amountETHBest);
+            amountETH = amountTokenIn.mul(reserveETH) / reserveToken;
+            require(amountETH >= amountETHMin, "UniswapV2Router: INSUFFICIENT_ETH_AMOUNT");
+            _safeTransferFrom(token, msg.sender, exchange, amountToken = amountTokenIn);
+            _sendETHAsWETH(exchange, amountETH);
         }
         liquidity = IUniswapV2(exchange).mint(to);
-        if (amountETHBest > 0) _sendETH(msg.sender, amountETHIn.sub(amountETHBest)); // refund dust eth (if any)
+        if (amountETHIn > amountETH) _sendETH(msg.sender, amountETHIn - amountETH); // refund dust eth (if any)
     }
 
 
@@ -122,30 +121,26 @@ contract UniswapV2Router is IUniswapV2Router {
     function removeLiquidity(
         address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline
     )
-        external
+        external returns (uint amountA, uint amountB)
     {
         _checkDeadline(deadline);
         address exchange = _getExchange(tokenA, tokenB);
         _safeTransferFrom(exchange, msg.sender, exchange, liquidity);
         (uint amount0, uint amount1) = IUniswapV2(exchange).burn(to);
-        (uint amountA, uint amountB) = tokenA == IUniswapV2(exchange).token0() ?
-            (amount0, amount1) :
-            (amount1, amount0);
+        (amountA, amountB) = tokenA == IUniswapV2(exchange).token0() ? (amount0, amount1) : (amount1, amount0);
         require(amountA >= amountAMin, "UniswapV2Router: INSUFFICIENT_A_AMOUNT");
         require(amountB >= amountBMin, "UniswapV2Router: INSUFFICIENT_B_AMOUNT");
     }
     function removeLiquidityETH(
         address token, uint liquidity, uint amountTokenMin, uint amountETHMin, address to, uint deadline
     )
-        external
+        external returns (uint amountToken, uint amountETH)
     {
         _checkDeadline(deadline);
         address exchange = _getExchange(token, WETH);
         _safeTransferFrom(exchange, msg.sender, exchange, liquidity);
         (uint amount0, uint amount1) = IUniswapV2(exchange).burn(address(this));
-        (uint amountToken, uint amountETH) = token == IUniswapV2(exchange).token0() ?
-            (amount0, amount1) :
-            (amount1, amount0);
+        (amountToken, amountETH) = token == IUniswapV2(exchange).token0() ? (amount0, amount1) : (amount1, amount0);
         require(amountToken >= amountTokenMin, "UniswapV2Router: INSUFFICIENT_TOKEN_AMOUNT");
         require(amountETH >= amountETHMin, "UniswapV2Router: INSUFFICIENT_ETH_AMOUNT");
         _safeTransferFrom(token, address(this), to, amountToken);
@@ -170,7 +165,7 @@ contract UniswapV2Router is IUniswapV2Router {
     function swapExactTokensForTokens(
         uint amountIn, address[] calldata tokens, uint amountOutMin, address to, uint deadline
     )
-        external
+        external returns (uint amountOut)
     {
         require(tokens.length >= 2, "UniswapV2Router: INSUFFICIENT_NUMBER_OF_TOKENS");
         _checkDeadline(deadline);
@@ -183,7 +178,8 @@ contract UniswapV2Router is IUniswapV2Router {
             (uint112 reserveIn, uint112 reserveOut) = _getReserves(recipients[i], tokens[i]);
             amounts[i+1] = _getAmountOut(amounts[i], reserveIn, reserveOut);
         }
-        require(amounts[tokens.length-1] >= amountOutMin, "UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+        amountOut = amounts[tokens.length-1];
+        require(amountOut >= amountOutMin, "UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
         _safeTransferFrom(tokens[0], msg.sender, recipients[0], amounts[0]); // send tokens to first exchange
         for (uint j; j < recipients.length-1; j++) { // execute all the swaps
             IUniswapV2(recipients[j]).swap(tokens[j], amounts[j+1], recipients[j+1]);
@@ -192,7 +188,7 @@ contract UniswapV2Router is IUniswapV2Router {
     function swapTokensForExactTokens(
         uint amountInMax, address[] calldata tokens, uint amountOut, address to, uint deadline
     )
-        external
+        external returns (uint amountIn)
     {
         require(tokens.length >= 2, "UniswapV2Router: INSUFFICIENT_NUMBER_OF_TOKENS");
         _checkDeadline(deadline);
@@ -205,7 +201,8 @@ contract UniswapV2Router is IUniswapV2Router {
             (uint112 reserveIn, uint112 reserveOut) = _getReserves(recipients[i-1], tokens[i-1]);
             amounts[i-1] = _getAmountIn(amounts[i], reserveIn, reserveOut);
         }
-        require(amounts[0] <= amountInMax, "UniswapV2Router: EXCESSIVE_INPUT_AMOUNT");
+        amountIn = amounts[0];
+        require(amountIn <= amountInMax, "UniswapV2Router: EXCESSIVE_INPUT_AMOUNT");
         _safeTransferFrom(tokens[0], msg.sender, recipients[0], amounts[0]); // send tokens to first exchange
         for (uint j; j < recipients.length-1; j++) { // execute all the swaps
             IUniswapV2(recipients[j]).swap(tokens[j], amounts[j+1], recipients[j+1]);
