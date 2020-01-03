@@ -157,14 +157,14 @@ contract UniswapV2Router is IUniswapV2Router {
 
 
     // **** SWAP ****
-    function _getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) public pure returns (uint amountOut) {
+    function _getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) private pure returns (uint amountOut) {
         require(reserveIn > 0 && reserveOut > 0, "UniswapV2Router: INSUFFICIENT_RESERVES");
         uint amountInWithFee = amountIn.mul(997);
         uint numerator = amountInWithFee.mul(reserveOut);
         uint denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
     }
-    function _getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) public pure returns (uint amountIn) {
+    function _getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) private pure returns (uint amountIn) {
         require(reserveIn > 0 && reserveOut > 0, "UniswapV2Router: INSUFFICIENT_RESERVES");
         uint numerator = reserveIn.mul(amountOut).mul(1000);
         uint denominator = reserveOut.sub(amountOut).mul(997);

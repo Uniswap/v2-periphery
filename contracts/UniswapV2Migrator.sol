@@ -11,6 +11,13 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
     address public factoryV2;
     address public router;
 
+    function _safeApprove(address token, address spender, uint value) private {
+        // solium-disable-next-line security/no-low-level-calls
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSignature("approve(address,uint256)", spender, value)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "UniswapV2Migrator: APPROVE_FAILED");
+    }
     function _safeTransfer(address token, address to, uint value) private {
         // solium-disable-next-line security/no-low-level-calls
         (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, value));
@@ -27,12 +34,18 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
         router = _router;
     }
 
+    function() external payable {}
+
     function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external {
         address exchangeV1 = IUniswapV1Factory(factoryV1).getExchange(token);
         uint liquidityV1 = IERC20(exchangeV1).balanceOf(msg.sender);
-        IERC20(exchangeV1).transferFrom(msg.sender, address(this), liquidityV1);
+        require(
+            IERC20(exchangeV1).transferFrom(msg.sender, address(this), liquidityV1),
+            "UniswapV2Migrator: TRANSFER_FROM_FAILED"
+        );
         (uint amountETHV1, uint amountTokenV1) = IUniswapV1(exchangeV1).removeLiquidity(liquidityV1, 1, 1, uint(-1));
-        (uint amountETHV2, uint amountTokenV2,) = IUniswapV2Router(router).addLiquidityETH.value(amountETHV1)(
+        _safeApprove(token, router, uint(-1));
+        (uint amountTokenV2, uint amountETHV2,) = IUniswapV2Router(router).addLiquidityETH.value(amountETHV1)(
             token, amountTokenV1, amountTokenMin, amountETHMin, to, deadline
         );
         if (amountETHV1 > amountETHV2) _sendETH(msg.sender, amountETHV1 - amountETHV2);
