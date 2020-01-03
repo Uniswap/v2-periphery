@@ -78,7 +78,11 @@ contract UniswapV2Router is IUniswapV2Router {
         address exchange = IUniswapV2Factory(factory).getExchange(tokenA, tokenB);
         if (exchange == address(0)) exchange = IUniswapV2Factory(factory).createExchange(tokenA, tokenB);
         (uint112 reserveA, uint112 reserveB) = _getReserves(exchange, tokenA);
-        amountA = amountBIn.mul(reserveA) / reserveB;
+        if (reserveA == 0 && reserveB == 0) {
+            amountA = amountAIn;
+        } else {
+            amountA = amountBIn.mul(reserveA) / reserveB;
+        }
         if (amountA <= amountAIn) { // send amountA and amountBIn
             require(amountA >= amountAMin, "UniswapV2Router: INSUFFICIENT_A_AMOUNT");
             _safeTransferFrom(tokenA, msg.sender, exchange, amountA);
@@ -101,7 +105,11 @@ contract UniswapV2Router is IUniswapV2Router {
         address exchange = IUniswapV2Factory(factory).getExchange(token, WETH);
         if (exchange == address(0)) exchange = IUniswapV2Factory(factory).createExchange(token, WETH);
         (uint112 reserveToken, uint112 reserveETH) = _getReserves(exchange, token);
-        amountToken = amountETHIn.mul(reserveToken) / reserveETH;
+        if (reserveToken == 0 && reserveETH == 0) {
+            amountToken = amountTokenIn;
+        } else {
+            amountToken = amountETHIn.mul(reserveToken) / reserveETH;
+        }
         if (amountToken <= amountTokenIn) { // send amountToken and amountETHIn
             require(amountToken >= amountTokenMin, "UniswapV2Router: INSUFFICIENT_TOKEN_AMOUNT");
             _safeTransferFrom(token, msg.sender, exchange, amountToken);
