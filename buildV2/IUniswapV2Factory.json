@@ -111,7 +111,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "factoryOwner",
+      "name": "feeTo",
       "outputs": [
         {
           "internalType": "address",
@@ -126,7 +126,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "feeTo",
+      "name": "feeToSetter",
       "outputs": [
         {
           "internalType": "address",
@@ -322,7 +322,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "factoryOwner",
+      "name": "feeTo",
       "outputs": [
         {
           "internalType": "address",
@@ -337,7 +337,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "feeTo",
+      "name": "feeToSetter",
       "outputs": [
         {
           "internalType": "address",
