@@ -13,5 +13,5 @@ interface IUniswapV2OracleExample {
 
     function update() external;
 
-    function initialize( address) external; // only called once
+    function initialize() external; // only called once
 }
