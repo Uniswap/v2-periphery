@@ -56,7 +56,7 @@ contract UniswapV2Router is IUniswapV2Router {
         require(exchange != address(0), "UniswapV2Router: NO_EXCHANGE");
     }
     function _getReserves(address exchange, address token) private view returns (uint112, uint112) {
-        (uint112 reserve0, uint112 reserve1) = (IUniswapV2(exchange).reserve0(), IUniswapV2(exchange).reserve1());
+        (uint112 reserve0, uint112 reserve1,) = IUniswapV2(exchange).getReserves();
         return token == IUniswapV2(exchange).token0() ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 
