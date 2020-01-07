@@ -1,3 +1,5 @@
+## The contents of this GitHub repo are confidential until this disclaimer is removed and the repo is made public
+
 # UniswapV2
 
 [![CircleCI](https://circleci.com/gh/Uniswap/uniswap-v2-periphery.svg?style=svg)](https://circleci.com/gh/Uniswap/uniswap-v2-periphery)
