@@ -1,6 +1,6 @@
 pragma solidity =0.5.16;
 
-interface IWETH {
+interface IUniswapV1Exchange {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
 
@@ -15,6 +15,5 @@ interface IWETH {
     function transfer(address to, uint value) external returns (bool);
     function transferFrom(address from, address to, uint value) external returns (bool);
 
-    function deposit() external payable;
-    function withdraw(uint) external;
+    function removeLiquidity(uint, uint, uint, uint) external returns (uint, uint);
 }

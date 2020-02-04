@@ -2,7 +2,7 @@
 
 # UniswapV2
 
-[![CircleCI](https://circleci.com/gh/Uniswap/uniswap-v2-periphery.svg?style=svg)](https://circleci.com/gh/Uniswap/uniswap-v2-periphery)
+[![Actions Status](https://github.com/Uniswap/uniswap-v2-periphery/workflows/CI/badge.svg)](https://github.com/Uniswap/uniswap-v2-periphery/actions)
 
 ## Local Development
 

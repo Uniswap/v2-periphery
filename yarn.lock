@@ -2,6 +2,33 @@
 # yarn lockfile v1
 
 
+"@ethereum-waffle/chai@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@ethereum-waffle/chai/-/chai-2.3.0.tgz#3b2d1f50567382f0d3e34093ff796a8f3ce90abc"
+  integrity sha512-P/MNpM+liRalgZSISugcJGZzLlNes0ynQnoruATb/dDFWNMNR2yYEXEeg078vbKByptzJqY/0ccXLyBkslfBJA==
+  dependencies:
+    ethers "^4.0.0"
+
+"@ethereum-waffle/compiler@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@ethereum-waffle/compiler/-/compiler-2.3.0.tgz#da888bb25a5db536ba6b6d871fd999d622b05a59"
+  integrity sha512-xO8JyByo4azph6MBdvwibNP9JzjShYpAMN9eXMBMOrGAT18DjEFuEb8FksLF3MnBCrXeH/J8+Edbs+jBR9y50A==
+  dependencies:
+    "@resolver-engine/imports" "^0.3.3"
+    "@resolver-engine/imports-fs" "^0.3.3"
+    "@types/mkdirp" "^0.5.2"
+    mkdirp "^0.5.1"
+    solc "^0.5.10"
+
+"@ethereum-waffle/provider@^2.3.1":
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/@ethereum-waffle/provider/-/provider-2.3.1.tgz#aaf6642fe8d246114b996e56906311c34f575d36"
+  integrity sha512-S9D3I7u2JafVawS+shMnMQiS6yh4oBXb5IBKuQEM6t3cXOdrHgTQEAwlOR0yUYmrnx3gBF4MJ2xkg1Mjpa+5bw==
+  dependencies:
+    "@types/ganache-core" "^2.7.0"
+    ethers "^4.0.0"
+    ganache-core "2.9.0-istanbul.0"
+
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@resolver-engine/core/-/core-0.3.3.tgz#590f77d85d45bc7ecc4e06c654f41345db6ca967"
@@ -69,6 +96,13 @@
   integrity sha512-kNnP+XBHmyEMYGLFzA+5PDt6P1TazTjALtZoJXExVisVT9buU8Al1xY24f3V+ROWshghQCL1cqofi8YsmacIew==
   dependencies:
     ganache-core "*"
+
+"@types/mkdirp@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@types/mkdirp/-/mkdirp-0.5.2.tgz#503aacfe5cc2703d5484326b1b27efa67a339c1f"
+  integrity sha512-U5icWpv7YnZYGsN4/cmh3WD2onMY0aJIiTE6+51TwJCttdHvtCYmkBNOobHlXwrJRL0nkH9jH4kD+1FAdMN4Tg==
+  dependencies:
+    "@types/node" "*"
 
 "@types/mocha@^5.2.7":
   version "5.2.7"
@@ -2272,18 +2306,15 @@ ethereum-common@^0.0.18:
   resolved "https://registry.yarnpkg.com/ethereum-common/-/ethereum-common-0.0.18.tgz#2fdc3576f232903358976eb39da783213ff9523f"
   integrity sha1-L9w1dvIykDNYl26znaeDIT/5Uj8=
 
-ethereum-waffle@^2.3.0-istanbul.0:
-  version "2.3.0-istanbul.0"
-  resolved "https://registry.yarnpkg.com/ethereum-waffle/-/ethereum-waffle-2.3.0-istanbul.0.tgz#67782422d76144e372d9bb8621f8af5c499a4a90"
-  integrity sha512-QSESEzG4UvPmV7rAjZS7p1xWgdxnlcPSreT3jJ884XHY5YiYya8jPPN81mTkovfXVBHE09FlmYCa5c1q3uJ3sQ==
+ethereum-waffle@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/ethereum-waffle/-/ethereum-waffle-2.3.1.tgz#6739d61e3c0405d82485034e2d31a64e70e1b37a"
+  integrity sha512-U33Wz5k9zdps91MjuLmmg2Iy7zEeTbaP0UGhvPAVAK6hoeVeOEAbvcAaTHAd+rIyz0YddOF6pAn9PEw0ZjKmcQ==
   dependencies:
-    "@resolver-engine/imports" "^0.3.3"
-    "@resolver-engine/imports-fs" "^0.3.3"
-    "@types/ganache-core" "^2.7.0"
+    "@ethereum-waffle/chai" "^2.3.0"
+    "@ethereum-waffle/compiler" "^2.3.0"
+    "@ethereum-waffle/provider" "^2.3.1"
     ethers "^4.0.0"
-    ganache-core "^2.9.0-istanbul.0"
-    mkdirp "^0.5.1"
-    solc "^0.5.10"
 
 ethereumjs-abi@0.6.5:
   version "0.6.5"
@@ -3035,7 +3066,7 @@ ganache-core@*:
     ethereumjs-wallet "0.6.3"
     web3 "1.2.1"
 
-ganache-core@^2.9.0-istanbul.0:
+ganache-core@2.9.0-istanbul.0:
   version "2.9.0-istanbul.0"
   resolved "https://registry.yarnpkg.com/ganache-core/-/ganache-core-2.9.0-istanbul.0.tgz#bc336c770775a2b9fb06f5cae827088ecc194283"
   integrity sha512-wqNWyxrfZe4QPxzaR/n4hGxIfa1iZAkymPg17wET0iWZ9uurMywGgpG4ZvxjVU9q7WCjIobOSzE1m9OT0dIYcQ==
@@ -5986,10 +6017,10 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-solc@0.5.15:
-  version "0.5.15"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.5.15.tgz#f674ce93d4d04a86b65a4393657edf03b2f26028"
-  integrity sha512-uI+7XtBu/0CXRc8IMjzxbh0haLwaBF32VxAkkks06zEk+mVcsQbHdjvojXX6zQYtZVuXdVYPVccoIjEhvvqKnQ==
+solc@0.5.16:
+  version "0.5.16"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.5.16.tgz#6c8d710a3792ccc79db924606b558a1149b1c603"
+  integrity sha512-weEtRtisJyf+8UjELs7S4ST1KK7UIq6SRB7tpprfJBL9b5mTrZAT7m4gJKi2h6MiBpuSWfnraK8BnkyWzuTMRA==
   dependencies:
     command-exists "^1.2.8"
     commander "3.0.2"

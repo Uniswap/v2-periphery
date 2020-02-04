@@ -1,6 +1,6 @@
-pragma solidity 0.5.15;
+pragma solidity =0.5.16;
 
-interface IUniswapV2OracleExample {
+interface IOracleExample {
     function period() external returns (uint);
     function initialized() external returns (bool);
     function exchange() external returns (address);
