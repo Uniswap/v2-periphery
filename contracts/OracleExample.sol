@@ -67,7 +67,7 @@ contract OracleExample is IOracleExample {
         uint32 timeElapsed = blockTimestamp - blockTimestampLastCached; // overflow is desired
         // - overflow is desired, / never overflows, casting never truncates
         uint224 price0 = uint224((price0CumulativeLast - price0CumulativeLastCached) / timeElapsed);
-        uint224 price1 = uint224((price0CumulativeLast - price1CumulativeLastCached) / timeElapsed);
+        uint224 price1 = uint224((price1CumulativeLast - price1CumulativeLastCached) / timeElapsed);
         if ((price0Average == 0 && price1Average == 0) || timeElapsed >= period) {
             price0Average = price0;
             price1Average = price1;

@@ -8,6 +8,8 @@ import { ecsign } from 'ethereumjs-util'
 import { expandTo18Decimals, getApprovalDigest } from './shared/utilities'
 import { exchangeFixture } from './shared/fixtures'
 
+const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
+
 import Router from '../build/Router.json'
 
 chai.use(solidity)
@@ -75,15 +77,21 @@ describe('Router', () => {
         overrides
       )
     )
+      .to.emit(token0, 'Transfer')
+      .withArgs(wallet.address, exchange.address, token0Amount)
       // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
+      // .to.emit(token1, 'Transfer')
+      // .withArgs(wallet.address, exchange.address, token1Amount)
       // .to.emit(exchange, 'Transfer')
-      // .withArgs(AddressZero, wallet.address, expectedLiquidity)
+      // .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
+      // .to.emit(exchange, 'Transfer')
+      // .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       .to.emit(exchange, 'Sync')
       .withArgs(token0Amount, token1Amount)
       .to.emit(exchange, 'Mint')
       .withArgs(router.address, token0Amount, token1Amount)
 
-    expect(await exchange.balanceOf(wallet.address)).to.eq(expectedLiquidity)
+    expect(await exchange.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
   })
 
   it('addLiquidityETH', async () => {
@@ -106,7 +114,9 @@ describe('Router', () => {
     )
       // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
       // .to.emit(WETHExchange, 'Transfer')
-      // .withArgs(AddressZero, wallet.address, expectedLiquidity)
+      // .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
+      // .to.emit(WETHExchange, 'Transfer')
+      // .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       .to.emit(WETHExchange, 'Sync')
       .withArgs(
         WETHExchangeToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
@@ -119,7 +129,7 @@ describe('Router', () => {
         WETHExchangeToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
       )
 
-    expect(await WETHExchange.balanceOf(wallet.address)).to.eq(expectedLiquidity)
+    expect(await WETHExchange.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
@@ -138,7 +148,7 @@ describe('Router', () => {
       router.removeLiquidity(
         token0.address,
         token1.address,
-        expectedLiquidity,
+        expectedLiquidity.sub(MINIMUM_LIQUIDITY),
         0,
         0,
         wallet.address,
@@ -147,24 +157,24 @@ describe('Router', () => {
       )
     )
       .to.emit(exchange, 'Transfer')
-      .withArgs(wallet.address, exchange.address, expectedLiquidity)
+      .withArgs(wallet.address, exchange.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
       // .to.emit(exchange, 'Transfer')
-      // .withArgs(exchange.address, AddressZero, expectedLiquidity)
+      // .withArgs(exchange.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       // .to.emit(token0, 'Transfer')
-      // .withArgs(exchange.address, wallet.address, token0Amount)
+      // .withArgs(exchange.address, wallet.address, token0Amount.sub(500))
       // .to.emit(token1, 'Transfer')
-      // .withArgs(exchange.address, wallet.address, token1Amount)
+      // .withArgs(exchange.address, wallet.address, token1Amount.sub(2000))
       .to.emit(exchange, 'Sync')
-      .withArgs(0, 0)
+      .withArgs(500, 2000)
       .to.emit(exchange, 'Burn')
-      .withArgs(router.address, token0Amount, token1Amount, wallet.address)
+      .withArgs(router.address, token0Amount.sub(500), token1Amount.sub(2000), wallet.address)
 
     expect(await exchange.balanceOf(wallet.address)).to.eq(0)
     const totalSupplyToken0 = await token0.totalSupply()
     const totalSupplyToken1 = await token1.totalSupply()
-    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0)
-    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1)
+    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0.sub(500))
+    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(2000))
   })
 
   it('removeLiquidityETH', async () => {
@@ -179,13 +189,21 @@ describe('Router', () => {
     const WETHExchangeToken0 = await WETHExchange.token0()
     await WETHExchange.approve(router.address, MaxUint256)
     await expect(
-      router.removeLiquidityETH(WETHPartner.address, expectedLiquidity, 0, 0, wallet.address, MaxUint256, overrides)
+      router.removeLiquidityETH(
+        WETHPartner.address,
+        expectedLiquidity.sub(MINIMUM_LIQUIDITY),
+        0,
+        0,
+        wallet.address,
+        MaxUint256,
+        overrides
+      )
     )
       .to.emit(WETHExchange, 'Transfer')
-      .withArgs(wallet.address, WETHExchange.address, expectedLiquidity)
+      .withArgs(wallet.address, WETHExchange.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
       // .to.emit(WETHExchange, 'Transfer')
-      // .withArgs(WETHExchange.address, AddressZero, expectedLiquidity)
+      // .withArgs(WETHExchange.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       // .to.emit(WETHPartner, 'Transfer')
       // .withArgs(WETHExchange.address, router.address, WETHPartnerAmount)
       // .to.emit(WETH, 'Transfer')
@@ -193,20 +211,23 @@ describe('Router', () => {
       // .to.emit(WETHPartner, 'Transfer')
       // .withArgs(router.address, wallet.address, WETHPartnerAmount)
       .to.emit(WETHExchange, 'Sync')
-      .withArgs(0, 0)
+      .withArgs(
+        WETHExchangeToken0 === WETHPartner.address ? 500 : 2000,
+        WETHExchangeToken0 === WETHPartner.address ? 2000 : 500
+      )
       .to.emit(WETHExchange, 'Burn')
       .withArgs(
         router.address,
-        WETHExchangeToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
-        WETHExchangeToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount,
+        WETHExchangeToken0 === WETHPartner.address ? WETHPartnerAmount.sub(500) : ETHAmount.sub(2000),
+        WETHExchangeToken0 === WETHPartner.address ? ETHAmount.sub(2000) : WETHPartnerAmount.sub(500),
         router.address
       )
 
     expect(await WETHExchange.balanceOf(wallet.address)).to.eq(0)
-    const totalSupplyToken0 = await token0.totalSupply()
-    const totalSupplyToken1 = await token1.totalSupply()
-    expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyToken0)
-    expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1)
+    const totalSupplyWETHPartner = await WETHPartner.totalSupply()
+    const totalSupplyWETH = await WETH.totalSupply()
+    expect(await WETHPartner.balanceOf(wallet.address)).to.eq(totalSupplyWETHPartner.sub(500))
+    expect(await WETH.balanceOf(wallet.address)).to.eq(totalSupplyWETH.sub(2000))
   })
 
   it('removeLiquidityWithPermit', async () => {
@@ -219,7 +240,7 @@ describe('Router', () => {
     const nonce = await exchange.nonces(wallet.address)
     const digest = await getApprovalDigest(
       exchange,
-      { owner: wallet.address, spender: router.address, value: expectedLiquidity },
+      { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
       nonce,
       MaxUint256
     )
@@ -229,7 +250,7 @@ describe('Router', () => {
     await router.removeLiquidityWithPermit(
       token0.address,
       token1.address,
-      expectedLiquidity,
+      expectedLiquidity.sub(MINIMUM_LIQUIDITY),
       0,
       0,
       wallet.address,
@@ -254,7 +275,7 @@ describe('Router', () => {
     const nonce = await WETHExchange.nonces(wallet.address)
     const digest = await getApprovalDigest(
       WETHExchange,
-      { owner: wallet.address, spender: router.address, value: expectedLiquidity },
+      { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
       nonce,
       MaxUint256
     )
@@ -263,7 +284,7 @@ describe('Router', () => {
 
     await router.removeLiquidityETHWithPermit(
       WETHPartner.address,
-      expectedLiquidity,
+      expectedLiquidity.sub(MINIMUM_LIQUIDITY),
       0,
       0,
       wallet.address,
@@ -301,7 +322,7 @@ describe('Router', () => {
       .to.emit(exchange, 'Sync')
       .withArgs(token0Amount.add(swapAmount), token1Amount.sub(expectedOutputAmount))
       .to.emit(exchange, 'Swap')
-      .withArgs(router.address, token0.address, swapAmount, expectedOutputAmount, wallet.address)
+      .withArgs(router.address, swapAmount, 0, 0, expectedOutputAmount, wallet.address)
   })
 
   it('swapTokensForExactTokens', async () => {
@@ -330,7 +351,7 @@ describe('Router', () => {
       .to.emit(exchange, 'Sync')
       .withArgs(token0Amount.add(expectedSwapAmount), token1Amount.sub(outputAmount))
       .to.emit(exchange, 'Swap')
-      .withArgs(router.address, token0.address, expectedSwapAmount, outputAmount, wallet.address)
+      .withArgs(router.address, expectedSwapAmount, 0, 0, outputAmount, wallet.address)
   })
 
   it('swapExactETHForTokens', async () => {
@@ -365,7 +386,14 @@ describe('Router', () => {
           : WETHPartnerAmount.sub(expectedOutputAmount)
       )
       .to.emit(WETHExchange, 'Swap')
-      .withArgs(router.address, WETH.address, swapAmount, expectedOutputAmount, wallet.address)
+      .withArgs(
+        router.address,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : swapAmount,
+        WETHExchangeToken0 === WETHPartner.address ? swapAmount : 0,
+        WETHExchangeToken0 === WETHPartner.address ? expectedOutputAmount : 0,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : expectedOutputAmount,
+        wallet.address
+      )
   })
 
   it('swapTokensForExactETH', async () => {
@@ -405,7 +433,14 @@ describe('Router', () => {
           : WETHPartnerAmount.add(expectedSwapAmount)
       )
       .to.emit(WETHExchange, 'Swap')
-      .withArgs(router.address, WETHPartner.address, expectedSwapAmount, outputAmount, router.address)
+      .withArgs(
+        router.address,
+        WETHExchangeToken0 === WETHPartner.address ? expectedSwapAmount : 0,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : expectedSwapAmount,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : outputAmount,
+        WETHExchangeToken0 === WETHPartner.address ? outputAmount : 0,
+        router.address
+      )
   })
 
   it('swapExactTokensForETH', async () => {
@@ -445,7 +480,14 @@ describe('Router', () => {
           : WETHPartnerAmount.add(swapAmount)
       )
       .to.emit(exchange, 'Swap')
-      .withArgs(router.address, WETHPartner.address, swapAmount, expectedOutputAmount, router.address)
+      .withArgs(
+        router.address,
+        WETHExchangeToken0 === WETHPartner.address ? swapAmount : 0,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : swapAmount,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : expectedOutputAmount,
+        WETHExchangeToken0 === WETHPartner.address ? expectedOutputAmount : 0,
+        router.address
+      )
   })
 
   it('swapETHForExactTokens', async () => {
@@ -480,6 +522,13 @@ describe('Router', () => {
           : WETHPartnerAmount.sub(outputAmount)
       )
       .to.emit(WETHExchange, 'Swap')
-      .withArgs(router.address, WETH.address, expectedSwapAmount, outputAmount, wallet.address)
+      .withArgs(
+        router.address,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : expectedSwapAmount,
+        WETHExchangeToken0 === WETHPartner.address ? expectedSwapAmount : 0,
+        WETHExchangeToken0 === WETHPartner.address ? outputAmount : 0,
+        WETHExchangeToken0 === WETHPartner.address ? 0 : outputAmount,
+        wallet.address
+      )
   })
 })

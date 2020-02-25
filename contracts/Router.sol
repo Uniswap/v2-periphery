@@ -259,10 +259,13 @@ contract Router is IRouter {
         require(amountOut >= amountOutMin, 'Router: INSUFFICIENT_OUTPUT_AMOUNT');
         _safeTransferFrom(path[0], msg.sender, exchanges[0], amountIn); // send tokens to first exchange
         for (uint i; i < exchanges.length; i++) {
+            uint amount0 = path[i] == IUniswapV2Exchange(exchanges[i]).token0() ? 0 : amountsOut[i];
+            uint amount1 = path[i] == IUniswapV2Exchange(exchanges[i]).token0() ? amountsOut[i] : 0;
             IUniswapV2Exchange(exchanges[i]).swap(
-                path[i], 
-                amountsOut[i],
-                i < exchanges.length - 1 ? exchanges[i + 1] : to
+                amount0,
+                amount1,
+                i < exchanges.length - 1 ? exchanges[i + 1] : to,
+                ''
             );
         }
     }
@@ -278,10 +281,17 @@ contract Router is IRouter {
         require(amountIn <= amountInMax, 'Router: EXCESSIVE_INPUT_AMOUNT');
         _safeTransferFrom(path[0], msg.sender, exchanges[0], amountIn); // send tokens to first exchange
         for (uint i; i < exchanges.length; i++) {
+            uint amount0 = path[i] == IUniswapV2Exchange(exchanges[i]).token0()
+                ? 0
+                : i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut;
+            uint amount1 = path[i] == IUniswapV2Exchange(exchanges[i]).token0()
+                ? i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut
+                : 0;
             IUniswapV2Exchange(exchanges[i]).swap(
-                path[i], 
-                i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut,
-                i < exchanges.length - 1 ? exchanges[i + 1] : to
+                amount0,
+                amount1,
+                i < exchanges.length - 1 ? exchanges[i + 1] : to,
+                ''
             );
         }
     }
@@ -299,10 +309,13 @@ contract Router is IRouter {
         IWETH(WETH).deposit.value(amountIn)();
         assert(IWETH(WETH).transfer(exchanges[0], amountIn)); // send tokens to first exchange
         for (uint i; i < exchanges.length; i++) {
+            uint amount0 = path[i] == IUniswapV2Exchange(exchanges[i]).token0() ? 0 : amountsOut[i];
+            uint amount1 = path[i] == IUniswapV2Exchange(exchanges[i]).token0() ? amountsOut[i] : 0;
             IUniswapV2Exchange(exchanges[i]).swap(
-                path[i], 
-                amountsOut[i],
-                i < exchanges.length - 1 ? exchanges[i + 1] : to
+                amount0,
+                amount1,
+                i < exchanges.length - 1 ? exchanges[i + 1] : to,
+                ''
             );
         }
     }
@@ -317,10 +330,17 @@ contract Router is IRouter {
         require(amountIn <= amountInMax, 'Router: EXCESSIVE_INPUT_AMOUNT');
         _safeTransferFrom(path[0], msg.sender, exchanges[0], amountIn); // send tokens to first exchange
         for (uint i; i < exchanges.length; i++) {
+            uint amount0 = path[i] == IUniswapV2Exchange(exchanges[i]).token0()
+                ? 0
+                : i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut;
+            uint amount1 = path[i] == IUniswapV2Exchange(exchanges[i]).token0()
+                ? i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut
+                : 0;
             IUniswapV2Exchange(exchanges[i]).swap(
-                path[i], 
-                i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut,
-                i < exchanges.length - 1 ? exchanges[i + 1] : address(this)
+                amount0,
+                amount1,
+                i < exchanges.length - 1 ? exchanges[i + 1] : address(this),
+                ''
             );
         }
         IWETH(WETH).withdraw(amountOut);
@@ -337,10 +357,13 @@ contract Router is IRouter {
         require(amountOut >= amountOutMin, 'Router: INSUFFICIENT_OUTPUT_AMOUNT');
         _safeTransferFrom(path[0], msg.sender, exchanges[0], amountIn); // send tokens to first exchange
         for (uint i; i < exchanges.length; i++) {
+            uint amount0 = path[i] == IUniswapV2Exchange(exchanges[i]).token0() ? 0 : amountsOut[i];
+            uint amount1 = path[i] == IUniswapV2Exchange(exchanges[i]).token0() ? amountsOut[i] : 0;
             IUniswapV2Exchange(exchanges[i]).swap(
-                path[i], 
-                amountsOut[i],
-                i < exchanges.length - 1 ? exchanges[i + 1] : address(this)
+                amount0,
+                amount1,
+                i < exchanges.length - 1 ? exchanges[i + 1] : address(this),
+                ''
             );
         }
         IWETH(WETH).withdraw(amountOut);
@@ -360,10 +383,17 @@ contract Router is IRouter {
         IWETH(WETH).deposit.value(amountIn)();
         assert(IWETH(WETH).transfer(exchanges[0], amountIn)); // send tokens to first exchange
         for (uint i; i < exchanges.length; i++) {
+            uint amount0 = path[i] == IUniswapV2Exchange(exchanges[i]).token0()
+                ? 0
+                : i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut;
+            uint amount1 = path[i] == IUniswapV2Exchange(exchanges[i]).token0()
+                ? i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut
+                : 0;
             IUniswapV2Exchange(exchanges[i]).swap(
-                path[i], 
-                i < exchanges.length - 1 ? amountsIn[i + 1] : amountOut,
-                i < exchanges.length - 1 ? exchanges[i + 1] : to
+                amount0,
+                amount1,
+                i < exchanges.length - 1 ? exchanges[i + 1] : to,
+                ''
             );
         }
         if (amountInMax > amountIn) _safeTransferETH(msg.sender, amountInMax - amountIn); // refund dust eth if needed
