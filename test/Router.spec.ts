@@ -3,10 +3,12 @@ import { Contract } from 'ethers'
 import { Zero, MaxUint256 } from 'ethers/constants'
 import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
-import { ecsign } from 'ethereumjs-util'
+import { ecsign, keccak256 } from 'ethereumjs-util'
 
 import { expandTo18Decimals, getApprovalDigest } from './shared/utilities'
 import { exchangeFixture } from './shared/fixtures'
+
+import UniswapV2Exchange from '../build/UniswapV2Exchange.json'
 
 const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
@@ -45,7 +47,12 @@ describe('Router', () => {
     WETHPartner = fixture.WETHPartner
     WETHExchange = fixture.WETHExchange
 
-    router = await deployContract(wallet, Router, [factory.address, WETH.address], overrides)
+    router = await deployContract(
+      wallet,
+      Router,
+      [factory.address, keccak256(`0x${UniswapV2Exchange.evm.bytecode.object}`), WETH.address],
+      overrides
+    )
   })
 
   afterEach(async function() {
