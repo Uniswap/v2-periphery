@@ -1,11 +1,11 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IRouter.sol';
-import './Helper.sol';
+import './interfaces/IUniswapV2Router.sol';
+import './UniswapV2Helper.sol';
 import './interfaces/V2/IUniswapV2Factory.sol';
 import './interfaces/IWETH.sol';
 
-contract Router is IRouter, Helper {
+contract UniswapV2Router is IUniswapV2Router, UniswapV2Helper {
     bytes4 public constant transferSelector = bytes4(keccak256(bytes('transfer(address,uint256)')));
     bytes4 public constant transferFromSelector = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
 
@@ -30,7 +30,7 @@ contract Router is IRouter, Helper {
         _;
     }
 
-    constructor(address _factory, bytes32 _initCodeHash, address _WETH) Helper(_factory, _initCodeHash) public {
+    constructor(address _WETH) public {
         WETH = _WETH;
     }
 

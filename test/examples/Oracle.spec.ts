@@ -3,10 +3,10 @@ import { Contract } from 'ethers'
 import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
-import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
-import { exchangeFixture } from './shared/fixtures'
+import { expandTo18Decimals, mineBlock, encodePrice } from '../shared/utilities'
+import { exchangeFixture } from '../shared/fixtures'
 
-import OracleExample from '../build/OracleExample.json'
+import Oracle from '../../build/Oracle.json'
 
 chai.use(solidity)
 
@@ -14,7 +14,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('OracleExample', () => {
+describe('Oracle', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -33,7 +33,7 @@ describe('OracleExample', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     exchange = fixture.exchange
-    oracle = await deployContract(wallet, OracleExample, [exchange.address], overrides)
+    oracle = await deployContract(wallet, Oracle, [exchange.address], overrides)
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {

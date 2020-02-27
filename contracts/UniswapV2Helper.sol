@@ -1,19 +1,14 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IHelper.sol';
+import './interfaces/IUniswapV2Helper.sol';
 import './libraries/SafeMath.sol';
 import './interfaces/V2/IUniswapV2Exchange.sol';
 
-contract Helper is IHelper {
+contract UniswapV2Helper is IUniswapV2Helper {
     using SafeMath for uint;
 
-    address public factory;
-    bytes32 public initCodeHash;
-
-    constructor(address _factory, bytes32 _initCodeHash) public {
-        factory = _factory;
-        initCodeHash = _initCodeHash;
-    }
+    address public constant factory = 0xA193E42526F1FEA8C99AF609dcEabf30C1c29fAA; // can change depending on setting
+    bytes32 public constant initCodeHash = 0x762dbd0ad132fda0dfcfbc963d8f43f78fc3e23b604fc4c34f61c2ca7b3e1b36;
 
     function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {
         require(tokenA != tokenB, 'Helper: IDENTICAL_ADDRESSES');
@@ -21,7 +16,7 @@ contract Helper is IHelper {
         require(token0 != address(0), 'Helper: ZERO_ADDRESS');
     }
 
-    function exchangeFor(address tokenA, address tokenB) public view returns (address exchange) {
+    function exchangeFor(address tokenA, address tokenB) public pure returns (address exchange) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         exchange = address(uint(keccak256(abi.encodePacked(
             hex'ff',

@@ -3,7 +3,7 @@ pragma solidity =0.5.16;
 import './interfaces/IMigrator.sol';
 import './interfaces/V1/IUniswapV1Factory.sol';
 import './interfaces/V1/IUniswapV1Exchange.sol';
-import './interfaces/IRouter.sol';
+import './interfaces/IUniswapV2Router.sol';
 
 contract Migrator is IMigrator {
     bytes4 public constant approveSelector = bytes4(keccak256(bytes('approve(address,uint256)')));
@@ -44,7 +44,7 @@ contract Migrator is IMigrator {
         require(exchangeV1.transferFrom(msg.sender, address(this), liquidityV1), 'TRANSFER_FROM_FAILED');
         (uint amountETHV1, uint amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, uint(-1));
         _safeApprove(token, router, uint(-1));
-        (uint amountTokenV2, uint amountETHV2,) = IRouter(router).addLiquidityETH.value(amountETHV1)(
+        (uint amountTokenV2, uint amountETHV2,) = IUniswapV2Router(router).addLiquidityETH.value(amountETHV1)(
             token,
             amountTokenV1,
             amountTokenMin,

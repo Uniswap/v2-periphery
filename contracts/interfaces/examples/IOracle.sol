@@ -1,6 +1,6 @@
 pragma solidity =0.5.16;
 
-interface IOracleExample {
+interface IOracle {
     function period() external returns (uint);
     function initialized() external returns (bool);
     function exchange() external returns (address);

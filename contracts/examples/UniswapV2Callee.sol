@@ -1,10 +1,10 @@
 pragma solidity =0.5.16;
 
-import './interfaces/V2/IUniswapV2Callee.sol';
-import './interfaces/V2/IUniswapV2Exchange.sol';
-import './interfaces/V2/IUniswapV2Factory.sol';
+import '../interfaces/V2/IUniswapV2Callee.sol';
+import '../interfaces/V2/IUniswapV2Exchange.sol';
+import '../interfaces/V2/IUniswapV2Factory.sol';
 
-contract CalleeExample is IUniswapV2Callee {
+contract UniswapV2Callee is IUniswapV2Callee {
     address public factory;
 
     constructor(address _factory) public {

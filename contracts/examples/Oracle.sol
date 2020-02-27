@@ -1,10 +1,10 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IOracleExample.sol';
-import './libraries/UQ112x112.sol';
-import './interfaces/V2/IUniswapV2Exchange.sol';
+import '../interfaces/examples/IOracle.sol';
+import '../libraries/UQ112x112.sol';
+import '../interfaces/V2/IUniswapV2Exchange.sol';
 
-contract OracleExample is IOracleExample {
+contract Oracle is IOracle {
     using UQ112x112 for uint224;
 
     uint public constant period = 24 hours;

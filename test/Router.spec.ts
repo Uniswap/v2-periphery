@@ -12,7 +12,7 @@ import UniswapV2Exchange from '../build/UniswapV2Exchange.json'
 
 const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
-import Router from '../build/Router.json'
+import UniswapV2Router from '../build/UniswapV2Router.json'
 
 chai.use(solidity)
 
@@ -20,7 +20,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('Router', () => {
+describe('UniswapV2Router', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -47,12 +47,7 @@ describe('Router', () => {
     WETHPartner = fixture.WETHPartner
     WETHExchange = fixture.WETHExchange
 
-    router = await deployContract(
-      wallet,
-      Router,
-      [factory.address, keccak256(`0x${UniswapV2Exchange.evm.bytecode.object}`), WETH.address],
-      overrides
-    )
+    router = await deployContract(wallet, UniswapV2Router, [WETH.address], overrides)
   })
 
   afterEach(async function() {
