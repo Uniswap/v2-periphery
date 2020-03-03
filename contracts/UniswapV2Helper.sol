@@ -2,12 +2,14 @@ pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Helper.sol';
 import './libraries/SafeMath.sol';
+import './interfaces/V2/IUniswapV2Factory.sol';
 import './interfaces/V2/IUniswapV2Exchange.sol';
 
 contract UniswapV2Helper is IUniswapV2Helper {
     using SafeMath for uint;
 
-    address public constant factory = 0xA193E42526F1FEA8C99AF609dcEabf30C1c29fAA; // can change depending on setting
+    // factory address is identical across mainnet and testnets but differs between testing and deployed environments
+    IUniswapV2Factory public constant factory = IUniswapV2Factory(0xdCCc660F92826649754E357b11bd41C31C0609B9);
     bytes32 public constant initCodeHash = 0x762dbd0ad132fda0dfcfbc963d8f43f78fc3e23b604fc4c34f61c2ca7b3e1b36;
 
     function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {

@@ -20,7 +20,7 @@
   },
   "scripts": {
     "lint": "yarn prettier ./test/*.ts --check",
-    "compile": "rimraf ./build/ && waffle .waffle.json && ncp ./buildV2 ./build",
+    "compile": "rimraf ./build/ && waffle .waffle.json && ncp ./buildV1 ./build && ncp ./buildV2 ./build",
     "test": "mocha"
   },
   "license": "GPL-3.0-or-later"

@@ -1,10 +1,10 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
-import { BigNumber, bigNumberify } from 'ethers/utils'
+import { BigNumber } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals, mineBlock, encodePrice } from '../shared/utilities'
-import { exchangeFixture } from '../shared/fixtures'
+import { v2Fixture } from '../shared/fixtures'
 
 import Oracle from '../../build/Oracle.json'
 
@@ -28,7 +28,7 @@ describe('Oracle', () => {
   let exchange: Contract
   let oracle: Contract
   beforeEach(async function() {
-    const fixture = await loadFixture(exchangeFixture)
+    const fixture = await loadFixture(v2Fixture)
 
     token0 = fixture.token0
     token1 = fixture.token1

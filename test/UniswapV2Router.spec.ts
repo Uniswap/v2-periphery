@@ -2,19 +2,15 @@ import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
 import { Zero, MaxUint256 } from 'ethers/constants'
 import { BigNumber, bigNumberify } from 'ethers/utils'
-import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
-import { ecsign, keccak256 } from 'ethereumjs-util'
+import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
+import { ecsign } from 'ethereumjs-util'
 
-import { expandTo18Decimals, getApprovalDigest } from './shared/utilities'
-import { exchangeFixture } from './shared/fixtures'
-
-import UniswapV2Exchange from '../build/UniswapV2Exchange.json'
-
-const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
-
-import UniswapV2Router from '../build/UniswapV2Router.json'
+import { expandTo18Decimals, getApprovalDigest, mineBlock } from './shared/utilities'
+import { v2Fixture } from './shared/fixtures'
 
 chai.use(solidity)
+
+const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
 const overrides = {
   gasLimit: 9999999
@@ -29,25 +25,24 @@ describe('UniswapV2Router', () => {
   const [wallet] = provider.getWallets()
   const loadFixture = createFixtureLoader(provider, [wallet])
 
-  let factory: Contract
   let token0: Contract
   let token1: Contract
-  let exchange: Contract
   let WETH: Contract
   let WETHPartner: Contract
-  let WETHExchange: Contract
+  let factory: Contract
   let router: Contract
+  let exchange: Contract
+  let WETHExchange: Contract
   beforeEach(async function() {
-    const fixture = await loadFixture(exchangeFixture)
-    factory = fixture.factory
+    const fixture = await loadFixture(v2Fixture)
     token0 = fixture.token0
     token1 = fixture.token1
-    exchange = fixture.exchange
     WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
+    factory = fixture.factoryV2
+    router = fixture.router
+    exchange = fixture.exchange
     WETHExchange = fixture.WETHExchange
-
-    router = await deployContract(wallet, UniswapV2Router, [WETH.address], overrides)
   })
 
   afterEach(async function() {
@@ -327,6 +322,29 @@ describe('UniswapV2Router', () => {
       .withArgs(router.address, swapAmount, 0, 0, expectedOutputAmount, wallet.address)
   })
 
+  it('swapExactTokensForTokens:gas', async () => {
+    const token0Amount = expandTo18Decimals(5)
+    const token1Amount = expandTo18Decimals(10)
+    await addLiquidity(token0Amount, token1Amount)
+
+    // ensure that setting price{0,1}CumulativeLast for the first time doesn't affect our gas math
+    await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
+    await exchange.sync(overrides)
+
+    const swapAmount = expandTo18Decimals(1)
+    await token0.approve(router.address, MaxUint256)
+    await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
+    const gasCost = await router.estimate.swapExactTokensForTokens(
+      swapAmount,
+      0,
+      [token0.address, token1.address],
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
+    console.log(`Gas required for swapExactTokensForTokens: ${gasCost}`)
+  })
+
   it('swapTokensForExactTokens', async () => {
     const token0Amount = expandTo18Decimals(5)
     const token1Amount = expandTo18Decimals(10)
@@ -396,6 +414,33 @@ describe('UniswapV2Router', () => {
         WETHExchangeToken0 === WETHPartner.address ? 0 : expectedOutputAmount,
         wallet.address
       )
+  })
+
+  it('swapExactETHForTokens:gas', async () => {
+    const WETHPartnerAmount = expandTo18Decimals(10)
+    const ETHAmount = expandTo18Decimals(5)
+    await WETHPartner.transfer(WETHExchange.address, WETHPartnerAmount)
+    await WETH.deposit({ value: ETHAmount })
+    await WETH.transfer(WETHExchange.address, ETHAmount)
+    await WETHExchange.mint(wallet.address, overrides)
+
+    // ensure that setting price{0,1}CumulativeLast for the first time doesn't affect our gas math
+    await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
+    await exchange.sync(overrides)
+
+    const swapAmount = expandTo18Decimals(1)
+    await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
+    const gasCost = await router.estimate.swapExactETHForTokens(
+      0,
+      [WETH.address, WETHPartner.address],
+      wallet.address,
+      MaxUint256,
+      {
+        ...overrides,
+        value: swapAmount
+      }
+    )
+    console.log(`Gas required for swapExactETHForTokens: ${gasCost}`)
   })
 
   it('swapTokensForExactETH', async () => {
