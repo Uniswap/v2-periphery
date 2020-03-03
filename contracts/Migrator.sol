@@ -32,7 +32,9 @@ contract Migrator is IMigrator {
         factoryV1 = IUniswapV1Factory(_factoryV1);
     }
 
-    function() external payable {} // needs to accept ETH from v1 exchanges and the router
+    // needs to accept ETH from v1 exchanges and the router. we'd like to enforce this, like the router does,
+    // but we can't because it requires a call to the v1 factory, which takes too much gas
+    function() external payable {} 
 
     function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external {
         IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(token));
