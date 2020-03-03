@@ -2,7 +2,6 @@ pragma solidity =0.5.16;
 
 interface IUniswapV2Router {
     function factory() external pure returns (address);
-    function initCodeHash() external pure returns (bytes32);
 
     function sortTokens(address tokenA, address tokenB) external pure returns (address token0, address token1);
     function exchangeFor(address tokenA, address tokenB) external pure returns (address exchange);
