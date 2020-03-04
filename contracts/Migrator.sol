@@ -32,14 +32,13 @@ contract Migrator is IMigrator {
         factoryV1 = IUniswapV1Factory(_factoryV1);
     }
 
-    // needs to accept ETH from v1 exchanges and the router. we'd like to enforce this, like the router does,
+    // needs to accept ETH from v1 exchanges and the router. we'd like to enforce this like the router does,
     // but we can't because it requires a call to the v1 factory, which takes too much gas
-    function() external payable {} 
+    function() external payable {}
 
     function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external {
         IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(token));
         uint liquidityV1 = exchangeV1.balanceOf(msg.sender);
-        require(liquidityV1 > 0, 'INSUFFICIENT_LIQUIDITY');
         require(exchangeV1.transferFrom(msg.sender, address(this), liquidityV1), 'TRANSFER_FROM_FAILED');
         (uint amountETHV1, uint amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, uint(-1));
         _safeApprove(token, address(router), amountTokenV1);
@@ -52,9 +51,11 @@ contract Migrator is IMigrator {
             deadline
         );
         if (amountTokenV1 > amountTokenV2) {
-            _safeApprove(token, address(router), 0);
+            _safeApprove(token, address(router), 0); // be a good blockchain citizen, reset allowance to 0
             _safeTransfer(token, msg.sender, amountTokenV1 - amountTokenV2);
+        } else if (amountETHV1 > amountETHV2) {
+            // addLiquidityETH guarantees that all of amountETHV1 or amountTokenV1 will be used, hence this else is safe
+            _safeTransferETH(msg.sender, amountETHV1 - amountETHV2);
         }
-        if (amountETHV1 > amountETHV2) _safeTransferETH(msg.sender, amountETHV1 - amountETHV2);
     }
 }

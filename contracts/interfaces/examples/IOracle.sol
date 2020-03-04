@@ -1,19 +1,17 @@
 pragma solidity =0.5.16;
 
 interface IOracle {
-    function period() external returns (uint);
-    function initialized() external returns (bool);
-    function exchange() external returns (address);
+    function period() external pure returns (uint);
+    function initialized() external view returns (bool);
+    function exchange() external view returns (address);
 
-    function price0CumulativeLastCached() external returns (uint);
-    function price1CumulativeLastCached() external returns (uint);
-    function blockTimestampLastCached() external returns (uint32);
-    function price0Average() external returns (uint224);
-    function price1Average() external returns (uint224);
+    function price0CumulativeLastCached() external view returns (uint);
+    function price1CumulativeLastCached() external view returns (uint);
+    function blockTimestampLastCached() external view returns (uint32);
+    function price0Average() external view returns (uint224);
+    function price1Average() external view returns (uint224);
 
-    function quote(address tokenIn, uint amountIn) external view returns (uint amountOut);
-
+    function initialize() external;
     function update() external;
-
-    function initialize() external; // only called once
+    function quote(address tokenIn, uint amountIn) external view returns (uint amountOut);
 }

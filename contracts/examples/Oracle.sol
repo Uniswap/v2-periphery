@@ -32,16 +32,6 @@ contract Oracle is IOracle {
         initialized = true;
     }
 
-    function quote(address tokenIn, uint amountIn) external view returns (uint amountOut) {
-        require(price0Average != 0 && price1Average != 0, 'OracleExample: NO_PRICE');
-        if (tokenIn == IUniswapV2Exchange(exchange).token0()) {
-            amountOut = UQ112x112.decode(price0Average.uqmul(amountIn));
-        } else {
-            require(tokenIn == IUniswapV2Exchange(exchange).token1(), 'OracleExample: INVALID_INPUT_TOKEN');
-            amountOut = UQ112x112.decode(price1Average.uqmul(amountIn));
-        }
-    }
-
     function mock(uint32 blockTimestamp, uint32 blockTimestampLast, uint112 reserve0, uint112 reserve1)
         private
         view
@@ -78,5 +68,15 @@ contract Oracle is IOracle {
         price0CumulativeLastCached = price0CumulativeLast;
         price1CumulativeLastCached = price1CumulativeLast;
         blockTimestampLastCached = blockTimestamp;
+    }
+
+    function quote(address tokenIn, uint amountIn) external view returns (uint amountOut) {
+        require(price0Average != 0 && price1Average != 0, 'OracleExample: NO_PRICE');
+        if (tokenIn == IUniswapV2Exchange(exchange).token0()) {
+            amountOut = UQ112x112.decode(price0Average.uqmul(amountIn));
+        } else {
+            require(tokenIn == IUniswapV2Exchange(exchange).token1(), 'OracleExample: INVALID_INPUT_TOKEN');
+            amountOut = UQ112x112.decode(price1Average.uqmul(amountIn));
+        }
     }
 }
