@@ -25,7 +25,7 @@ contract UniswapV2Helper is IUniswapV2Helper {
             hex'ff',
             factory,
             keccak256(abi.encodePacked(token0, token1)),
-            hex'762dbd0ad132fda0dfcfbc963d8f43f78fc3e23b604fc4c34f61c2ca7b3e1b36' // init code hash for exchanges
+            hex'8548287401d15401e1162bb5bc290f6fba82afcb66944df43c3017817522771b' // init code hash for exchanges
         ))));
     }
 
