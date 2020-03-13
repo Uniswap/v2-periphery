@@ -1,11 +1,11 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IUniswapV2Helper.sol';
+import './interfaces/IUniswapV2Library.sol';
 import './libraries/SafeMath.sol';
 import './interfaces/V2/IUniswapV2Factory.sol';
 import './interfaces/V2/IUniswapV2Exchange.sol';
 
-contract UniswapV2Helper is IUniswapV2Helper {
+contract UniswapV2Library is IUniswapV2Library {
     using SafeMath for uint;
 
     // factory address is identical across mainnet and testnets but differs between testing and deployed environments

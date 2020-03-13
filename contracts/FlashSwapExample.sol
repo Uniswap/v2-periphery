@@ -1,10 +1,10 @@
 pragma solidity =0.5.16;
 
 import './interfaces/V2/IUniswapV2Callee.sol';
-import './UniswapV2Helper.sol';
+import './UniswapV2Library.sol';
 import './interfaces/V2/IUniswapV2Exchange.sol';
 
-contract FlashSwapExample is IUniswapV2Callee, UniswapV2Helper {
+contract FlashSwapExample is IUniswapV2Callee, UniswapV2Library {
     function uniswapV2Call(
         address,       /* sender */
         uint,          /* amount0 */

@@ -1,10 +1,10 @@
 pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Router01.sol';
-import './UniswapV2Helper.sol';
+import './UniswapV2Library.sol';
 import './interfaces/IWETH.sol';
 
-contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Helper {
+contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Library {
     bytes4 private constant SELECTOR_TRANSFER = bytes4(keccak256(bytes('transfer(address,uint256)')));
     bytes4 private constant SELECTOR_TRANSFER_FROM = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
 
