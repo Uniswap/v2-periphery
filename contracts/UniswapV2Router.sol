@@ -5,22 +5,22 @@ import './UniswapV2Helper.sol';
 import './interfaces/IWETH.sol';
 
 contract UniswapV2Router is IUniswapV2Router, UniswapV2Helper {
-    bytes4 public constant transferSelector = bytes4(keccak256(bytes('transfer(address,uint256)')));
-    bytes4 public constant transferFromSelector = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
+    bytes4 private constant SELECTOR_TRANSFER = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    bytes4 private constant SELECTOR_TRANSFER_FROM = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
 
     IWETH public WETH;
 
     // **** TRANSFER HELPERS ****
     function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(transferSelector, to, value));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR_TRANSFER, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2Router: TRANSFER_FAILED');
     }
     function _safeTransferFrom(address token, address from, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(transferFromSelector, from, to, value));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR_TRANSFER_FROM, from, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2Router: TRANSFER_FROM_FAILED');
     }
     function _safeTransferETH(address to, uint value) private {
-        (bool success,) = to.call.value(value)('');
+        (bool success,) = to.call.value(value)(new bytes(0));
         require(success, 'UniswapV2Router: ETH_TRANSFER_FAILED');
     }
 
@@ -34,7 +34,7 @@ contract UniswapV2Router is IUniswapV2Router, UniswapV2Helper {
     }
 
     function() external payable {
-        assert(msg.sender == address(WETH)); // only accept ETH from the WETH contract
+        assert(msg.sender == address(WETH)); // only accept ETH via fallback from the WETH contract
     }
 
     // **** ADD LIQUIDITY ****
@@ -53,11 +53,11 @@ contract UniswapV2Router is IUniswapV2Router, UniswapV2Helper {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
             uint amountBOptimal = quote(amountADesired, reserveA, reserveB);
-            uint amountAOptimal = quote(amountBDesired, reserveB, reserveA);
             if (amountBOptimal <= amountBDesired) {
                 require(amountBOptimal >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
+                uint amountAOptimal = quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
                 require(amountAOptimal >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
                 (amountA, amountB) = (amountAOptimal, amountBDesired);

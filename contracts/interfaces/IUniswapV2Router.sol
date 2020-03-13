@@ -9,8 +9,6 @@ interface IUniswapV2Router {
     function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
     function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 
-    function transferSelector() external pure returns (bytes4);
-    function transferFromSelector() external pure returns (bytes4);
     function WETH() external view returns (address);
 
     function addLiquidity(
