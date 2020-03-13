@@ -6,7 +6,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import FlashSwapExample from '../build/FlashSwapExample.json'
+import ExampleFlashSwap from '../build/ExampleFlashSwap.json'
 
 chai.use(solidity)
 
@@ -14,7 +14,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('FlashSwapExample', () => {
+describe('ExampleFlashSwap', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -33,7 +33,7 @@ describe('FlashSwapExample', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     exchange = fixture.exchange
-    flashSwapExample = await deployContract(wallet, FlashSwapExample, undefined, overrides)
+    flashSwapExample = await deployContract(wallet, ExampleFlashSwap, undefined, overrides)
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {

@@ -4,7 +4,7 @@ import './interfaces/V2/IUniswapV2Callee.sol';
 import './UniswapV2Library.sol';
 import './interfaces/V2/IUniswapV2Exchange.sol';
 
-contract FlashSwapExample is IUniswapV2Callee, UniswapV2Library {
+contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
     function uniswapV2Call(
         address,       /* sender */
         uint,          /* amount0 */

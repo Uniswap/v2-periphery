@@ -1,6 +1,6 @@
 pragma solidity =0.5.16;
 
-interface IOracleExample {
+interface IExampleOracle {
     function period() external pure returns (uint);
     function initialized() external view returns (bool);
     function exchange() external view returns (address);

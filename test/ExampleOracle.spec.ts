@@ -6,7 +6,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import OracleExample from '../build/OracleExample.json'
+import ExampleOracle from '../build/ExampleOracle.json'
 
 chai.use(solidity)
 
@@ -14,7 +14,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('OracleExample', () => {
+describe('ExampleOracle', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -33,7 +33,7 @@ describe('OracleExample', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     exchange = fixture.exchange
-    oracleExample = await deployContract(wallet, OracleExample, [exchange.address], overrides)
+    oracleExample = await deployContract(wallet, ExampleOracle, [exchange.address], overrides)
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
