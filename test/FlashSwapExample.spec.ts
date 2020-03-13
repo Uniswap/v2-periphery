@@ -3,10 +3,10 @@ import { Contract } from 'ethers'
 import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
-import { expandTo18Decimals } from '../shared/utilities'
-import { v2Fixture } from '../shared/fixtures'
+import { expandTo18Decimals } from './shared/utilities'
+import { v2Fixture } from './shared/fixtures'
 
-import UniswapV2Callee from '../../build/UniswapV2Callee.json'
+import FlashSwapExample from '../build/FlashSwapExample.json'
 
 chai.use(solidity)
 
@@ -14,7 +14,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Callee', () => {
+describe('FlashSwapExample', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -26,14 +26,14 @@ describe('UniswapV2Callee', () => {
   let token0: Contract
   let token1: Contract
   let exchange: Contract
-  let uniswapV2Callee: Contract
+  let flashSwapExample: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
     token0 = fixture.token0
     token1 = fixture.token1
     exchange = fixture.exchange
-    uniswapV2Callee = await deployContract(wallet, UniswapV2Callee, undefined, overrides)
+    flashSwapExample = await deployContract(wallet, FlashSwapExample, undefined, overrides)
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
@@ -49,12 +49,12 @@ describe('UniswapV2Callee', () => {
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = bigNumberify('1662497915624478906')
     await token0.transfer(exchange.address, swapAmount)
-    await expect(exchange.swap(0, expectedOutputAmount, uniswapV2Callee.address, '0xc0ffee', overrides))
+    await expect(exchange.swap(0, expectedOutputAmount, flashSwapExample.address, '0xc0ffee', overrides))
       .to.emit(token1, 'Transfer')
-      .withArgs(exchange.address, uniswapV2Callee.address, expectedOutputAmount)
+      .withArgs(exchange.address, flashSwapExample.address, expectedOutputAmount)
       .to.emit(exchange, 'Sync')
       .withArgs(token0Amount.add(swapAmount), token1Amount.sub(expectedOutputAmount))
       .to.emit(exchange, 'Swap')
-      .withArgs(wallet.address, swapAmount, 0, 0, expectedOutputAmount, uniswapV2Callee.address)
+      .withArgs(wallet.address, swapAmount, 0, 0, expectedOutputAmount, flashSwapExample.address)
   })
 })

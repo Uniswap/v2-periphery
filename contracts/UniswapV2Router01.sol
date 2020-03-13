@@ -1,10 +1,10 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IUniswapV2Router.sol';
+import './interfaces/IUniswapV2Router01.sol';
 import './UniswapV2Helper.sol';
 import './interfaces/IWETH.sol';
 
-contract UniswapV2Router is IUniswapV2Router, UniswapV2Helper {
+contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Helper {
     bytes4 private constant SELECTOR_TRANSFER = bytes4(keccak256(bytes('transfer(address,uint256)')));
     bytes4 private constant SELECTOR_TRANSFER_FROM = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
 
@@ -174,7 +174,7 @@ contract UniswapV2Router is IUniswapV2Router, UniswapV2Helper {
     }
 
     // **** SWAP ****
-    // requires the first amount in amounts to have already been sent to the first exchange
+    // requires the initial amount to have already been sent to the first exchange
     function _swap(uint[] memory amounts, address[] memory path, address _to) private {
         for (uint i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);

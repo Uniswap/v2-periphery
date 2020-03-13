@@ -15,7 +15,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('Migrator', () => {
+describe('UniswapV2Migrator', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',

@@ -9,8 +9,8 @@ import WETH9 from '../../build/WETH9.json'
 import UniswapV1Exchange from '../../build/UniswapV1Exchange.json'
 import UniswapV1Factory from '../../build/UniswapV1Factory.json'
 import UniswapV2Factory from '../../build/UniswapV2Factory.json'
-import UniswapV2Router from '../../build/UniswapV2Router.json'
-import Migrator from '../../build/Migrator.json'
+import UniswapV2Router01 from '../../build/UniswapV2Router01.json'
+import UniswapV2Migrator from '../../build/UniswapV2Migrator.json'
 import IUniswapV2Exchange from '../../build/IUniswapV2Exchange.json'
 
 const overrides = {
@@ -46,8 +46,8 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   const factoryV2 = await deployContract(wallet, UniswapV2Factory, [wallet.address])
 
   // deploy router and migrator
-  const router = await deployContract(wallet, UniswapV2Router, [WETH.address], overrides)
-  const migrator = await deployContract(wallet, Migrator, [factoryV1.address], overrides)
+  const router = await deployContract(wallet, UniswapV2Router01, [WETH.address], overrides)
+  const migrator = await deployContract(wallet, UniswapV2Migrator, [factoryV1.address], overrides)
 
   // initialize v1
   await factoryV1.createExchange(WETHPartner.address, overrides)
