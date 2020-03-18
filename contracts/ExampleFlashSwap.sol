@@ -4,7 +4,6 @@ import './interfaces/V2/IUniswapV2Callee.sol';
 import './UniswapV2Library.sol';
 import './interfaces/V1/IUniswapV1Factory.sol';
 import './interfaces/V1/IUniswapV1Exchange.sol';
-import './interfaces/V2/IUniswapV2Pair.sol';
 import './interfaces/IUniswapV2Router01.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';

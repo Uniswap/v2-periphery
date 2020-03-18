@@ -18,12 +18,12 @@ library UQ112x112 {
         z = x / uint224(y);
     }
 
-    // multiply a UQ112x112 by a uint, returning a UQ112x112
+    // multiply a UQ112x112 by a uint, returning a UQ112x112 in a uint container
     function uqmul(uint224 x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = uint(x) * y) / y == uint(x), "uqmul-overflow");
     }
 
-    // decode a UQ112x112 into a uint
+    // decode a UQ112x112 in a uint container into a uint
     function decode(uint y) internal pure returns (uint z) {
         z = y / uint(Q112);
     }
