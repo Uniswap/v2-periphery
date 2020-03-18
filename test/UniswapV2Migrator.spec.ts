@@ -26,18 +26,18 @@ describe('UniswapV2Migrator', () => {
 
   let WETH: Contract
   let WETHPartner: Contract
-  let WETHExchange: Contract
+  let WETHPair: Contract
   let router: Contract
   let migrator: Contract
-  let exchange: Contract
+  let WETHExchangeV1: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
     WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
-    WETHExchange = fixture.WETHExchange
+    WETHPair = fixture.WETHPair
     router = fixture.router
     migrator = fixture.migrator
-    exchange = fixture.exchangeV1
+    WETHExchangeV1 = fixture.WETHExchangeV1
   })
 
   it('router', async () => {
@@ -47,30 +47,33 @@ describe('UniswapV2Migrator', () => {
   it('migrate', async () => {
     const WETHPartnerAmount = expandTo18Decimals(1)
     const ETHAmount = expandTo18Decimals(4)
-    await WETHPartner.approve(exchange.address, MaxUint256)
-    await exchange.addLiquidity(bigNumberify(1), WETHPartnerAmount, MaxUint256, { ...overrides, value: ETHAmount })
-    await exchange.approve(migrator.address, MaxUint256)
+    await WETHPartner.approve(WETHExchangeV1.address, MaxUint256)
+    await WETHExchangeV1.addLiquidity(bigNumberify(1), WETHPartnerAmount, MaxUint256, {
+      ...overrides,
+      value: ETHAmount
+    })
+    await WETHExchangeV1.approve(migrator.address, MaxUint256)
     const expectedLiquidity = expandTo18Decimals(2)
-    const WETHExchangeToken0 = await WETHExchange.token0()
+    const WETHPairToken0 = await WETHPair.token0()
     await expect(
       migrator.migrate(WETHPartner.address, WETHPartnerAmount, ETHAmount, wallet.address, MaxUint256, overrides)
     )
       // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
-      // .to.emit(WETHExchange, 'Transfer')
+      // .to.emit(WETHPair, 'Transfer')
       // .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-      // .to.emit(WETHExchange, 'Transfer')
+      // .to.emit(WETHPair, 'Transfer')
       // .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-      .to.emit(WETHExchange, 'Sync')
+      .to.emit(WETHPair, 'Sync')
       .withArgs(
-        WETHExchangeToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
-        WETHExchangeToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
+        WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
+        WETHPairToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
       )
-      .to.emit(WETHExchange, 'Mint')
+      .to.emit(WETHPair, 'Mint')
       .withArgs(
         router.address,
-        WETHExchangeToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
-        WETHExchangeToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
+        WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
+        WETHPairToken0 === WETHPartner.address ? ETHAmount : WETHPartnerAmount
       )
-    expect(await WETHExchange.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+    expect(await WETHPair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
   })
 })

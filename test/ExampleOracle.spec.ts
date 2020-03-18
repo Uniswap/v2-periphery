@@ -25,21 +25,21 @@ describe('ExampleOracle', () => {
 
   let token0: Contract
   let token1: Contract
-  let exchange: Contract
+  let pair: Contract
   let oracleExample: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
     token0 = fixture.token0
     token1 = fixture.token1
-    exchange = fixture.exchange
-    oracleExample = await deployContract(wallet, ExampleOracle, [exchange.address], overrides)
+    pair = fixture.pair
+    oracleExample = await deployContract(wallet, ExampleOracle, [pair.address], overrides)
   })
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
-    await token0.transfer(exchange.address, token0Amount)
-    await token1.transfer(exchange.address, token1Amount)
-    await exchange.mint(wallet.address, overrides)
+    await token0.transfer(pair.address, token0Amount)
+    await token1.transfer(pair.address, token1Amount)
+    await pair.mint(wallet.address, overrides)
   }
 
   it('initialize', async () => {
@@ -47,9 +47,9 @@ describe('ExampleOracle', () => {
     const token1Amount = expandTo18Decimals(10)
     await addLiquidity(token0Amount, token1Amount)
 
-    const blockTimestamp = (await exchange.getReserves())[2]
+    const blockTimestamp = (await pair.getReserves())[2]
     await mineBlock(provider, blockTimestamp + 1)
-    await exchange.sync(overrides)
+    await pair.sync(overrides)
     await oracleExample.initialize(overrides)
   })
 
@@ -57,9 +57,9 @@ describe('ExampleOracle', () => {
     const token0Amount = expandTo18Decimals(5)
     const token1Amount = expandTo18Decimals(10)
     await addLiquidity(token0Amount, token1Amount)
-    const blockTimestamp = (await exchange.getReserves())[2]
+    const blockTimestamp = (await pair.getReserves())[2]
     await mineBlock(provider, blockTimestamp + 1)
-    await exchange.sync(overrides)
+    await pair.sync(overrides)
     await oracleExample.initialize(overrides)
     await mineBlock(provider, blockTimestamp + 2)
     await oracleExample.update(overrides)
@@ -74,9 +74,9 @@ describe('ExampleOracle', () => {
     const token0Amount = expandTo18Decimals(5)
     const token1Amount = expandTo18Decimals(10)
     await addLiquidity(token0Amount, token1Amount)
-    const blockTimestamp = (await exchange.getReserves())[2]
+    const blockTimestamp = (await pair.getReserves())[2]
     await mineBlock(provider, blockTimestamp + 1)
-    await exchange.sync(overrides)
+    await pair.sync(overrides)
     await oracleExample.initialize(overrides)
     await mineBlock(provider, blockTimestamp + 2)
     await oracleExample.update(overrides)

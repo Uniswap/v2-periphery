@@ -4,7 +4,7 @@ import './interfaces/V2/IUniswapV2Callee.sol';
 import './UniswapV2Library.sol';
 import './interfaces/V1/IUniswapV1Factory.sol';
 import './interfaces/V1/IUniswapV1Exchange.sol';
-import './interfaces/V2/IUniswapV2Exchange.sol';
+import './interfaces/V2/IUniswapV2Pair.sol';
 import './interfaces/IUniswapV2Router01.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
@@ -19,7 +19,7 @@ contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
         WETH = IWETH(IUniswapV2Router01(0x84e924C5E04438D2c1Df1A981f7E7104952e6de1).WETH());
     }
 
-    // needs to accept ETH from any v1 exchange and WETH. ideally this could be enforced, as in the router,
+    // needs to accept ETH from any V1 exchange and WETH. ideally this could be enforced, as in the router,
     // but it's not possible because it requires a call to the v1 factory, which takes too much gas
     function() external payable {}
 
@@ -29,9 +29,9 @@ contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
         uint amountToken;
         uint amountETH;
         { // scope for token{0,1}, avoids stack too deep errors
-        address token0 = IUniswapV2Exchange(msg.sender).token0();
-        address token1 = IUniswapV2Exchange(msg.sender).token1();
-        assert(msg.sender == exchangeFor(token0, token1)); // ensure that msg.sender is actually a V2 exchange
+        address token0 = IUniswapV2Pair(msg.sender).token0();
+        address token1 = IUniswapV2Pair(msg.sender).token1();
+        assert(msg.sender == pairFor(token0, token1)); // ensure that msg.sender is actually a V2 pair
         assert(amount0 == 0 || amount1 == 0); // this strategy is unidirectional
         path[0] = amount0 == 0 ? token0 : token1;
         path[1] = amount0 == 0 ? token1 : token0;
@@ -50,7 +50,7 @@ contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
             uint amountRequired = getAmountsIn(amountToken, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough ETH back to repay our flash loan
             WETH.deposit.value(amountRequired)();
-            assert(WETH.transfer(msg.sender, amountRequired)); // return WETH to V2 exchange
+            assert(WETH.transfer(msg.sender, amountRequired)); // return WETH to V2 pair
             (bool success,) = sender.call.value(amountReceived - amountRequired)(new bytes(0)); // keep the rest! (ETH)
             assert(success);
         } else {
@@ -59,7 +59,7 @@ contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
             uint amountReceived = exchangeV1.ethToTokenSwapInput.value(amountETH)(minTokens, uint(-1)); 
             uint amountRequired = getAmountsIn(amountETH, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough tokens back to repay our flash loan
-            assert(token.transfer(msg.sender, amountRequired)); // return tokens to V2 exchange
+            assert(token.transfer(msg.sender, amountRequired)); // return tokens to V2 pair
             assert(token.transfer(sender, amountReceived - amountRequired)); // keep the rest! (tokens)
         }
     }

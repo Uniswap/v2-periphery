@@ -1,16 +1,15 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IExampleOracle.sol';
 import './libraries/UQ112x112.sol';
-import './interfaces/V2/IUniswapV2Exchange.sol';
+import './interfaces/V2/IUniswapV2Pair.sol';
 
-contract ExampleOracle is IExampleOracle {
+contract ExampleOracle {
     using UQ112x112 for uint224;
 
     uint public constant period = 24 hours;
     bool public initialized;
 
-    address public exchange;
+    address public pair;
 
     uint   public price0CumulativeLastCached;
     uint   public price1CumulativeLastCached;
@@ -19,16 +18,16 @@ contract ExampleOracle is IExampleOracle {
     uint224 public price0Average; // prices should probably be accessed through quote, not directly
     uint224 public price1Average; // prices should probably be accessed through quote, not directly
 
-    constructor(address _exchange) public {
-        exchange = _exchange;
+    constructor(address _pair) public {
+        pair = _pair;
     }
 
     function initialize() external {
         require(!initialized, 'OracleExample: FORBIDDEN');
-        price0CumulativeLastCached = IUniswapV2Exchange(exchange).price0CumulativeLast();
-        price1CumulativeLastCached = IUniswapV2Exchange(exchange).price1CumulativeLast();
+        price0CumulativeLastCached = IUniswapV2Pair(pair).price0CumulativeLast();
+        price1CumulativeLastCached = IUniswapV2Pair(pair).price1CumulativeLast();
         require(price0CumulativeLastCached > 0 && price1CumulativeLastCached > 0, 'OracleExample: NO_PRICE');
-        (, , blockTimestampLastCached) = IUniswapV2Exchange(exchange).getReserves();
+        (, , blockTimestampLastCached) = IUniswapV2Pair(pair).getReserves();
         initialized = true;
     }
 
@@ -37,8 +36,8 @@ contract ExampleOracle is IExampleOracle {
         view
         returns (uint price0CumulativeLast, uint price1CumulativeLast)
     {
-        price0CumulativeLast = IUniswapV2Exchange(exchange).price0CumulativeLast();
-        price1CumulativeLast = IUniswapV2Exchange(exchange).price1CumulativeLast();
+        price0CumulativeLast = IUniswapV2Pair(pair).price0CumulativeLast();
+        price1CumulativeLast = IUniswapV2Pair(pair).price1CumulativeLast();
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
         price0CumulativeLast += uint(UQ112x112.encode(reserve1).uqdiv(reserve0)) * timeElapsed;
         price1CumulativeLast += uint(UQ112x112.encode(reserve0).uqdiv(reserve1)) * timeElapsed;
@@ -48,11 +47,11 @@ contract ExampleOracle is IExampleOracle {
         require(initialized, 'OracleExample: FORBIDDEN');
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
         require(blockTimestamp != blockTimestampLastCached, 'OracleExample: ALREADY_UPDATED');
-        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = IUniswapV2Exchange(exchange).getReserves();
+        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = IUniswapV2Pair(pair).getReserves();
         require(reserve0 != 0 && reserve1 != 0, 'OracleExample: INSUFFICIENT_LIQUIDITY');
         // get maximally up-to-date values of price0CumulativeLast and price0CumulativeLast
         (uint price0CumulativeLast, uint price1CumulativeLast) = blockTimestamp == blockTimestampLast
-            ? (IUniswapV2Exchange(exchange).price0CumulativeLast(), IUniswapV2Exchange(exchange).price1CumulativeLast())
+            ? (IUniswapV2Pair(pair).price0CumulativeLast(), IUniswapV2Pair(pair).price1CumulativeLast())
             : mock(blockTimestamp, blockTimestampLast, reserve0, reserve1);
         uint32 timeElapsed = blockTimestamp - blockTimestampLastCached; // overflow is desired
         // - overflow is desired, / never overflows, casting never truncates
@@ -72,10 +71,10 @@ contract ExampleOracle is IExampleOracle {
 
     function quote(address tokenIn, uint amountIn) external view returns (uint amountOut) {
         require(price0Average != 0 && price1Average != 0, 'OracleExample: NO_PRICE');
-        if (tokenIn == IUniswapV2Exchange(exchange).token0()) {
+        if (tokenIn == IUniswapV2Pair(pair).token0()) {
             amountOut = UQ112x112.decode(price0Average.uqmul(amountIn));
         } else {
-            require(tokenIn == IUniswapV2Exchange(exchange).token1(), 'OracleExample: INVALID_INPUT_TOKEN');
+            require(tokenIn == IUniswapV2Pair(pair).token1(), 'OracleExample: INVALID_INPUT_TOKEN');
             amountOut = UQ112x112.decode(price1Average.uqmul(amountIn));
         }
     }
