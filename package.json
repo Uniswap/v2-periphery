@@ -2,9 +2,6 @@
   "engines": {
     "node": ">=10"
   },
-  "dependencies": {
-    "solc": "0.5.16"
-  },
   "devDependencies": {
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
@@ -15,12 +12,18 @@
     "ncp": "^2.0.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
+    "solc": "0.5.16",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.3"
   },
   "scripts": {
     "lint": "yarn prettier ./test/*.ts --check",
-    "compile": "rimraf ./build/ && waffle .waffle.json && ncp ./buildV1 ./build && ncp ./buildV2 ./build",
+    "clean": "rimraf ./build/",
+    "copy-v1-v2-artifacts": "ncp ./buildV1 ./build && ncp ./buildV2 ./build",
+    "precompile": "yarn clean",
+    "compile": "waffle .waffle.json",
+    "postcompile": "yarn copy-v1-v2-artifacts",
+    "pretest": "yarn compile",
     "test": "mocha"
   },
   "license": "GPL-3.0-or-later"
