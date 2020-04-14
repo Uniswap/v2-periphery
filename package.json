@@ -24,7 +24,8 @@
     "compile": "waffle .waffle.json",
     "postcompile": "yarn copy-v1-v2-artifacts",
     "pretest": "yarn compile",
-    "test": "mocha"
+    "test": "mocha",
+    "check-compile-output": "./scripts/check-compile-output.sh"
   },
   "license": "GPL-3.0-or-later"
 }
