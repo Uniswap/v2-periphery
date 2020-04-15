@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
-import { MaxUint256 } from 'ethers/constants'
+import { AddressZero, MaxUint256 } from 'ethers/constants'
 import { bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 
@@ -24,7 +24,6 @@ describe('UniswapV2Migrator', () => {
   const [wallet] = provider.getWallets()
   const loadFixture = createFixtureLoader(provider, [wallet])
 
-  let WETH: Contract
   let WETHPartner: Contract
   let WETHPair: Contract
   let router: Contract
@@ -32,7 +31,6 @@ describe('UniswapV2Migrator', () => {
   let WETHExchangeV1: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
-    WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
     WETHPair = fixture.WETHPair
     router = fixture.router
@@ -58,11 +56,10 @@ describe('UniswapV2Migrator', () => {
     await expect(
       migrator.migrate(WETHPartner.address, WETHPartnerAmount, ETHAmount, wallet.address, MaxUint256, overrides)
     )
-      // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
-      // .to.emit(WETHPair, 'Transfer')
-      // .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-      // .to.emit(WETHPair, 'Transfer')
-      // .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+      .to.emit(WETHPair, 'Transfer')
+      .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
+      .to.emit(WETHPair, 'Transfer')
+      .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       .to.emit(WETHPair, 'Sync')
       .withArgs(
         WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,

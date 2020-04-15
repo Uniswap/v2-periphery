@@ -1,12 +1,17 @@
 {
+  "name": "@uniswap/v2-periphery",
+  "version": "1.0.0-beta.0",
   "engines": {
     "node": ">=10"
+  },
+  "dependencies": {
+    "@uniswap/v2-core": "1.0.0-beta.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
-    "ethereum-waffle": "^2.3.1",
+    "ethereum-waffle": "^2.4.1",
     "ethereumjs-util": "^6.2.0",
     "mocha": "^6.2.2",
     "ncp": "^2.0.0",
@@ -18,14 +23,15 @@
   },
   "scripts": {
     "lint": "yarn prettier ./test/*.ts --check",
+    "lint:fix": "yarn prettier ./test/*.ts --write",
     "clean": "rimraf ./build/",
-    "copy-v1-v2-artifacts": "ncp ./buildV1 ./build && ncp ./buildV2 ./build",
+    "copy-v1-artifacts": "ncp ./buildV1 ./build",
     "precompile": "yarn clean",
     "compile": "waffle .waffle.json",
-    "postcompile": "yarn copy-v1-v2-artifacts",
+    "postcompile": "yarn copy-v1-artifacts",
     "pretest": "yarn compile",
     "test": "mocha",
-    "check-compile-output": "./scripts/check-compile-output.sh"
+    "prepublishOnly": "yarn test"
   },
   "license": "GPL-3.0-or-later"
 }
