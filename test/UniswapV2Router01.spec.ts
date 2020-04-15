@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
-import { Zero, MaxUint256 } from 'ethers/constants'
+import { AddressZero, Zero, MaxUint256 } from 'ethers/constants'
 import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { ecsign } from 'ethereumjs-util'
@@ -76,13 +76,12 @@ describe('UniswapV2Router01', () => {
     )
       .to.emit(token0, 'Transfer')
       .withArgs(wallet.address, pair.address, token0Amount)
-      // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
-      // .to.emit(token1, 'Transfer')
-      // .withArgs(wallet.address, pair.address, token1Amount)
-      // .to.emit(pair, 'Transfer')
-      // .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-      // .to.emit(pair, 'Transfer')
-      // .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+      .to.emit(token1, 'Transfer')
+      .withArgs(wallet.address, pair.address, token1Amount)
+      .to.emit(pair, 'Transfer')
+      .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
+      .to.emit(pair, 'Transfer')
+      .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       .to.emit(pair, 'Sync')
       .withArgs(token0Amount, token1Amount)
       .to.emit(pair, 'Mint')
@@ -109,11 +108,10 @@ describe('UniswapV2Router01', () => {
         { ...overrides, value: ETHAmount }
       )
     )
-      // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
-      // .to.emit(WETHPair, 'Transfer')
-      // .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
-      // .to.emit(WETHPair, 'Transfer')
-      // .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+      .to.emit(WETHPair, 'Transfer')
+      .withArgs(AddressZero, AddressZero, MINIMUM_LIQUIDITY)
+      .to.emit(WETHPair, 'Transfer')
+      .withArgs(AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
       .to.emit(WETHPair, 'Sync')
       .withArgs(
         WETHPairToken0 === WETHPartner.address ? WETHPartnerAmount : ETHAmount,
@@ -155,13 +153,12 @@ describe('UniswapV2Router01', () => {
     )
       .to.emit(pair, 'Transfer')
       .withArgs(wallet.address, pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-      // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
-      // .to.emit(pair, 'Transfer')
-      // .withArgs(pair.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-      // .to.emit(token0, 'Transfer')
-      // .withArgs(pair.address, wallet.address, token0Amount.sub(500))
-      // .to.emit(token1, 'Transfer')
-      // .withArgs(pair.address, wallet.address, token1Amount.sub(2000))
+      .to.emit(pair, 'Transfer')
+      .withArgs(pair.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+      .to.emit(token0, 'Transfer')
+      .withArgs(pair.address, wallet.address, token0Amount.sub(500))
+      .to.emit(token1, 'Transfer')
+      .withArgs(pair.address, wallet.address, token1Amount.sub(2000))
       .to.emit(pair, 'Sync')
       .withArgs(500, 2000)
       .to.emit(pair, 'Burn')
@@ -315,9 +312,8 @@ describe('UniswapV2Router01', () => {
     )
       .to.emit(token0, 'Transfer')
       .withArgs(wallet.address, pair.address, swapAmount)
-      // commented out because of this bug: https://github.com/EthWorks/Waffle/issues/100
-      // .to.emit(token1, 'Transfer')
-      // .withArgs(pair.address, wallet.address, expectedOutputAmount)
+      .to.emit(token1, 'Transfer')
+      .withArgs(pair.address, wallet.address, expectedOutputAmount)
       .to.emit(pair, 'Sync')
       .withArgs(token0Amount.add(swapAmount), token1Amount.sub(expectedOutputAmount))
       .to.emit(pair, 'Swap')
@@ -336,7 +332,7 @@ describe('UniswapV2Router01', () => {
     const swapAmount = expandTo18Decimals(1)
     await token0.approve(router.address, MaxUint256)
     await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
-    const gasCost = await router.estimate.swapExactTokensForTokens(
+    const tx = await router.swapExactTokensForTokens(
       swapAmount,
       0,
       [token0.address, token1.address],
@@ -344,7 +340,8 @@ describe('UniswapV2Router01', () => {
       MaxUint256,
       overrides
     )
-    console.log(`Gas required for swapExactTokensForTokens: ${gasCost}`)
+    const receipt = await tx.wait()
+    expect(receipt.gasUsed).to.eq(101854)
   })
 
   it('swapTokensForExactTokens', async () => {
@@ -430,17 +427,12 @@ describe('UniswapV2Router01', () => {
 
     const swapAmount = expandTo18Decimals(1)
     await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
-    const gasCost = await router.estimate.swapExactETHForTokens(
-      0,
-      [WETH.address, WETHPartner.address],
-      wallet.address,
-      MaxUint256,
-      {
-        ...overrides,
-        value: swapAmount
-      }
-    )
-    console.log(`Gas required for swapExactETHForTokens: ${gasCost}`)
+    const tx = await router.swapExactETHForTokens(0, [WETH.address, WETHPartner.address], wallet.address, MaxUint256, {
+      ...overrides,
+      value: swapAmount
+    })
+    const receipt = await tx.wait()
+    expect(receipt.gasUsed).to.eq(141045)
   })
 
   it('swapTokensForExactETH', async () => {
@@ -488,7 +480,7 @@ describe('UniswapV2Router01', () => {
       )
   })
 
-  it('swapExactTokensForETH', async () => {
+  it.skip('swapExactTokensForETH', async () => {
     const WETHPartnerAmount = expandTo18Decimals(5)
     const ETHAmount = expandTo18Decimals(10)
     await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)

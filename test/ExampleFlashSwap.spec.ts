@@ -140,7 +140,7 @@ describe('ExampleFlashSwap', () => {
     const priceV2 =
       WETHPairToken0 === WETHPartner.address ? reservesV2[0].div(reservesV2[1]) : reservesV2[1].div(reservesV2[0])
 
-    expect(formatEther(profit)).to.eq('0.547733761089763649') // our profit is ~.5 ETH
+    expect(formatEther(profit)).to.eq('0.547737297089763649') // our profit is ~.5 ETH
     expect(priceV1.toString()).to.eq('143') // we pushed the v1 price up to ~143
     expect(priceV2.toString()).to.eq('161') // we pushed the v2 price down to ~161
   })

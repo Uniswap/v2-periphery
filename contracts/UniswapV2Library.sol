@@ -1,9 +1,10 @@
 pragma solidity =0.5.16;
 
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+
 import './interfaces/IUniswapV2Library.sol';
 import './libraries/SafeMath.sol';
-import './interfaces/V2/IUniswapV2Factory.sol';
-import './interfaces/V2/IUniswapV2Pair.sol';
 
 contract UniswapV2Library is IUniswapV2Library {
     using SafeMath for uint;
