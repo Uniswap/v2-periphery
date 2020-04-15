@@ -24,7 +24,6 @@ describe('UniswapV2Migrator', () => {
   const [wallet] = provider.getWallets()
   const loadFixture = createFixtureLoader(provider, [wallet])
 
-  let WETH: Contract
   let WETHPartner: Contract
   let WETHPair: Contract
   let router: Contract
@@ -32,7 +31,6 @@ describe('UniswapV2Migrator', () => {
   let WETHExchangeV1: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
-    WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
     WETHPair = fixture.WETHPair
     router = fixture.router
