@@ -41,8 +41,9 @@ contract ExampleOracleSimple is UniswapV2Library {
         (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLastFromPair) = pair.getReserves();
         assert(reserve0 != 0 && reserve1 != 0); // ensure that there's still liquidity in the pair
         if (blockTimestampLastFromPair != blockTimestamp) {
-            price0Cumulative += uint(UQ112x112.encode(reserve1).uqdiv(reserve0)) * timeElapsed; // counterfactual
-            price1Cumulative += uint(UQ112x112.encode(reserve0).uqdiv(reserve1)) * timeElapsed; // counterfactual
+            uint timeElapsedPartial = blockTimestamp - blockTimestampLastFromPair; // overflow is desired
+            price0Cumulative += uint(UQ112x112.encode(reserve1).uqdiv(reserve0)) * timeElapsedPartial; // counterfactual
+            price1Cumulative += uint(UQ112x112.encode(reserve0).uqdiv(reserve1)) * timeElapsedPartial; // counterfactual
         }
 
         // - overflow is desired, / never overflows, casting never truncates
