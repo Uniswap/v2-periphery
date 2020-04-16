@@ -25,7 +25,13 @@ console.log(replace.sync({
   files: [
     "build/*.json"
   ],
-  from: [new RegExp(TEST_FACTORY_ADDRESS, 'gi'), new RegExp(TEST_ROUTER_ADDRESS, 'gi')],
-  to: [caseSensitiveReplacer(PROD_FACTORY_ADDRESS), caseSensitiveReplacer(PROD_ROUTER_ADDRESS)],
+  from: [
+    new RegExp(TEST_FACTORY_ADDRESS, 'gi'),
+    new RegExp(TEST_ROUTER_ADDRESS, 'gi'),
+  ],
+  to: [
+    caseSensitiveReplacer(PROD_FACTORY_ADDRESS),
+    caseSensitiveReplacer(PROD_ROUTER_ADDRESS),
+  ],
   // countMatches: true,
 }));

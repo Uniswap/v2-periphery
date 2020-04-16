@@ -22,11 +22,11 @@ The following assumes the use of `node@>=10`.
 
 ## Prepare for deployment
 The build artifacts include constants that refer to addresses of test contracts. We must replace these constants with
-production values before deployment. They are constants rather than variables for compile time gains on gas efficiency.
+production values before deployment. They are constants rather than variables for gains on gas efficiency.
 
 We cannot use [ethereum/solidity#3835](https://github.com/ethereum/solidity/issues/3835) in the current version of solc. 
 
-So a script has been written that replaces the constants in the bytecode with the desired value.
+A script has been written that replaces the constants in the bytecode with the desired production value.
 
 ## Run Tests
 
