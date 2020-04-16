@@ -15,7 +15,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe.only('ExampleSwapToPrice', () => {
+describe('ExampleSwapToPrice', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -56,19 +56,56 @@ describe.only('ExampleSwapToPrice', () => {
   describe('#swapToPrice', () => {
     it('requires non-zero true price inputs', async () => {
       await expect(
-        swapToPriceExample.swapToPrice(token0.address, token1.address, MaxUint256, MaxUint256, 0, 0, wallet.address, MaxUint256)
+        swapToPriceExample.swapToPrice(
+          token0.address,
+          token1.address,
+          MaxUint256,
+          MaxUint256,
+          0,
+          0,
+          wallet.address,
+          MaxUint256
+        )
       ).to.be.revertedWith('ExampleSwapToPrice: ZERO_PRICE')
       await expect(
-        swapToPriceExample.swapToPrice(token0.address, token1.address, MaxUint256, MaxUint256, 10, 0, wallet.address, MaxUint256)
+        swapToPriceExample.swapToPrice(
+          token0.address,
+          token1.address,
+          MaxUint256,
+          MaxUint256,
+          10,
+          0,
+          wallet.address,
+          MaxUint256
+        )
       ).to.be.revertedWith('ExampleSwapToPrice: ZERO_PRICE')
       await expect(
-        swapToPriceExample.swapToPrice(token0.address, token1.address, MaxUint256, MaxUint256, 0, 10, wallet.address, MaxUint256)
+        swapToPriceExample.swapToPrice(
+          token0.address,
+          token1.address,
+          MaxUint256,
+          MaxUint256,
+          0,
+          10,
+          wallet.address,
+          MaxUint256
+        )
       ).to.be.revertedWith('ExampleSwapToPrice: ZERO_PRICE')
     })
 
     it('moves the price to 1:90', async () => {
       await expect(
-        swapToPriceExample.swapToPrice(token0.address, token1.address, MaxUint256, MaxUint256, 1, 90, wallet.address, MaxUint256, overrides)
+        swapToPriceExample.swapToPrice(
+          token0.address,
+          token1.address,
+          MaxUint256,
+          MaxUint256,
+          1,
+          90,
+          wallet.address,
+          MaxUint256,
+          overrides
+        )
       )
         .to.emit(token0, 'Transfer')
         .withArgs(wallet.address, swapToPriceExample.address, '526682316179835569')
@@ -82,7 +119,17 @@ describe.only('ExampleSwapToPrice', () => {
 
     it('moves the price to 1:110', async () => {
       await expect(
-        swapToPriceExample.swapToPrice(token0.address, token1.address, MaxUint256, MaxUint256, 1, 110, wallet.address, MaxUint256, overrides)
+        swapToPriceExample.swapToPrice(
+          token0.address,
+          token1.address,
+          MaxUint256,
+          MaxUint256,
+          1,
+          110,
+          wallet.address,
+          MaxUint256,
+          overrides
+        )
       )
         // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
         .to.emit(token1, 'Transfer')
@@ -93,6 +140,22 @@ describe.only('ExampleSwapToPrice', () => {
         .withArgs(swapToPriceExample.address, pair.address, '47376582963642643588')
         .to.emit(token0, 'Transfer')
         .withArgs(pair.address, wallet.address, '451039908682851138')
+    })
+
+    it('swap gas cost', async () => {
+      const tx = await swapToPriceExample.swapToPrice(
+        token0.address,
+        token1.address,
+        MaxUint256,
+        MaxUint256,
+        1,
+        110,
+        wallet.address,
+        MaxUint256,
+        overrides
+      )
+      const receipt = await tx.wait()
+      expect(receipt.gasUsed).to.eq('124045')
     })
   })
 })
