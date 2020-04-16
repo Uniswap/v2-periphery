@@ -16,6 +16,7 @@
     "mocha": "^6.2.2",
     "ncp": "^2.0.0",
     "prettier": "^1.19.1",
+    "replace-in-file": "^5.0.2",
     "rimraf": "^3.0.0",
     "solc": "0.5.16",
     "ts-node": "^8.5.4",
@@ -31,7 +32,8 @@
     "postcompile": "yarn copy-v1-artifacts",
     "pretest": "yarn compile",
     "test": "mocha",
-    "prepublishOnly": "yarn test"
+    "replace-test-constants-with-production": "scripts/replace-test-constants-with-production.js",
+    "prepublishOnly": "yarn test && yarn replace-test-constants-with-production"
   },
   "license": "GPL-3.0-or-later"
 }
