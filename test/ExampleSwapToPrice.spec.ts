@@ -93,6 +93,12 @@ describe('ExampleSwapToPrice', () => {
       ).to.be.revertedWith('ExampleSwapToPrice: ZERO_PRICE')
     })
 
+    it('requires non-zero max spend', async () => {
+      await expect(
+        swapToPriceExample.swapToPrice(token0.address, token1.address, 0, 0, 1, 100, wallet.address, MaxUint256)
+      ).to.be.revertedWith('ExampleSwapToPrice: ZERO_SPEND')
+    })
+
     it('moves the price to 1:90', async () => {
       await expect(
         swapToPriceExample.swapToPrice(
