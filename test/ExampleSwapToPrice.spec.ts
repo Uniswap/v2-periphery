@@ -1,11 +1,11 @@
-import chai, {expect} from 'chai'
-import {Contract} from 'ethers'
-import {MaxUint256} from 'ethers/constants'
-import {BigNumber, bigNumberify, defaultAbiCoder, formatEther} from 'ethers/utils'
-import {solidity, MockProvider, createFixtureLoader, deployContract} from 'ethereum-waffle'
+import chai, { expect } from 'chai'
+import { Contract } from 'ethers'
+import { MaxUint256 } from 'ethers/constants'
+import { BigNumber, bigNumberify, defaultAbiCoder, formatEther } from 'ethers/utils'
+import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
-import {expandTo18Decimals} from './shared/utilities'
-import {v2Fixture} from './shared/fixtures'
+import { expandTo18Decimals } from './shared/utilities'
+import { v2Fixture } from './shared/fixtures'
 
 import ExampleSwapToPrice from '../build/ExampleSwapToPrice.json'
 
@@ -67,14 +67,18 @@ describe.only('ExampleSwapToPrice', () => {
     })
 
     it('moves the price to 1:90', async () => {
-      await expect(swapToPriceExample.swapToPrice(token0.address, token1.address, 1, 90, wallet.address, MaxUint256, overrides))
+      await expect(
+        swapToPriceExample.swapToPrice(token0.address, token1.address, 1, 90, wallet.address, MaxUint256, overrides)
+      )
         .to.emit(swapToPriceExample, 'SwapToPrice')
         // (1e19 + 526682316179835569) : (1e21 - 49890467170695440744) ~= 1:90
         .withArgs(token0.address, '526682316179835569', token1.address, '49890467170695440744')
     })
 
     it('moves the price to 1:110', async () => {
-      await expect(swapToPriceExample.swapToPrice(token1.address, token0.address, 110, 1, wallet.address, MaxUint256, overrides))
+      await expect(
+        swapToPriceExample.swapToPrice(token1.address, token0.address, 110, 1, wallet.address, MaxUint256, overrides)
+      )
         .to.emit(swapToPriceExample, 'SwapToPrice')
         // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
         .withArgs(token1.address, '47376582963642643588', token0.address, '451039908682851138')
