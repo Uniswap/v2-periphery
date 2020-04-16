@@ -37,7 +37,8 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
     receive() external payable {}
 
     function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline)
-        external override
+        external
+        override
     {
         IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(token));
         uint liquidityV1 = exchangeV1.balanceOf(msg.sender);
