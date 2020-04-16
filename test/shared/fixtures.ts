@@ -47,8 +47,8 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   const factoryV2 = await deployContract(wallet, UniswapV2Factory, [wallet.address])
 
   // deploy router and migrator
-  const router = await deployContract(wallet, UniswapV2Router01, [WETH.address], overrides)
-  const migrator = await deployContract(wallet, UniswapV2Migrator, [factoryV1.address], overrides)
+  const router = await deployContract(wallet, UniswapV2Router01, [factoryV2.address, WETH.address], overrides)
+  const migrator = await deployContract(wallet, UniswapV2Migrator, [factoryV1.address, router.address], overrides)
 
   // initialize V1
   await factoryV1.createExchange(WETHPartner.address, overrides)

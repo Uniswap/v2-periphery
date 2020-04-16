@@ -38,10 +38,6 @@ describe('UniswapV2Migrator', () => {
     WETHExchangeV1 = fixture.WETHExchangeV1
   })
 
-  it('router', async () => {
-    expect(await migrator.router()).to.eq(router.address)
-  })
-
   it('migrate', async () => {
     const WETHPartnerAmount = expandTo18Decimals(1)
     const ETHAmount = expandTo18Decimals(4)
