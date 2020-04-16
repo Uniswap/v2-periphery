@@ -50,39 +50,49 @@ contract ExampleSwapToPrice is UniswapV2Library {
 
     event SwapToPrice(address tokenIn, uint256 amoutIn, address tokenOut, uint256 amountOut);
 
-    // swaps a given token in an amount to move the price to the profit-maximizing price, given the external true price
-    // true price is expressed in the ratio of token in to token out
+    // swaps either token in an amount to move the price to the profit-maximizing price, given the external true price
+    // true price is expressed in the ratio of token A to token B
+    // caller must approve this contract to spend whichever token is intended to be swapped
     function swapToPrice(
-        address tokenIn,
-        address tokenOut,
-        uint128 truePriceTokenIn,
-        uint128 truePriceTokenOut,
+        address tokenA,
+        address tokenB,
+        uint256 maxSpendTokenA,
+        uint256 maxSpendTokenB,
+        uint256 truePriceTokenA,
+        uint256 truePriceTokenB,
         address to,
         uint256 deadline
     ) ensure(deadline) public {
-        require(truePriceTokenIn != 0 && truePriceTokenOut != 0, "ExampleSwapToPrice: ZERO_PRICE");
+        // true price is expressed as a ratio, so both values must be non-zero
+        require(truePriceTokenA != 0 && truePriceTokenB != 0, "ExampleSwapToPrice: ZERO_PRICE");
+        // caller can specify 0 for either if they wish to swap in only one direction, but not both
+        require(maxSpendTokenA != 0 || maxSpendTokenB != 0, "ExampleSwapToPrice: ZERO_SPEND");
 
-        (uint256 reserveIn, uint256 reserveOut) = getReserves(tokenIn, tokenOut);
+        (uint256 reserveA, uint256 reserveB) = getReserves(tokenA, tokenB);
+
+        // if the ratio of a/b < true a/b, then b is cheap and we should buy it, otherwise vice versa
+        bool aToB = reserveA.mul(truePriceTokenB) / reserveB < truePriceTokenA;
 
         uint256 amountIn;
         {
-            uint256 invariant = reserveIn.mul(reserveOut);
+            uint256 invariant = reserveA.mul(reserveB);
 
-            uint256 leftSide = sqrt(invariant.mul(truePriceTokenIn).mul(1000) / uint256(truePriceTokenOut).mul(997));
-            uint256 rightSide = reserveIn.mul(1000) / 997;
+            uint256 leftSide = sqrt(invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) / uint256(aToB
+                ? truePriceTokenB : truePriceTokenA).mul(997));
+            uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
 
             // compute the amount that must be sent to move the price to the profit-maximizing price
             amountIn = leftSide.sub(rightSide);
 
-            require(amountIn > 0, "ExampleSwapToPrice: ZERO_PROFIT");
-
             // spend up to the allowance of the token in
-            uint256 allowance = IERC20(tokenIn).allowance(msg.sender, address(this));
-            if (amountIn > allowance) {
-                amountIn = allowance;
+            uint256 maxSpend = aToB ? maxSpendTokenA : maxSpendTokenB;
+            if (amountIn > maxSpend) {
+                amountIn = maxSpend;
             }
         }
 
+        address tokenIn = aToB ? tokenA : tokenB;
+        address tokenOut = aToB ? tokenB : tokenA;
         _safeTransferFrom(tokenIn, msg.sender, address(this), amountIn);
         _safeApprove(tokenIn, address(router), amountIn);
 
@@ -90,14 +100,9 @@ contract ExampleSwapToPrice is UniswapV2Library {
         path[0] = tokenIn;
         path[1] = tokenOut;
 
-        uint amountOut = getAmountOut(amountIn, reserveIn, reserveOut);
-
-        // emit an event for testing the calculation
-        emit SwapToPrice(tokenIn, amountIn, tokenOut, amountOut);
-
         router.swapExactTokensForTokens(
             amountIn,
-            amountOut,
+            0, // amountOutMin: we can skip computing this number because the math is tested
             path,
             to,
             block.timestamp
