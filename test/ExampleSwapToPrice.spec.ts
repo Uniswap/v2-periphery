@@ -1,11 +1,11 @@
-import chai, { expect } from 'chai'
-import { Contract } from 'ethers'
-import { MaxUint256 } from 'ethers/constants'
-import { BigNumber, bigNumberify, defaultAbiCoder, formatEther } from 'ethers/utils'
-import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
+import chai, {expect} from 'chai'
+import {Contract} from 'ethers'
+import {MaxUint256} from 'ethers/constants'
+import {BigNumber, bigNumberify, defaultAbiCoder, formatEther} from 'ethers/utils'
+import {solidity, MockProvider, createFixtureLoader, deployContract} from 'ethereum-waffle'
 
-import { expandTo18Decimals } from './shared/utilities'
-import { v2Fixture } from './shared/fixtures'
+import {expandTo18Decimals} from './shared/utilities'
+import {v2Fixture} from './shared/fixtures'
 
 import ExampleSwapToPrice from '../build/ExampleSwapToPrice.json'
 
@@ -59,10 +59,10 @@ describe('ExampleSwapToPrice', () => {
         swapToPriceExample.swapToPrice(
           token0.address,
           token1.address,
-          MaxUint256,
-          MaxUint256,
           0,
           0,
+          MaxUint256,
+          MaxUint256,
           wallet.address,
           MaxUint256
         )
@@ -71,10 +71,10 @@ describe('ExampleSwapToPrice', () => {
         swapToPriceExample.swapToPrice(
           token0.address,
           token1.address,
-          MaxUint256,
-          MaxUint256,
           10,
           0,
+          MaxUint256,
+          MaxUint256,
           wallet.address,
           MaxUint256
         )
@@ -83,10 +83,10 @@ describe('ExampleSwapToPrice', () => {
         swapToPriceExample.swapToPrice(
           token0.address,
           token1.address,
-          MaxUint256,
-          MaxUint256,
           0,
           10,
+          MaxUint256,
+          MaxUint256,
           wallet.address,
           MaxUint256
         )
@@ -95,7 +95,7 @@ describe('ExampleSwapToPrice', () => {
 
     it('requires non-zero max spend', async () => {
       await expect(
-        swapToPriceExample.swapToPrice(token0.address, token1.address, 0, 0, 1, 100, wallet.address, MaxUint256)
+        swapToPriceExample.swapToPrice(token0.address, token1.address, 1, 100, 0, 0, wallet.address, MaxUint256)
       ).to.be.revertedWith('ExampleSwapToPrice: ZERO_SPEND')
     })
 
@@ -104,15 +104,16 @@ describe('ExampleSwapToPrice', () => {
         swapToPriceExample.swapToPrice(
           token0.address,
           token1.address,
-          MaxUint256,
-          MaxUint256,
           1,
           90,
+          MaxUint256,
+          MaxUint256,
           wallet.address,
           MaxUint256,
           overrides
         )
       )
+        // (1e19 + 526682316179835569) : (1e21 - 49890467170695440744) ~= 1:90
         .to.emit(token0, 'Transfer')
         .withArgs(wallet.address, swapToPriceExample.address, '526682316179835569')
         .to.emit(token0, 'Approval')
@@ -128,10 +129,35 @@ describe('ExampleSwapToPrice', () => {
         swapToPriceExample.swapToPrice(
           token0.address,
           token1.address,
-          MaxUint256,
-          MaxUint256,
           1,
           110,
+          MaxUint256,
+          MaxUint256,
+          wallet.address,
+          MaxUint256,
+          overrides
+        )
+      )
+        // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
+        .to.emit(token1, 'Transfer')
+        .withArgs(wallet.address, swapToPriceExample.address, '47376582963642643588')
+        .to.emit(token1, 'Approval')
+        .withArgs(swapToPriceExample.address, router.address, '47376582963642643588')
+        .to.emit(token1, 'Transfer')
+        .withArgs(swapToPriceExample.address, pair.address, '47376582963642643588')
+        .to.emit(token0, 'Transfer')
+        .withArgs(pair.address, wallet.address, '451039908682851138')
+    })
+
+    it('reverse token order', async () => {
+      await expect(
+        swapToPriceExample.swapToPrice(
+          token1.address,
+          token0.address,
+          110,
+          1,
+          MaxUint256,
+          MaxUint256,
           wallet.address,
           MaxUint256,
           overrides
@@ -152,10 +178,10 @@ describe('ExampleSwapToPrice', () => {
       const tx = await swapToPriceExample.swapToPrice(
         token0.address,
         token1.address,
-        MaxUint256,
-        MaxUint256,
         1,
         110,
+        MaxUint256,
+        MaxUint256,
         wallet.address,
         MaxUint256,
         overrides

@@ -19,11 +19,6 @@ contract ExampleSwapToPrice is UniswapV2Library {
         router = router_;
     }
 
-    modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ExampleSwapToPrice: EXPIRED');
-        _;
-    }
-
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
     function sqrt(uint256 y) private pure returns (uint256 z) {
         if (y > 3) {
@@ -48,16 +43,16 @@ contract ExampleSwapToPrice is UniswapV2Library {
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ExampleSwapToPrice: APPROVE_FAILED');
     }
 
-    // swaps either token in an amount to move the price to the profit-maximizing price, given the external true price
+    // swaps an amount of either token such that the trade is profit-maximizing, given an external true price
     // true price is expressed in the ratio of token A to token B
     // caller must approve this contract to spend whichever token is intended to be swapped
     function swapToPrice(
         address tokenA,
         address tokenB,
-        uint256 maxSpendTokenA,
-        uint256 maxSpendTokenB,
         uint256 truePriceTokenA,
         uint256 truePriceTokenB,
+        uint256 maxSpendTokenA,
+        uint256 maxSpendTokenB,
         address to,
         uint256 deadline
     ) ensure(deadline) public {
@@ -105,7 +100,7 @@ contract ExampleSwapToPrice is UniswapV2Library {
             0, // amountOutMin: we can skip computing this number because the math is tested
             path,
             to,
-            block.timestamp
+            deadline
         );
     }
 }
