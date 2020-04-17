@@ -75,8 +75,10 @@ contract ExampleSwapToPrice is UniswapV2Library {
         {
             uint256 invariant = reserveA.mul(reserveB);
 
-            uint256 leftSide = sqrt(invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) / uint256(aToB
-                ? truePriceTokenB : truePriceTokenA).mul(997));
+            uint256 leftSide = sqrt(
+                invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
+                uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+            );
             uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
 
             // compute the amount that must be sent to move the price to the profit-maximizing price
