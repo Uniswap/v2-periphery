@@ -43,6 +43,27 @@ contract ExampleSwapToPrice is UniswapV2Library {
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ExampleSwapToPrice: APPROVE_FAILED');
     }
 
+    // computes the direction and magnitude of the profit-maximizing trade
+    function computeProfitMaximizingTrade(
+        uint256 truePriceTokenA,
+        uint256 truePriceTokenB,
+        uint256 reserveA,
+        uint256 reserveB
+    ) pure public returns (bool aToB, uint256 amountIn) {
+        aToB = reserveA.mul(truePriceTokenB) / reserveB < truePriceTokenA;
+
+        uint256 invariant = reserveA.mul(reserveB);
+
+        uint256 leftSide = sqrt(
+            invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
+            uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+        );
+        uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
+
+        // compute the amount that must be sent to move the price to the profit-maximizing price
+        amountIn = leftSide.sub(rightSide);
+    }
+
     // swaps an amount of either token such that the trade is profit-maximizing, given an external true price
     // true price is expressed in the ratio of token A to token B
     // caller must approve this contract to spend whichever token is intended to be swapped
@@ -61,29 +82,20 @@ contract ExampleSwapToPrice is UniswapV2Library {
         // caller can specify 0 for either if they wish to swap in only one direction, but not both
         require(maxSpendTokenA != 0 || maxSpendTokenB != 0, "ExampleSwapToPrice: ZERO_SPEND");
 
-        (uint256 reserveA, uint256 reserveB) = getReserves(tokenA, tokenB);
-
-        // if the ratio of a/b < true a/b, then b is cheap and we should buy it, otherwise vice versa
-        bool aToB = reserveA.mul(truePriceTokenB) / reserveB < truePriceTokenA;
-
+        bool aToB;
         uint256 amountIn;
         {
-            uint256 invariant = reserveA.mul(reserveB);
-
-            uint256 leftSide = sqrt(
-                invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
-                uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+            (uint256 reserveA, uint256 reserveB) = getReserves(tokenA, tokenB);
+            (aToB, amountIn) = computeProfitMaximizingTrade(
+                truePriceTokenA, truePriceTokenB,
+                reserveA, reserveB
             );
-            uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
+        }
 
-            // compute the amount that must be sent to move the price to the profit-maximizing price
-            amountIn = leftSide.sub(rightSide);
-
-            // spend up to the allowance of the token in
-            uint256 maxSpend = aToB ? maxSpendTokenA : maxSpendTokenB;
-            if (amountIn > maxSpend) {
-                amountIn = maxSpend;
-            }
+        // spend up to the allowance of the token in
+        uint256 maxSpend = aToB ? maxSpendTokenA : maxSpendTokenB;
+        if (amountIn > maxSpend) {
+            amountIn = maxSpend;
         }
 
         address tokenIn = aToB ? tokenA : tokenB;
