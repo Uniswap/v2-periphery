@@ -1,4 +1,4 @@
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 
@@ -10,12 +10,9 @@ import './libraries/SafeMath.sol';
 contract ExampleSwapToPrice is UniswapV2Library {
     using SafeMath for uint256;
 
-    bytes4 private constant SELECTOR_TRANSFER_FROM = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-    bytes4 private constant SELECTOR_APPROVE = bytes4(keccak256(bytes('approve(address,uint256)')));
+    IUniswapV2Router01 public immutable router;
 
-    IUniswapV2Router01 public router;
-
-    constructor(IUniswapV2Router01 router_) public {
+    constructor(address factory_, IUniswapV2Router01 router_) UniswapV2Library(factory_) public {
         router = router_;
     }
 
@@ -34,13 +31,15 @@ contract ExampleSwapToPrice is UniswapV2Library {
     }
 
     function _safeTransferFrom(address token, address from, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR_TRANSFER_FROM, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'ExampleSwapToPrice: TRANSFER_FROM_FAILED');
+        // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2Router: TRANSFER_FROM_FAILED');
     }
 
     function _safeApprove(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR_APPROVE, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'ExampleSwapToPrice: APPROVE_FAILED');
+        // bytes4(keccak256(bytes('approve(address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'APPROVE_FAILED');
     }
 
     // computes the direction and magnitude of the profit-maximizing trade

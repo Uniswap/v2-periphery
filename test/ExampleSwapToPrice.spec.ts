@@ -35,7 +35,12 @@ describe('ExampleSwapToPrice', () => {
     token1 = fixture.token1
     pair = fixture.pair
     router = fixture.router
-    swapToPriceExample = await deployContract(wallet, ExampleSwapToPrice, [fixture.router.address], overrides)
+    swapToPriceExample = await deployContract(
+      wallet,
+      ExampleSwapToPrice,
+      [fixture.factoryV2.address, fixture.router.address],
+      overrides
+    )
   })
 
   beforeEach('set up price differential of 1:100', async () => {
@@ -187,7 +192,7 @@ describe('ExampleSwapToPrice', () => {
         overrides
       )
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('124114')
+      expect(receipt.gasUsed).to.eq('122253')
     })
   })
 })
