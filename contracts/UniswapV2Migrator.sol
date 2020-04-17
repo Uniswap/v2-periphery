@@ -7,20 +7,19 @@ import './interfaces/IUniswapV2Router01.sol';
 import './interfaces/IERC20.sol';
 
 contract UniswapV2Migrator is IUniswapV2Migrator {
-    bytes4 private constant SELECTOR_APPROVE = 0x095ea7b3;
-    bytes4 private constant SELECTOR_TRANSFER = 0xa9059cbb;
-
     IUniswapV1Factory public factoryV1;
     // router address is identical across mainnet and testnets but differs between testing and deployed environments
     IUniswapV2Router01 public constant router = IUniswapV2Router01(0x84e924C5E04438D2c1Df1A981f7E7104952e6de1);
 
     function _safeApprove(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR_APPROVE, to, value));
+        // bytes4(keccak256(bytes('approve(address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'APPROVE_FAILED');
     }
 
     function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR_TRANSFER, to, value));
+        // bytes4(keccak256(bytes('transfer(address,uint256)')));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'TRANSFER_FAILED');
     }
 
@@ -30,8 +29,6 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
     }
 
     constructor(address _factoryV1) public {
-        require(SELECTOR_APPROVE == IERC20(0).approve.selector);
-        require(SELECTOR_TRANSFER == IERC20(0).transfer.selector);
         factoryV1 = IUniswapV1Factory(_factoryV1);
     }
 
