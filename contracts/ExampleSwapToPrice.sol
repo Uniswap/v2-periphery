@@ -55,7 +55,7 @@ contract ExampleSwapToPrice is UniswapV2Library {
         uint256 maxSpendTokenB,
         address to,
         uint256 deadline
-    ) ensure(deadline) public {
+    ) public {
         // true price is expressed as a ratio, so both values must be non-zero
         require(truePriceTokenA != 0 && truePriceTokenB != 0, "ExampleSwapToPrice: ZERO_PRICE");
         // caller can specify 0 for either if they wish to swap in only one direction, but not both
