@@ -1,4 +1,4 @@
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
 import './interfaces/IUniswapV2Migrator.sol';
 import './interfaces/V1/IUniswapV1Factory.sol';
@@ -7,9 +7,8 @@ import './interfaces/IUniswapV2Router01.sol';
 import './interfaces/IERC20.sol';
 
 contract UniswapV2Migrator is IUniswapV2Migrator {
-    IUniswapV1Factory public factoryV1;
-    // router address is identical across mainnet and testnets but differs between testing and deployed environments
-    IUniswapV2Router01 public constant router = IUniswapV2Router01(0x84e924C5E04438D2c1Df1A981f7E7104952e6de1);
+    IUniswapV1Factory immutable factoryV1;
+    IUniswapV2Router01 immutable router;
 
     function _safeApprove(address token, address to, uint value) private {
         // bytes4(keccak256(bytes('approve(address,uint256)')));
@@ -24,25 +23,29 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
     }
 
     function _safeTransferETH(address to, uint value) private {
-        (bool success,) = to.call.value(value)(new bytes(0));
+        (bool success,) = to.call{value: value}(new bytes(0));
         require(success, 'ETH_TRANSFER_FAILED');
     }
 
-    constructor(address _factoryV1) public {
+    constructor(address _factoryV1, address _router) public {
         factoryV1 = IUniswapV1Factory(_factoryV1);
+        router = IUniswapV2Router01(_router);
     }
 
     // needs to accept ETH from any v1 exchange and the router. ideally this could be enforced, as in the router,
     // but it's not possible because it requires a call to the v1 factory, which takes too much gas
-    function() external payable {}
+    receive() external payable {}
 
-    function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external {
+    function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline)
+        external
+        override
+    {
         IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(token));
         uint liquidityV1 = exchangeV1.balanceOf(msg.sender);
         require(exchangeV1.transferFrom(msg.sender, address(this), liquidityV1), 'TRANSFER_FROM_FAILED');
         (uint amountETHV1, uint amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, uint(-1));
         _safeApprove(token, address(router), amountTokenV1);
-        (uint amountTokenV2, uint amountETHV2,) = router.addLiquidityETH.value(amountETHV1)(
+        (uint amountTokenV2, uint amountETHV2,) = router.addLiquidityETH{value: amountETHV1}(
             token,
             amountTokenV1,
             amountTokenMin,

@@ -44,7 +44,12 @@ describe('ExampleOracleSimple', () => {
     token1 = fixture.token1
     pair = fixture.pair
     await addLiquidity()
-    exampleOracleSimple = await deployContract(wallet, ExampleOracleSimple, [token0.address, token1.address], overrides)
+    exampleOracleSimple = await deployContract(
+      wallet,
+      ExampleOracleSimple,
+      [fixture.factoryV2.address, token0.address, token1.address],
+      overrides
+    )
   })
 
   it('update', async () => {

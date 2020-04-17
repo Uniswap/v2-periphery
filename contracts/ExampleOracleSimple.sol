@@ -1,15 +1,18 @@
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
-import './UniswapV2Library.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+
 import './libraries/UQ112x112.sol';
 
-contract ExampleOracleSimple is UniswapV2Library {
+contract ExampleOracleSimple {
     using UQ112x112 for uint224;
 
     uint public constant PERIOD = 24 hours;
-    address public token0;
-    address public token1;
-    IUniswapV2Pair public pair;
+
+    IUniswapV2Pair immutable pair;
+    address public immutable token0;
+    address public immutable token1;
 
     uint    public price0CumulativeLast;
     uint    public price1CumulativeLast;
@@ -17,14 +20,16 @@ contract ExampleOracleSimple is UniswapV2Library {
     uint224 public price0Average;
     uint224 public price1Average;
 
-    constructor(address tokenA, address tokenB) public {
-        (token0, token1) = sortTokens(tokenA, tokenB);
-        pair = IUniswapV2Pair(pairFor(token0, token1));
-        price0CumulativeLast = pair.price0CumulativeLast(); // fetch the current accumulated price value (1 / 0)
-        price1CumulativeLast = pair.price1CumulativeLast(); // fetch the current accumulated price value (0 / 1)
+    constructor(address factory, address tokenA, address tokenB) public {
+        IUniswapV2Pair _pair = IUniswapV2Pair(IUniswapV2Factory(factory).getPair(tokenA, tokenB));
+        pair = _pair;
+        token0 = _pair.token0();
+        token1 = _pair.token1();
+        price0CumulativeLast = _pair.price0CumulativeLast(); // fetch the current accumulated price value (1 / 0)
+        price1CumulativeLast = _pair.price1CumulativeLast(); // fetch the current accumulated price value (0 / 1)
         uint112 reserve0;
         uint112 reserve1;
-        (reserve0, reserve1, blockTimestampLast) = pair.getReserves();
+        (reserve0, reserve1, blockTimestampLast) = _pair.getReserves();
         assert(reserve0 != 0 && reserve1 != 0); // ensure that there's liquidity in the pair
         assert(blockTimestampLast != 0); // ensure there's a price history
     }

@@ -36,7 +36,12 @@ describe('ExampleFlashSwap', () => {
     WETHPartner = fixture.WETHPartner
     WETHExchangeV1 = fixture.WETHExchangeV1
     WETHPair = fixture.WETHPair
-    flashSwapExample = await deployContract(wallet, ExampleFlashSwap, [fixture.factoryV1.address], overrides)
+    flashSwapExample = await deployContract(
+      wallet,
+      ExampleFlashSwap,
+      [fixture.factoryV2.address, fixture.factoryV1.address, fixture.router.address],
+      overrides
+    )
   })
 
   it('uniswapV2Call:0', async () => {
@@ -140,7 +145,7 @@ describe('ExampleFlashSwap', () => {
     const priceV2 =
       WETHPairToken0 === WETHPartner.address ? reservesV2[0].div(reservesV2[1]) : reservesV2[1].div(reservesV2[0])
 
-    expect(formatEther(profit)).to.eq('0.547737297089763649') // our profit is ~.5 ETH
+    expect(formatEther(profit)).to.eq('0.547748493089763649') // our profit is ~.5 ETH
     expect(priceV1.toString()).to.eq('143') // we pushed the v1 price up to ~143
     expect(priceV2.toString()).to.eq('161') // we pushed the v2 price down to ~161
   })

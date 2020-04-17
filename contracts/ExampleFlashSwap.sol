@@ -1,4 +1,4 @@
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
 
@@ -10,21 +10,20 @@ import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
 contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
-    IUniswapV1Factory public factoryV1;
-    IWETH public WETH;
+    IUniswapV1Factory immutable factoryV1;
+    IWETH immutable WETH;
 
-    constructor(address _factoryV1) public {
+    constructor(address _factory, address _factoryV1, address router) UniswapV2Library(_factory) public {
         factoryV1 = IUniswapV1Factory(_factoryV1);
-        // router address is identical across mainnet and testnets but differs between testing and deployed environments
-        WETH = IWETH(IUniswapV2Router01(0x84e924C5E04438D2c1Df1A981f7E7104952e6de1).WETH());
+        WETH = IWETH(IUniswapV2Router01(router).WETH());
     }
 
     // needs to accept ETH from any V1 exchange and WETH. ideally this could be enforced, as in the router,
     // but it's not possible because it requires a call to the v1 factory, which takes too much gas
-    function() external payable {}
+    receive() external payable {}
 
     // gets tokens/WETH via a V2 flash swap, swaps for the ETH/tokens on V1, repays V2, and keeps the rest!
-    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external {
+    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external override {
         address[] memory path = new address[](2);
         uint amountToken;
         uint amountETH;
@@ -49,14 +48,14 @@ contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Library {
             uint amountReceived = exchangeV1.tokenToEthSwapInput(amountToken, minETH, uint(-1));
             uint amountRequired = getAmountsIn(amountToken, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough ETH back to repay our flash loan
-            WETH.deposit.value(amountRequired)();
+            WETH.deposit{value: amountRequired}();
             assert(WETH.transfer(msg.sender, amountRequired)); // return WETH to V2 pair
-            (bool success,) = sender.call.value(amountReceived - amountRequired)(new bytes(0)); // keep the rest! (ETH)
+            (bool success,) = sender.call{value: amountReceived - amountRequired}(new bytes(0)); // keep the rest! (ETH)
             assert(success);
         } else {
             (uint minTokens) = abi.decode(data, (uint)); // slippage parameter for V1, passed in by caller
             WETH.withdraw(amountETH);
-            uint amountReceived = exchangeV1.ethToTokenSwapInput.value(amountETH)(minTokens, uint(-1)); 
+            uint amountReceived = exchangeV1.ethToTokenSwapInput{value: amountETH}(minTokens, uint(-1)); 
             uint amountRequired = getAmountsIn(amountETH, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough tokens back to repay our flash loan
             assert(token.transfer(msg.sender, amountRequired)); // return tokens to V2 pair

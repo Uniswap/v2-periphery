@@ -133,10 +133,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.35.tgz#1e61b226c14380f4384f70cfe49a65c2c553ad2b"
   integrity sha512-ASYsaKecA7TUsDrqIGPNk3JeEox0z/0XR/WsJJ8BIX/9+SkMSImQXKWfU/yBrSyc7ZSE/NPqLu36Nur0miCFfQ==
 
-"@uniswap/v2-core@1.0.0-beta.0":
-  version "1.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.0-beta.0.tgz#e2ca1d801a659f47fabb3daef4a7bfa91361a2b4"
-  integrity sha512-q5pK9DxIn07vcFQELzDwaxHKaq9vQD1gZ2Lm/vWvW60P8Eaa8W+8PBsY5AwhcXg/hHxoFqevTygyF0DekclAAw==
+"@uniswap/v2-core@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.0-beta.2.tgz#8a7be1a1efb6974ccfd16edce29ba01161023fad"
+  integrity sha512-mpbfx1LcEEGl/w0tliIJyEvcSmzrQVa7YMc5Xn2Bkxrl+hdwAqhHqTyl7EXqsrFD0zWoMWzwXSZIUtQgfURa+g==
 
 "@web3-js/scrypt-shim@^0.1.0":
   version "0.1.0"
@@ -5851,21 +5851,7 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-solc@0.5.16:
-  version "0.5.16"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.5.16.tgz#6c8d710a3792ccc79db924606b558a1149b1c603"
-  integrity sha512-weEtRtisJyf+8UjELs7S4ST1KK7UIq6SRB7tpprfJBL9b5mTrZAT7m4gJKi2h6MiBpuSWfnraK8BnkyWzuTMRA==
-  dependencies:
-    command-exists "^1.2.8"
-    commander "3.0.2"
-    fs-extra "^0.30.0"
-    js-sha3 "0.8.0"
-    memorystream "^0.3.1"
-    require-from-string "^2.0.0"
-    semver "^5.5.0"
-    tmp "0.0.33"
-
-solc@^0.6.3:
+solc@0.6.6, solc@^0.6.3:
   version "0.6.6"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.6.tgz#0d4b9c2e7105dd6015583f5e1c5ba6a35861ea71"
   integrity sha512-p0IO/1fRaHWKN+qR+mUivpwnBpFYD8EoFAzT8VL4lmllNwsyEO7TJJAc2QK0XUeWOYOT92NWKhDNNNLTVbHShA==

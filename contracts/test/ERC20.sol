@@ -1,4 +1,4 @@
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
 import '../libraries/SafeMath.sol';
 
@@ -23,7 +23,7 @@ contract ERC20 {
     constructor(uint _totalSupply) public {
         uint chainId;
         assembly {
-            chainId := chainid
+            chainId := chainid()
         }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(

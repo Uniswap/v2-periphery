@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at Etherscan.io on 2017-12-12
-*/
-
 // Copyright (C) 2015, 2016, 2017 Dapphub
 
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity =0.5.16;
+pragma solidity =0.6.6;
 
 contract WETH9 {
     string public name     = "Wrapped Ether";
