@@ -48,8 +48,6 @@ contract ExampleSwapToPrice is UniswapV2Library {
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ExampleSwapToPrice: APPROVE_FAILED');
     }
 
-    event SwapToPrice(address tokenIn, uint256 amoutIn, address tokenOut, uint256 amountOut);
-
     // swaps either token in an amount to move the price to the profit-maximizing price, given the external true price
     // true price is expressed in the ratio of token A to token B
     // caller must approve this contract to spend whichever token is intended to be swapped
