@@ -4,10 +4,11 @@ import './interfaces/IUniswapV2Migrator.sol';
 import './interfaces/V1/IUniswapV1Factory.sol';
 import './interfaces/V1/IUniswapV1Exchange.sol';
 import './interfaces/IUniswapV2Router01.sol';
+import './interfaces/IERC20.sol';
 
 contract UniswapV2Migrator is IUniswapV2Migrator {
-    bytes4 private constant SELECTOR_APPROVE = bytes4(keccak256(bytes('approve(address,uint256)')));
-    bytes4 private constant SELECTOR_TRANSFER = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    bytes4 private constant SELECTOR_APPROVE = 0x095ea7b3;
+    bytes4 private constant SELECTOR_TRANSFER = 0xa9059cbb;
 
     IUniswapV1Factory public factoryV1;
     // router address is identical across mainnet and testnets but differs between testing and deployed environments
@@ -29,6 +30,8 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
     }
 
     constructor(address _factoryV1) public {
+        require(SELECTOR_APPROVE == IERC20(0).approve.selector);
+        require(SELECTOR_TRANSFER == IERC20(0).transfer.selector);
         factoryV1 = IUniswapV1Factory(_factoryV1);
     }
 

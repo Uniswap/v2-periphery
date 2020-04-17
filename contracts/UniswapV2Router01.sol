@@ -2,11 +2,12 @@ pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Router01.sol';
 import './UniswapV2Library.sol';
+import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
 contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Library {
-    bytes4 private constant SELECTOR_TRANSFER = bytes4(keccak256(bytes('transfer(address,uint256)')));
-    bytes4 private constant SELECTOR_TRANSFER_FROM = bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
+    bytes4 private constant SELECTOR_TRANSFER = 0xa9059cbb;
+    bytes4 private constant SELECTOR_TRANSFER_FROM = 0x23b872dd;
 
     IWETH public WETH;
 
@@ -30,6 +31,8 @@ contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Library {
     }
 
     constructor(address _WETH) public {
+        require(SELECTOR_TRANSFER == IERC20(0).transfer.selector);
+        require(SELECTOR_TRANSFER_FROM == IERC20(0).transferFrom.selector);
         WETH = IWETH(_WETH);
     }
 
