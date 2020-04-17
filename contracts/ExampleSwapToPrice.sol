@@ -20,7 +20,7 @@ contract ExampleSwapToPrice is UniswapV2Library {
     }
 
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
+        require(deadline >= block.timestamp, 'ExampleSwapToPrice: EXPIRED');
         _;
     }
 
