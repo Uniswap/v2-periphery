@@ -1,4 +1,4 @@
-pragma solidity =0.6.6;
+pragma solidity >=0.5.0;
 
 interface IUniswapV1Exchange {
     function balanceOf(address owner) external view returns (uint);

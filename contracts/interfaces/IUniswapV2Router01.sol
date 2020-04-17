@@ -1,6 +1,8 @@
-pragma solidity >=0.5 <0.7;
+pragma solidity >=0.6.2;
 
-interface IUniswapV2Router01 {
+import './IUniswapV2Library.sol';
+
+interface IUniswapV2Router01 is IUniswapV2Library {
     function WETH() external pure returns (address);
 
     function addLiquidity(
