@@ -6,6 +6,7 @@ import './UniswapV2Library.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IUniswapV2Router01.sol';
 import './libraries/SafeMath.sol';
+import './libraries/TransferHelper.sol';
 
 contract ExampleSwapToPrice is UniswapV2Library {
     using SafeMath for uint256;
@@ -28,18 +29,6 @@ contract ExampleSwapToPrice is UniswapV2Library {
         } else if (y != 0) {
             z = 1;
         }
-    }
-
-    function _safeTransferFrom(address token, address from, address to, uint value) private {
-        // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2Router: TRANSFER_FROM_FAILED');
-    }
-
-    function _safeApprove(address token, address to, uint value) private {
-        // bytes4(keccak256(bytes('approve(address,uint256)')));
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'APPROVE_FAILED');
     }
 
     // computes the direction and magnitude of the profit-maximizing trade
@@ -99,8 +88,8 @@ contract ExampleSwapToPrice is UniswapV2Library {
 
         address tokenIn = aToB ? tokenA : tokenB;
         address tokenOut = aToB ? tokenB : tokenA;
-        _safeTransferFrom(tokenIn, msg.sender, address(this), amountIn);
-        _safeApprove(tokenIn, address(router), amountIn);
+        TransferHelper.safeTransferFrom(tokenIn, msg.sender, address(this), amountIn);
+        TransferHelper.safeApprove(tokenIn, address(router), amountIn);
 
         address[] memory path = new address[](2);
         path[0] = tokenIn;
