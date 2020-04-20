@@ -11,16 +11,6 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
     IUniswapV1Factory immutable factoryV1;
     IUniswapV2Router01 immutable router;
 
-    function _safeTransferETH(address to, uint value) private {
-        (bool success,) = to.call{value: value}(new bytes(0));
-        require(success, 'ETH_TRANSFER_FAILED');
-    }
-
-    constructor(address _factoryV1, address _router) public {
-        factoryV1 = IUniswapV1Factory(_factoryV1);
-        router = IUniswapV2Router01(_router);
-    }
-
     // needs to accept ETH from any v1 exchange and the router. ideally this could be enforced, as in the router,
     // but it's not possible because it requires a call to the v1 factory, which takes too much gas
     receive() external payable {}
