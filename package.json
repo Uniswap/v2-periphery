@@ -4,8 +4,17 @@
   "engines": {
     "node": ">=10"
   },
+  "homepage": "https://uniswap.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
+  },
+  "files": [
+    "build",
+    "contracts"
+  ],
   "dependencies": {
-    "@uniswap/v2-core": "1.0.0-beta.2"
+    "@uniswap/v2-core": "1.0.0-beta.4"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
