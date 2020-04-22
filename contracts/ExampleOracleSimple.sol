@@ -5,6 +5,7 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
 // fixed window oracle that recomputes the average price for the entire period once every period
+// note that the fixed window average is not over exactly 1 period
 contract ExampleOracleSimple {
     using FixedPoint for *;
 
@@ -40,12 +41,16 @@ contract ExampleOracleSimple {
 
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
-        assert(timeElapsed >= PERIOD); // ensure that at least one full period has passed since the last update
+
+        // ensure that at least one full period has passed since the last update
+        require(timeElapsed >= PERIOD, 'ExampleOracleSimple: PERIOD_NOT_ELAPSED');
 
         uint price0Cumulative = pair.price0CumulativeLast();
         uint price1Cumulative = pair.price1CumulativeLast();
 
-        // - overflow is desired, / never overflows, casting never truncates
+        // overflow is desired
+        // casting never truncates
+        // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
         price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
         price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
 
@@ -58,7 +63,7 @@ contract ExampleOracleSimple {
         if (token == token0) {
             amountOut = price0Average.mul(amountIn).decode144();
         } else {
-            assert(token == token1);
+            require(token == token1, 'ExampleOracleSimple: INVALID_TOKEN');
             amountOut = price1Average.mul(amountIn).decode144();
         }
     }
