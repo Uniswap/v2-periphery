@@ -1,6 +1,7 @@
 {
   "name": "@uniswap/v2-periphery",
   "version": "1.0.0-beta.0",
+  "description": "Periphery contracts for interacting with UniswapV2 core contracts including the router",
   "engines": {
     "node": ">=10"
   },
