@@ -133,10 +133,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.35.tgz#1e61b226c14380f4384f70cfe49a65c2c553ad2b"
   integrity sha512-ASYsaKecA7TUsDrqIGPNk3JeEox0z/0XR/WsJJ8BIX/9+SkMSImQXKWfU/yBrSyc7ZSE/NPqLu36Nur0miCFfQ==
 
-"@uniswap/v2-core@1.0.0-beta.4":
-  version "1.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.0-beta.4.tgz#fd5a13ac1a02462ddd6d4f0337e9a6a75d021ed1"
-  integrity sha512-aiBFSVv4E1majFyoXgqmJoYzvoVlnq2ZAQdKO/zIpowsGCMNq2gYGByOy7EKk6OElo68L1sVHdnHlw9F8ZHHSQ==
+"@uniswap/v2-core@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.0.tgz#e0fab91a7d53e8cafb5326ae4ca18351116b0844"
+  integrity sha512-BJiXrBGnN8mti7saW49MXwxDBRFiWemGetE58q8zgfnPPzQKq55ADltEILqOt6VFZ22kVeVKbF8gVd8aY3l7pA==
 
 "@web3-js/scrypt-shim@^0.1.0":
   version "0.1.0"
