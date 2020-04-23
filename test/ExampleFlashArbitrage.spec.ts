@@ -46,6 +46,14 @@ describe.skip('ExampleFlashArbitrage', () => {
 
   describe('#arbitrage', () => {
     describe('token/WETH pairs', () => {
+      let token0: string
+      let token1: string
+      beforeEach('sort tokens', () => {
+        ([token0, token1] =
+          WETH.address.toLowerCase() < WETHPartner.address.toLowerCase() ?
+            [WETH.address, WETHPartner.address] : [WETHPartner.address, WETH.address])
+      })
+
       describe('V1 eth is expensive', () => {
         beforeEach('add liquidity', async () => {
           // add liquidity to V1 at a rate of 1 ETH / 200 X
@@ -61,15 +69,18 @@ describe.skip('ExampleFlashArbitrage', () => {
           const WETHPartnerAmountV2 = expandTo18Decimals(1000)
           const ETHAmountV2 = expandTo18Decimals(10)
           await WETHPartner.transfer(WETHPair.address, WETHPartnerAmountV2)
-          await WETH.deposit({ value: ETHAmountV2 })
+          await WETH.deposit({value: ETHAmountV2})
           await WETH.transfer(WETHPair.address, ETHAmountV2)
           await WETHPair.mint(wallet.address, overrides)
         })
 
         it('borrows eth from v2 to sell on v1', async () => {
-          await flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)
+          await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address))
+            .to.emit(flashArbitrage, 'Arbitrage')
+            .withArgs(token0, token0 === WETH.address ? 0 : 99098, token1, token1 === WETH.address ? 0 : 99098)
         })
       })
+
       describe('V1 eth is cheap', () => {
         beforeEach('add liquidity', async () => {
           // add liquidity to V1 at a rate of 1 ETH / 50 X
@@ -85,13 +96,15 @@ describe.skip('ExampleFlashArbitrage', () => {
           const WETHPartnerAmountV2 = expandTo18Decimals(1000)
           const ETHAmountV2 = expandTo18Decimals(10)
           await WETHPartner.transfer(WETHPair.address, WETHPartnerAmountV2)
-          await WETH.deposit({ value: ETHAmountV2 })
+          await WETH.deposit({value: ETHAmountV2})
           await WETH.transfer(WETHPair.address, ETHAmountV2)
           await WETHPair.mint(wallet.address, overrides)
         })
 
         it('borrows tokens from v2 to sell on v1', async () => {
-          await flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)
+          await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address))
+            .to.emit(flashArbitrage, 'Arbitrage')
+            .withArgs(token0, token0 === WETH.address ? 8 : 0, token1, token1 === WETH.address ? 8 : 0)
         })
       })
     })
