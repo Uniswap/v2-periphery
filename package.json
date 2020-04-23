@@ -15,6 +15,7 @@
     "contracts"
   ],
   "dependencies": {
+    "@uniswap/lib": "1.1.1",
     "@uniswap/v2-core": "1.0.0"
   },
   "devDependencies": {

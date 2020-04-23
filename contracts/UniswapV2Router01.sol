@@ -1,12 +1,12 @@
 pragma solidity =0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
+import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import './interfaces/IUniswapV2Router01.sol';
 import './UniswapV2Library.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
-import './libraries/TransferHelper.sol';
 
 contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Library {
     address public immutable override WETH;
