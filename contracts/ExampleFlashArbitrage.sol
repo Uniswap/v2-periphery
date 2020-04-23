@@ -73,7 +73,6 @@ contract ExampleZeroRiskArbitrage is UniswapV2Library, IUniswapV2Callee {
 
         // the amount of eth we borrow should be the amount that moves the marginal price of the token in ETH to be
         // the same in both V1 and V2.
-        // for simplicity, we can exclude the fee from calculation.
         if (borrowEth) {
             // (z1 + (b * 0.997)) / t1 = (z2 - (b * 0.997)) / t2 solve for b
             // where z1/t1 are eth/token reserves in v1, and z2/t2 are eth/token reserves in v2
