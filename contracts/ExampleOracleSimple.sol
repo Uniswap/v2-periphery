@@ -5,7 +5,7 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
 // fixed window oracle that recomputes the average price for the entire period once every period
-// note that the fixed window average is not over exactly 1 period
+// note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
 contract ExampleOracleSimple {
     using FixedPoint for *;
 
@@ -36,9 +36,6 @@ contract ExampleOracleSimple {
     }
 
     function update() external {
-        // updates the block timestamp and reserves so we don't have to adjust for it
-        pair.sync();
-
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
@@ -48,8 +45,15 @@ contract ExampleOracleSimple {
         uint price0Cumulative = pair.price0CumulativeLast();
         uint price1Cumulative = pair.price1CumulativeLast();
 
-        // overflow is desired
-        // casting never truncates
+        // if time has elapsed since the last update on the pair, mock the accumulated price values
+        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLastFromPair) = pair.getReserves();
+        if (blockTimestampLastFromPair != blockTimestamp) {
+            uint timeElapsedPartial = blockTimestamp - blockTimestampLastFromPair; // overflow is desired
+            price0Cumulative += uint(FixedPoint.fraction(reserve1, reserve0)._x) * timeElapsedPartial; // counterfactual
+            price1Cumulative += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsedPartial; // counterfactual
+        }
+
+        // overflow is desired, casting never truncates
         // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
         price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
         price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
