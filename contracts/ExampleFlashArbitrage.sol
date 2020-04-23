@@ -179,22 +179,23 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
             // prepare to get ETH from the v1 exchange
             pendingReceiveAddress = address(receivedExchange);
-            uint ethBack = receivedExchange.tokenToEthSwapInput(amountReceived, 1, block.timestamp);
+            uint ethReceived = receivedExchange.tokenToEthSwapInput(amountReceived, 1, block.timestamp);
             // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
 
-            weth.deposit{value: ethBack}();
+            weth.deposit{value: ethReceived}();
         } else {
             IUniswapV1Exchange receivedExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
-            IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
+            IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReturn));
 
             // prepare to get ETH from the first exchange
+            TransferHelper.safeApprove(tokenReceived, address(receivedExchange), amountReceived);
             pendingReceiveAddress = address(receivedExchange);
-            uint middleEth = receivedExchange.tokenToEthSwapInput(amountReceived, 1, block.timestamp);
-            returnExchange.ethToTokenSwapInput{value: middleEth}(1, block.timestamp);
-
+            uint ethReceived = receivedExchange.tokenToEthSwapInput(amountReceived, 1, block.timestamp);
             // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
+
+            returnExchange.ethToTokenSwapInput{value: ethReceived}(1, block.timestamp);
         }
 
         // now pay back v2 what is owed
