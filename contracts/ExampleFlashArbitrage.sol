@@ -119,9 +119,9 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             IUniswapV2Pair(v2Pair)
                 .swap(isToken0Eth ? 0 : borrowAmount, isToken0Eth ? borrowAmount : 0, address(this), callback_data);
 
-            uint profit = address(this).balance;
+            uint profit = IERC20(address(weth)).balanceOf(address(this));
             // just forward the whole balance of ETH we ended up with
-            TransferHelper.safeTransferETH(recipient, profit);
+            TransferHelper.safeTransfer(address(weth), recipient, profit);
             emit Arbitrage(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? profit : 0,
@@ -167,28 +167,31 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
         // do the v1 swap
         if (tokenReceived == address(weth)) {
+            pendingReceiveAddress = address(weth);
             weth.withdraw(amountReceived);
+            delete pendingReceiveAddress;
+
             IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReturn));
-            returnExchange.ethToTokenSwapInput{value: amountReceived}(0, block.timestamp);
+            returnExchange.ethToTokenSwapInput{value: amountReceived}(1, block.timestamp);
         } else if (tokenReturn == address(weth)) {
             IUniswapV1Exchange receivedExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
             TransferHelper.safeApprove(tokenReceived, address(receivedExchange), amountReceived);
 
             // prepare to get ETH from the v1 exchange
             pendingReceiveAddress = address(receivedExchange);
-            receivedExchange.tokenToEthSwapInput(amountReceived, 0, block.timestamp);
-            weth.deposit{value: amountReceived}();
-
+            uint ethBack = receivedExchange.tokenToEthSwapInput(amountReceived, 1, block.timestamp);
             // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
+
+            weth.deposit{value: ethBack}();
         } else {
             IUniswapV1Exchange receivedExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
             IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
 
             // prepare to get ETH from the first exchange
             pendingReceiveAddress = address(receivedExchange);
-            uint middleEth = receivedExchange.tokenToEthSwapInput(amountReceived, 0, block.timestamp);
-            returnExchange.ethToTokenSwapInput{value: middleEth}(0, block.timestamp);
+            uint middleEth = receivedExchange.tokenToEthSwapInput(amountReceived, 1, block.timestamp);
+            returnExchange.ethToTokenSwapInput{value: middleEth}(1, block.timestamp);
 
             // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
