@@ -46,6 +46,7 @@ contract ExampleOracleSimple {
         uint price1Cumulative = pair.price1CumulativeLast();
 
         // if time has elapsed since the last update on the pair, mock the accumulated price values
+        // alternately, call pair.sync() before reading the cumulative last price from the pair
         (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLastFromPair) = pair.getReserves();
         if (blockTimestampLastFromPair != blockTimestamp) {
             uint timeElapsedPartial = blockTimestamp - blockTimestampLastFromPair; // overflow is desired
