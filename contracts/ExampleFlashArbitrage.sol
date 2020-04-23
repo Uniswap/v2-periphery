@@ -88,7 +88,8 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
-                isToken0Eth ? token : address(weth)
+                isToken0Eth ? token : address(weth),
+                getAmountIn(borrowAmount, tokenBalanceV2, ethBalanceV2)
             );
 
             IUniswapV2Pair(v2Pair)
@@ -113,7 +114,8 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
-                isToken0Eth ? token : address(weth)
+                isToken0Eth ? token : address(weth),
+                getAmountIn(borrowAmount, ethBalanceV2, tokenBalanceV2)
             );
 
             IUniswapV2Pair(v2Pair)
@@ -158,7 +160,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
         // at this point we have received the loan to this contract and we must trade the full amount to
         // uniswap v1 and repay v2 the amount owed for the borrow
-        (address token0, address token1) = abi.decode(data, (address, address));
+        (address token0, address token1, uint returnAmount) = abi.decode(data, (address, address, uint));
 
         // the token we receive from v2 vs. the token we send back to v2
         (address tokenReceived, uint amountReceived, address tokenReturn) = amount0 > 0 ?
@@ -199,8 +201,6 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
         }
 
         // now pay back v2 what is owed
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(msg.sender).getReserves();
-        uint256 returnAmount = getAmountIn(amountReceived, reserve0, reserve1);
         TransferHelper.safeTransfer(tokenReturn, msg.sender, returnAmount);
     }
 }
