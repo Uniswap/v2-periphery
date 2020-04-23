@@ -15,7 +15,7 @@ import "./UniswapV2Library.sol";
 
 // uses flash swaps in UniswapV2 to arbitrage against UniswapV1 with zero price risk
 // i.e. any caller can provide a token pair and the liquidity in UniswapV2 will be used to move the marginal price in V1
-// to be the same as the marginal price in V2.
+// to be the same as the marginal price in V2, and forward any resulting profits
 // all the caller pays for is gas. gas and gas prices are not considered in the arbitrage profitability.
 contract ExampleZeroRiskArbitrage is UniswapV2Library, IUniswapV2Callee {
     using SafeMath for uint;
@@ -66,8 +66,8 @@ contract ExampleZeroRiskArbitrage is UniswapV2Library, IUniswapV2Callee {
         require(tokenBalanceV2 > 0 && ethBalanceV2 > 0, "ExampleZeroRiskArbitrage: V2_NO_LIQUIDITY");
 
         // if the tokens to eth is less in v2 than v1, eth is cheaper in v2 in terms of token.
-        // that means we should borrow eth from v2 and sell it on v1.
-        // otherwise we should borrow tokens from v2 and sell it on v1
+        // that means we should borrow eth from v2 and sell it on v1 for tokens.
+        // otherwise we should borrow tokens from v2 and sell it on v1 for eth.
         // division by zero not possible
         bool borrowEth = tokenBalanceV2.mul(ethBalanceV1) / ethBalanceV2 < tokenBalanceV1;
 
@@ -95,8 +95,9 @@ contract ExampleZeroRiskArbitrage is UniswapV2Library, IUniswapV2Callee {
             // just forward the whole balance of the token we ended up with
             TransferHelper.safeTransfer(token, recipient, IERC20(token).balanceOf(address(this)));
         } else {
+            // z1 / (t1 + b * 0.997) = z2 / (t2  - (b * 0.997)) solve for b
             uint borrowAmount = uint256(1000).mul(tokenBalanceV2.mul(ethBalanceV1).sub(tokenBalanceV1.mul(ethBalanceV2))) /
-                uint256(997).mul(tokenBalanceV1.add(tokenBalanceV2));
+                uint256(997).mul(ethBalanceV1.add(ethBalanceV2));
 
             // this may happen if the profit exactly equals the swap fees
             require(borrowAmount > 0, 'ExampleZeroRiskArbitrage: NO_PROFIT');
@@ -123,7 +124,7 @@ contract ExampleZeroRiskArbitrage is UniswapV2Library, IUniswapV2Callee {
             return;
         }
 
-        revert("TODO");
+        revert("TODO: 2 token arbitrage");
     }
 
     // this callback takes any amount received of token0 and token1 and exchanges the entire amount on uniswap v1 for
