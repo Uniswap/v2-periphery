@@ -77,11 +77,8 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
         // the amount of eth we borrow should be the amount that moves the marginal price of the token in ETH to be
         // the same in both V1 and V2.
         if (borrowEth) {
-            // (z1 + (b * 0.997)) / t1 = (z2 - (b * 0.997)) / t2 solve for b
-            // where z1/t1 are eth/token reserves in v1, and z2/t2 are eth/token reserves in v2
-            // try the above query in wolfram alpha
-            uint borrowAmount = uint256(1000).mul(tokenBalanceV1.mul(ethBalanceV2).sub(tokenBalanceV2.mul(ethBalanceV1))) /
-                uint256(997).mul(tokenBalanceV1.add(tokenBalanceV2));
+            // TODO(moodysalem): back to the drawing board
+            uint borrowAmount = 1000;
 
             // this may happen if the profit exactly equals the swap fees
             require(borrowAmount > 0, 'ExampleFlashArbitrage: NO_PROFIT');
@@ -105,9 +102,8 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
                 isToken0Eth ? profit : 0
             );
         } else {
-            // z1 / (t1 + b * 0.997) = z2 / (t2  - (b * 0.997)) solve for b
-            uint borrowAmount = uint256(1000).mul(tokenBalanceV2.mul(ethBalanceV1).sub(tokenBalanceV1.mul(ethBalanceV2))) /
-                uint256(997).mul(ethBalanceV1.add(ethBalanceV2));
+            // TODO(moodysalem): back to the drawing board
+            uint borrowAmount = 1000;
 
             // this may happen if the profit exactly equals the swap fees
             require(borrowAmount > 0, 'ExampleFlashArbitrage: NO_PROFIT');
@@ -171,6 +167,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
         if (tokenReceived == address(weth)) {
             pendingReceiveAddress = address(weth);
             weth.withdraw(amountReceived);
+            // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
 
             IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReturn));
