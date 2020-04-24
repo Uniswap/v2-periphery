@@ -5,6 +5,7 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
+import '@uniswap/lib/contracts/libraries/Babylonian.sol';
 
 import "./interfaces/V1/IUniswapV1Factory.sol";
 import "./interfaces/V1/IUniswapV1Exchange.sol";
@@ -34,6 +35,26 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
     // receives ETH from V1 exchanges. must first be prepared to receive via pendingReceiveAddress.
     receive() external payable {
         require(msg.sender == pendingReceiveAddress, "ExampleFlashArbitrage: RECEIVE_NOT_PENDING");
+    }
+
+    // computes the borrow amount to arbitrage between v1 and v2 eth/token pairs
+    // cannot be used for token/token pairs because token/token pairs must make multiple hops in v1
+    function computeBorrowAmountETH(uint v1Eth, uint v1Token, uint v2Eth, uint v2Token) private pure returns (uint borrowAmount, bool borrowEth) {
+        require(v1Eth > 0 && v1Eth > 0 && v2Eth > 0 && v2Token > 0, 'ExampleFlashArbitrage: ALL_INPUTS_NONZERO');
+
+        {
+            uint left = v2Token.mul(v1Eth) / v2Eth;
+            uint right = v1Token;
+            require(left != right, 'ExampleFlashArbitrage: EQUIVALENT_PRICE');
+            // if the tokens to eth is less in v2 than v1, eth is cheaper in v2 in terms of token.
+            // that means we should borrow eth from v2 and sell it on v1 for tokens.
+            // otherwise we should borrow tokens from v2 and sell it on v1 for eth.
+            // division by zero not possible
+            borrowEth = left < right;
+        }
+
+        // TODO(moodysalem): Compute this.
+        borrowAmount = 1000;
     }
 
     // emitted when a successful arbitrage occurs
@@ -68,21 +89,12 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
         require(tokenBalanceV2 > 0 && ethBalanceV2 > 0, "ExampleFlashArbitrage: V2_NO_LIQUIDITY");
 
-        // if the tokens to eth is less in v2 than v1, eth is cheaper in v2 in terms of token.
-        // that means we should borrow eth from v2 and sell it on v1 for tokens.
-        // otherwise we should borrow tokens from v2 and sell it on v1 for eth.
-        // division by zero not possible
-        bool borrowEth = tokenBalanceV2.mul(ethBalanceV1) / ethBalanceV2 < tokenBalanceV1;
+        (uint borrowAmount, bool borrowEth) =
+            computeBorrowAmountETH(ethBalanceV1, tokenBalanceV1, ethBalanceV2, tokenBalanceV2);
 
         // the amount of eth we borrow should be the amount that moves the marginal price of the token in ETH to be
         // the same in both V1 and V2.
         if (borrowEth) {
-            // TODO(moodysalem): back to the drawing board
-            uint borrowAmount = 1000;
-
-            // this may happen if the profit exactly equals the swap fees
-            require(borrowAmount > 0, 'ExampleFlashArbitrage: NO_PROFIT');
-
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),
@@ -102,12 +114,6 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
                 isToken0Eth ? profit : 0
             );
         } else {
-            // TODO(moodysalem): back to the drawing board
-            uint borrowAmount = 1000;
-
-            // this may happen if the profit exactly equals the swap fees
-            require(borrowAmount > 0, 'ExampleFlashArbitrage: NO_PROFIT');
-
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),
@@ -141,7 +147,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             return;
         }
 
-        revert("TODO: 2 token arbitrage");
+        revert("ExampleFlashArbitrage: TODO_MULTIHOP_ARBITRAGE");
     }
 
     // this callback takes any amount received of token0 and token1 and exchanges the entire amount on uniswap v1 for
