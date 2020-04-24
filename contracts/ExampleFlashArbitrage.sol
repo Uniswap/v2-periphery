@@ -37,9 +37,9 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
         require(msg.sender == pendingReceiveAddress, "ExampleFlashArbitrage: RECEIVE_NOT_PENDING");
     }
 
-    // computes the borrow amount to arbitrage between v1 and v2 eth/token pairs
+    // computes the withdraw amount to arbitrage between v1 and v2 eth/token pairs
     // cannot be used for token/token pairs because token/token pairs must make multiple hops in v1
-    function computeBorrowAmountETH(uint v1Eth, uint v1Token, uint v2Eth, uint v2Token) private pure returns (uint borrowAmount, bool borrowEth) {
+    function computeWithdrawAmountETH(uint v1Eth, uint v1Token, uint v2Eth, uint v2Token) private pure returns (uint withdrawAmount, bool withdrawEth) {
         require(v1Eth > 0 && v1Eth > 0 && v2Eth > 0 && v2Token > 0, 'ExampleFlashArbitrage: ALL_INPUTS_NONZERO');
 
         {
@@ -47,14 +47,14 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             uint right = v1Token;
             require(left != right, 'ExampleFlashArbitrage: EQUIVALENT_PRICE');
             // if the tokens to eth is less in v2 than v1, eth is cheaper in v2 in terms of token.
-            // that means we should borrow eth from v2 and sell it on v1 for tokens.
-            // otherwise we should borrow tokens from v2 and sell it on v1 for eth.
+            // that means we should withdraw eth from v2 and sell it on v1 for tokens.
+            // otherwise we should withdraw tokens from v2 and sell it on v1 for eth.
             // division by zero not possible
-            borrowEth = left < right;
+            withdrawEth = left < right;
         }
 
         // TODO(moodysalem): Compute this.
-        borrowAmount = 1000;
+        withdrawAmount = 1000;
     }
 
     // emitted when a successful arbitrage occurs
@@ -89,20 +89,20 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
         require(tokenBalanceV2 > 0 && ethBalanceV2 > 0, "ExampleFlashArbitrage: V2_NO_LIQUIDITY");
 
-        (uint borrowAmount, bool borrowEth) =
-            computeBorrowAmountETH(ethBalanceV1, tokenBalanceV1, ethBalanceV2, tokenBalanceV2);
+        (uint withdrawAmount, bool withdrawEth) =
+            computeWithdrawAmountETH(ethBalanceV1, tokenBalanceV1, ethBalanceV2, tokenBalanceV2);
 
-        // the amount of eth we borrow should be the amount that moves the marginal price of the token in ETH to be
+        // the amount of eth we withdraw should be the amount that moves the marginal price of the token in ETH to be
         // the same in both V1 and V2.
-        if (borrowEth) {
+        if (withdrawEth) {
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),
-                getAmountIn(borrowAmount, tokenBalanceV2, ethBalanceV2)
+                getAmountIn(withdrawAmount, tokenBalanceV2, ethBalanceV2)
             );
 
             IUniswapV2Pair(v2Pair)
-                .swap(isToken0Eth ? borrowAmount : 0, isToken0Eth ? 0 : borrowAmount, address(this), callback_data);
+                .swap(isToken0Eth ? withdrawAmount : 0, isToken0Eth ? 0 : withdrawAmount, address(this), callback_data);
 
             // just forward the whole balance of the token we ended up with
             uint profit = IERC20(token).balanceOf(address(this));
@@ -117,11 +117,11 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),
-                getAmountIn(borrowAmount, ethBalanceV2, tokenBalanceV2)
+                getAmountIn(withdrawAmount, ethBalanceV2, tokenBalanceV2)
             );
 
             IUniswapV2Pair(v2Pair)
-                .swap(isToken0Eth ? 0 : borrowAmount, isToken0Eth ? borrowAmount : 0, address(this), callback_data);
+                .swap(isToken0Eth ? 0 : withdrawAmount, isToken0Eth ? withdrawAmount : 0, address(this), callback_data);
 
             uint profit = IERC20(address(weth)).balanceOf(address(this));
             // just forward the whole balance of ETH we ended up with
@@ -161,7 +161,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
         require((amount0 > 0 && amount1 == 0) || (amount0 == 0 && amount1 > 0), "ExampleFlashArbitrage: CALLBACK_AMOUNT_XOR");
 
         // at this point we have received the loan to this contract and we must trade the full amount to
-        // uniswap v1 and repay v2 the amount owed for the borrow
+        // uniswap v1 and complete the swap
         (address token0, address token1, uint returnAmount) = abi.decode(data, (address, address, uint));
 
         // the token we receive from v2 vs. the token we send back to v2
