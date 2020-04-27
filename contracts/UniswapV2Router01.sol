@@ -3,21 +3,23 @@ pragma solidity =0.6.6;
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
+import './libraries/UniswapV2Library.sol';
 import './interfaces/IUniswapV2Router01.sol';
-import './UniswapV2Periphery.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
-contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Periphery {
+contract UniswapV2Router01 is IUniswapV2Router01 {
     address public immutable override WETH;
+    address public immutable override factory;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
         _;
     }
 
-    constructor(address _factory, address _WETH) UniswapV2Periphery(_factory) public {
+    constructor(address _factory, address _WETH) public {
         WETH = _WETH;
+        factory = _factory;
     }
 
     receive() external payable {
@@ -254,5 +256,25 @@ contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Periphery {
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
         if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]); // refund dust eth, if any
+    }
+
+    function quote(uint amountA, uint reserveA, uint reserveB) public pure override returns (uint amountB) {
+        return UniswapV2Library.quote(amountA, reserveA, reserveB);
+    }
+
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) public pure override returns (uint amountOut) {
+        return UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+    }
+
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) public pure override returns (uint amountIn) {
+        return UniswapV2Library.getAmountOut(amountOut, reserveIn, reserveOut);
+    }
+
+    function getAmountsOut(uint amountIn, address[] memory path) public view override returns (uint[] memory amounts) {
+        return UniswapV2Library.getAmountsOut(factory, amountIn, path);
+    }
+
+    function getAmountsIn(uint amountOut, address[] memory path) public view override returns (uint[] memory amounts) {
+        return UniswapV2Library.getAmountsIn(factory, amountOut, path);
     }
 }
