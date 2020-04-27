@@ -9,8 +9,8 @@ import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
 contract UniswapV2Router01 is IUniswapV2Router01 {
-    address public immutable override WETH;
     address public immutable override factory;
+    address public immutable override WETH;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
@@ -18,8 +18,8 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
     }
 
     constructor(address _factory, address _WETH) public {
-        WETH = _WETH;
         factory = _factory;
+        WETH = _WETH;
     }
 
     receive() external payable {
