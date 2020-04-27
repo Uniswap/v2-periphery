@@ -4,11 +4,11 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import './interfaces/IUniswapV2Router01.sol';
-import './UniswapV2Library.sol';
+import './UniswapV2Periphery.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
-contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Library {
+contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Periphery {
     address public immutable override WETH;
 
     modifier ensure(uint deadline) {
@@ -16,7 +16,7 @@ contract UniswapV2Router01 is IUniswapV2Router01, UniswapV2Library {
         _;
     }
 
-    constructor(address _factory, address _WETH) UniswapV2Library(_factory) public {
+    constructor(address _factory, address _WETH) UniswapV2Periphery(_factory) public {
         WETH = _WETH;
     }
 

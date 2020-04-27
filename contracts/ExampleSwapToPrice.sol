@@ -4,17 +4,17 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/Babylonian.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import './UniswapV2Library.sol';
+import './UniswapV2Periphery.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IUniswapV2Router01.sol';
 import './libraries/SafeMath.sol';
 
-contract ExampleSwapToPrice is UniswapV2Library {
+contract ExampleSwapToPrice is UniswapV2Periphery {
     using SafeMath for uint256;
 
     IUniswapV2Router01 public immutable router;
 
-    constructor(address factory_, IUniswapV2Router01 router_) UniswapV2Library(factory_) public {
+    constructor(address factory_, IUniswapV2Router01 router_) UniswapV2Periphery(factory_) public {
         router = router_;
     }
 

@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0;
 
-interface IUniswapV2Library {
+interface IUniswapV2Periphery {
     function factory() external pure returns (address);
 
     function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
