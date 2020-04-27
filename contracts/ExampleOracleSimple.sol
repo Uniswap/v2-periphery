@@ -4,6 +4,7 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
+import './libraries/PriceComputer.sol';
 import './libraries/UniswapV2Library.sol';
 
 // fixed window oracle that recomputes the average price for the entire period once every period
@@ -37,32 +38,14 @@ contract ExampleOracleSimple {
     }
 
     function update() external {
-        uint32 blockTimestamp = uint32(block.timestamp % 2**32);
-        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
-
         // ensure that at least one full period has passed since the last update
-        require(timeElapsed >= PERIOD, 'ExampleOracleSimple: PERIOD_NOT_ELAPSED');
+        require(
+            PriceComputer.timeElapsedSince(blockTimestampLast) >= PERIOD,
+            'ExampleOracleSimple: PERIOD_NOT_ELAPSED'
+        );
 
-        uint price0Cumulative = pair.price0CumulativeLast();
-        uint price1Cumulative = pair.price1CumulativeLast();
-
-        // if time has elapsed since the last update on the pair, mock the accumulated price values
-        // alternately, call pair.sync() before reading the cumulative last price from the pair
-        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLastFromPair) = pair.getReserves();
-        if (blockTimestampLastFromPair != blockTimestamp) {
-            uint timeElapsedPartial = blockTimestamp - blockTimestampLastFromPair; // overflow is desired
-            price0Cumulative += uint(FixedPoint.fraction(reserve1, reserve0)._x) * timeElapsedPartial; // counterfactual
-            price1Cumulative += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsedPartial; // counterfactual
-        }
-
-        // overflow is desired, casting never truncates
-        // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
-        price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
-        price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
-
-        price0CumulativeLast = price0Cumulative;
-        price1CumulativeLast = price1Cumulative;
-        blockTimestampLast = blockTimestamp;
+        (price0Average, price1Average, blockTimestampLast, price0CumulativeLast, price1CumulativeLast) =
+            PriceComputer.compute(pair, blockTimestampLast, price0CumulativeLast, price1CumulativeLast);
     }
 
     // note this will always return 0 before update has been called successfully for the first time.
