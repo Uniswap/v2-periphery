@@ -1,14 +1,9 @@
 pragma solidity =0.6.6;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-
 import './interfaces/IUniswapV2Periphery.sol';
 import './libraries/UniswapV2Library.sol';
-import './libraries/SafeMath.sol';
 
 contract UniswapV2Periphery is IUniswapV2Periphery {
-    using SafeMath for uint;
-
     address public immutable override factory;
 
     constructor(address _factory) public {
