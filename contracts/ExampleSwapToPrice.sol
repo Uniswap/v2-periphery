@@ -1,6 +1,7 @@
 pragma solidity =0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+import '@uniswap/lib/contracts/libraries/Babylonian.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import './UniswapV2Library.sol';
@@ -17,20 +18,6 @@ contract ExampleSwapToPrice is UniswapV2Library {
         router = router_;
     }
 
-    // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    function sqrt(uint256 y) private pure returns (uint256 z) {
-        if (y > 3) {
-            z = y;
-            uint256 x = y / 2 + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) / 2;
-            }
-        } else if (y != 0) {
-            z = 1;
-        }
-    }
-
     // computes the direction and magnitude of the profit-maximizing trade
     function computeProfitMaximizingTrade(
         uint256 truePriceTokenA,
@@ -42,7 +29,7 @@ contract ExampleSwapToPrice is UniswapV2Library {
 
         uint256 invariant = reserveA.mul(reserveB);
 
-        uint256 leftSide = sqrt(
+        uint256 leftSide = Babylonian.sqrt(
             invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
             uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
         );
