@@ -1,8 +1,7 @@
 pragma solidity >=0.6.2;
 
-import './IUniswapV2Library.sol';
-
-interface IUniswapV2Router01 is IUniswapV2Library {
+interface IUniswapV2Router01 {
+    function factory() external pure returns (address);
     function WETH() external pure returns (address);
 
     function addLiquidity(
@@ -87,4 +86,10 @@ interface IUniswapV2Router01 is IUniswapV2Library {
         external
         payable
         returns (uint[] memory amounts);
+
+    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
+    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 }
