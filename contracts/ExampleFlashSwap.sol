@@ -30,7 +30,7 @@ contract ExampleFlashSwap is IUniswapV2Callee, UniswapV2Periphery {
         { // scope for token{0,1}, avoids stack too deep errors
         address token0 = IUniswapV2Pair(msg.sender).token0();
         address token1 = IUniswapV2Pair(msg.sender).token1();
-        assert(msg.sender == pairFor(token0, token1)); // ensure that msg.sender is actually a V2 pair
+        assert(msg.sender == UniswapV2Library.pairFor(factory, token0, token1)); // ensure that msg.sender is actually a V2 pair
         assert(amount0 == 0 || amount1 == 0); // this strategy is unidirectional
         path[0] = amount0 == 0 ? token0 : token1;
         path[1] = amount0 == 0 ? token1 : token0;

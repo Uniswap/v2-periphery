@@ -60,7 +60,7 @@ contract ExampleSwapToPrice is UniswapV2Periphery {
         bool aToB;
         uint256 amountIn;
         {
-            (uint256 reserveA, uint256 reserveB) = getReserves(tokenA, tokenB);
+            (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
             (aToB, amountIn) = computeProfitMaximizingTrade(
                 truePriceTokenA, truePriceTokenB,
                 reserveA, reserveB

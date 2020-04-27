@@ -15,18 +15,6 @@ contract UniswapV2Periphery is IUniswapV2Periphery {
         factory = _factory;
     }
 
-    function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
-        return UniswapV2Library.sortTokens(tokenA, tokenB);
-    }
-
-    function pairFor(address tokenA, address tokenB) internal view returns (address pair) {
-        return UniswapV2Library.pairFor(factory, tokenA, tokenB);
-    }
-
-    function getReserves(address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB) {
-        return UniswapV2Library.getReserves(factory, tokenA, tokenB);
-    }
-
     function quote(uint amountA, uint reserveA, uint reserveB) public pure override returns (uint amountB) {
         return UniswapV2Library.quote(amountA, reserveA, reserveB);
     }
