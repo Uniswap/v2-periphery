@@ -88,14 +88,14 @@ describe('ExampleSlidingWindowOracle', () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
       expect(receipt.gasUsed).to.eq('131142')
-    })
+    }).retries(2) // gas test inconsistent
 
     it('gas for second update', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
       expect(receipt.gasUsed).to.eq('50718')
-    }).retries(2) // sometimes gas used is wrong
+    }).retries(2) // gas test inconsistent
 
     it('pair not exists', async () => {
       await expect(slidingWindowOracle.update(weth.address, token1.address)).to.be.reverted
