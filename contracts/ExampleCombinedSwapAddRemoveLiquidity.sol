@@ -23,43 +23,44 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         router = router_;
     }
 
-    // returns the amount of token that should be swapped in such that the ratio of reserve and reserveOther is equivalent
-    // to the user's x/y after the swap
-    function calculateSwapInAmount(uint reserve, uint userIn) internal pure returns (uint) {
+    // returns the amount of token that should be swapped in such that ratio of reserves in the pair is equivalent
+    // to the swapper's ratio of tokens
+    // note this depends only on the number of tokens the caller wishes to swap and the current reserves of that token,
+    // and not the current reserves of the other token
+    function calculateSwapInAmount(uint reserve, uint userIn) public pure returns (uint) {
         return Babylonian.sqrt(reserve.mul(userIn.mul(3988000) + reserve.mul(3988009))).sub(reserve.mul(1997)) / 1994;
     }
 
     // computes the exact amount of tokens that should be swapped before adding liquidity for a given token
     // does the swap and then adds liquidity
     // minOtherToken should be set to the minimum intermediate amount of token1 that should be received to prevent
-    // slippage and front running
-    // liquidity provider tokens are sent to the to address
+    // excessive slippage or front running
+    // liquidity provider shares are minted to the 'to' address
     function swapExactTokensAndAddLiquidity(
-        address tokenIn, uint amountIn,
-        address otherToken, uint minOtherToken,
+        address tokenIn, address otherToken,
+        uint amountIn, uint minOtherTokenIn,
         address to, uint deadline
     ) external returns (uint amountTokenIn, uint amountTokenOther, uint liquidity) {
-        // compute how much we should swap in to match the ratio of tokenIn / otherToken
-        uint swapAmount;
+        // compute how much we should swap in to match the reserve ratio of tokenIn / otherToken of the pair
+        uint swapInAmount;
         {
             (uint reserveIn,) = UniswapV2Library.getReserves(address(factory), tokenIn, otherToken);
-            swapAmount = calculateSwapInAmount(reserveIn, amountIn);
+            swapInAmount = calculateSwapInAmount(reserveIn, amountIn);
         }
 
-        // take the full amount from the caller
+        // first take possession of the full amount from the caller
         TransferHelper.safeTransferFrom(tokenIn, msg.sender, address(this), amountIn);
-        // approve the full amount for the router as well, since we will be either swapping with it or adding liquidity.
+        // approve for the swap, and then later the add liquidity. total is amountIn
         TransferHelper.safeApprove(tokenIn, address(router), amountIn);
 
-        uint amountOtherAdd;
         {
             address[] memory path = new address[](2);
             path[0] = tokenIn;
             path[1] = otherToken;
 
-            amountOtherAdd = router.swapExactTokensForTokens(
-                swapAmount,
-                minOtherToken,
+            amountTokenOther = router.swapExactTokensForTokens(
+                swapInAmount,
+                minOtherTokenIn,
                 path,
                 address(this),
                 deadline
@@ -67,19 +68,20 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         }
 
         // approve the other token for the add liquidity call
-        TransferHelper.safeApprove(otherToken, address(router), amountOtherAdd);
-        uint amountTokenInAdd = amountIn - swapAmount;
+        TransferHelper.safeApprove(otherToken, address(router), amountTokenOther);
+        amountTokenIn = amountIn.sub(swapInAmount);
 
         // no need to check that we transferred everything because minimums == total balance of this contract
-        return router.addLiquidity(
+        (,,liquidity) = router.addLiquidity(
             tokenIn,
             otherToken,
         // desired amountA, amountB
-            amountTokenInAdd,
-            amountOtherAdd,
-        // they are also the minimums
-            amountTokenInAdd,
-            amountOtherAdd,
+            amountTokenIn,
+            amountTokenOther,
+        // amountTokenIn and amountTokenOther should match the ratio of reserves of tokenIn to otherToken
+        // thus we do not need to constrain the minimums here
+            0,
+            0,
             to,
             deadline
         );
