@@ -3,8 +3,8 @@ pragma solidity >=0.5.0;
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
-// computes prices for pairs given a previous checkpoint in a gas efficient manner
-library PriceComputer {
+// library with helper methods for oracles that are concerned with computing average prices
+library UniswapV2OracleLibrary {
     using FixedPoint for *;
 
     // helper function that returns the current block timestamp within the range of uint32, i.e. [0, 2**32 - 1]
@@ -18,17 +18,10 @@ library PriceComputer {
         return currentBlockTimestamp() - blockTimestampLast;
     }
 
-    // computes prices over an arbitrary period by reading the current state from the pair and comparing it to the
-    // given previous state. the resulting prices are the averages over the period between blockTimestampLast and
-    // the current block timestamp, even if the pair has not been synced in the current block.
-    // the returned values should be used for computing the average prices of the following period.
-    function compute(
-        IUniswapV2Pair pair,
-        uint32 blockTimestampLast, uint price0CumulativeLast, uint price1CumulativeLast
-    ) internal view returns (
-        FixedPoint.uq112x112 memory price0Average, FixedPoint.uq112x112 memory price1Average,
-        uint32 blockTimestamp, uint price0Cumulative, uint price1Cumulative
-    ) {
+    // produces the cumulative price using counterfactuals to save gas and avoid a call to sync.
+    function currentCumulativePrices(
+        IUniswapV2Pair pair
+    ) internal view returns (uint32 blockTimestamp, uint price0Cumulative, uint price1Cumulative) {
         price0Cumulative = pair.price0CumulativeLast();
         price1Cumulative = pair.price1CumulativeLast();
 
@@ -43,13 +36,5 @@ library PriceComputer {
             // counterfactual
             price1Cumulative += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsedPartial;
         }
-
-        // overflow is desired
-        uint32 timeElapsed = blockTimestamp - blockTimestampLast;
-
-        // overflow is desired, casting never truncates
-        // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
-        price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
-        price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
     }
 }

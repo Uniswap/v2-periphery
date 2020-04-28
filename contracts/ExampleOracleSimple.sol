@@ -4,7 +4,7 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
-import './libraries/PriceComputer.sol';
+import './libraries/UniswapV2OracleLibrary.sol';
 import './libraries/UniswapV2Library.sol';
 
 // fixed window oracle that recomputes the average price for the entire period once every period
@@ -38,14 +38,21 @@ contract ExampleOracleSimple {
     }
 
     function update() external {
-        // ensure that at least one full period has passed since the last update
-        require(
-            PriceComputer.timeElapsedSince(blockTimestampLast) >= PERIOD,
-            'ExampleOracleSimple: PERIOD_NOT_ELAPSED'
-        );
+        (uint32 blockTimestamp, uint price0Cumulative, uint price1Cumulative) =
+            UniswapV2OracleLibrary.currentCumulativePrices(pair);
+        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
-        (price0Average, price1Average, blockTimestampLast, price0CumulativeLast, price1CumulativeLast) =
-            PriceComputer.compute(pair, blockTimestampLast, price0CumulativeLast, price1CumulativeLast);
+        // ensure that at least one full period has passed since the last update
+        require(timeElapsed >= PERIOD, 'ExampleOracleSimple: PERIOD_NOT_ELAPSED');
+
+        // overflow is desired, casting never truncates
+        // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
+        price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
+        price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
+
+        price0CumulativeLast = price0Cumulative;
+        price1CumulativeLast = price1Cumulative;
+        blockTimestampLast = blockTimestamp;
     }
 
     // note this will always return 0 before update has been called successfully for the first time.
