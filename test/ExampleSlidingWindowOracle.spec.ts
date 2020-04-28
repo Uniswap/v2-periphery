@@ -55,7 +55,7 @@ describe('ExampleSlidingWindowOracle', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
-    weth = fixture.WETH;
+    weth = fixture.WETH
 
     slidingWindowOracle = await deployContract(
       wallet,
@@ -98,52 +98,67 @@ describe('ExampleSlidingWindowOracle', () => {
     }).retries(2) // sometimes gas used is wrong
 
     it('pair not exists', async () => {
-      await expect(slidingWindowOracle.update(weth.address, token1.address))
-        .to.be.reverted
+      await expect(slidingWindowOracle.update(weth.address, token1.address)).to.be.reverted
     })
   })
 
   describe('#consult', () => {
-    let blockTimestamp: number
-    let previousBlockTimestamp: number
-    let previousCumulativePrices: any
-    beforeEach('add some prices', async () => {
-      previousBlockTimestamp = (await pair.getReserves())[2]
-      previousCumulativePrices = [await pair.price0CumulativeLast(), await pair.price1CumulativeLast()]
+    it('fails if current bucket not updated', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
-      blockTimestamp = previousBlockTimestamp + 60 * 60 * 23
-      await mineBlock(provider, blockTimestamp)
+      await mineBlock(provider, (await pair.getReserves())[2] + period / numBuckets) // advance one bucket
+      await expect(slidingWindowOracle.consult(token0.address, 0, token1.address)).to.be.revertedWith(
+        'SlidingWindowOracle: CURRENT_BUCKET_NOT_UPDATED'
+      )
+    })
+
+    it('fails if previous bucket not set', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      await expect(slidingWindowOracle.consult(token0.address, 0, token1.address)).to.be.revertedWith(
+        'SlidingWindowOracle: MISSING_PREVIOUS_BUCKET'
+      )
     })
 
-    it('has prices in previous bucket', async () => {
-      expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(previousBlockTimestamp))).to.deep.eq([
-        previousCumulativePrices[0],
-        previousCumulativePrices[1],
-        epochBucket(previousBlockTimestamp),
-        previousBlockTimestamp
-      ])
-    })
+    describe('happy path', () => {
+      let blockTimestamp: number
+      let previousBlockTimestamp: number
+      let previousCumulativePrices: any
+      beforeEach('add some prices', async () => {
+        previousBlockTimestamp = (await pair.getReserves())[2]
+        previousCumulativePrices = [await pair.price0CumulativeLast(), await pair.price1CumulativeLast()]
+        await slidingWindowOracle.update(token0.address, token1.address, overrides)
+        blockTimestamp = previousBlockTimestamp + 60 * 60 * 23
+        await mineBlock(provider, blockTimestamp)
+        await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      })
 
-    it('has prices in current bucket', async () => {
-      expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
-        await pair.price0CumulativeLast(),
-        await pair.price1CumulativeLast(),
-        epochBucket(blockTimestamp),
-        blockTimestamp
-      ])
-    })
+      it('has prices in previous bucket', async () => {
+        expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(previousBlockTimestamp))).to.deep.eq([
+          previousCumulativePrices[0],
+          previousCumulativePrices[1],
+          epochBucket(previousBlockTimestamp),
+          previousBlockTimestamp
+        ])
+      })
 
-    it('pair not exists', async () => {
-      await expect(slidingWindowOracle.consult(weth.address, 0, token1.address))
-        .to.be.reverted
-    })
+      it('has prices in current bucket', async () => {
+        expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+          await pair.price0CumulativeLast(),
+          await pair.price1CumulativeLast(),
+          epochBucket(blockTimestamp),
+          blockTimestamp
+        ])
+      })
 
-    it('provides the current ratio in consult token0', async () => {
-      expect(await slidingWindowOracle.consult(token0.address, 100, token1.address)).to.eq(200)
-    })
-    it('provides the current ratio in consult token1', async () => {
-      expect(await slidingWindowOracle.consult(token1.address, 100, token0.address)).to.eq(50)
+      it('pair not exists', async () => {
+        await expect(slidingWindowOracle.consult(weth.address, 0, token1.address)).to.be.reverted
+      })
+
+      it('provides the current ratio in consult token0', async () => {
+        expect(await slidingWindowOracle.consult(token0.address, 100, token1.address)).to.eq(200)
+      })
+      it('provides the current ratio in consult token1', async () => {
+        expect(await slidingWindowOracle.consult(token1.address, 100, token0.address)).to.eq(50)
+      })
     })
   })
 })
