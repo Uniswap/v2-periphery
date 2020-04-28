@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
-import { BigNumber } from 'ethers/utils'
+import { bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
@@ -17,7 +17,7 @@ const overrides = {
 const token0Amount = expandTo18Decimals(5)
 const token1Amount = expandTo18Decimals(10)
 
-describe.only('ExampleSlidingWindowOracle', () => {
+describe('ExampleSlidingWindowOracle', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -29,6 +29,7 @@ describe.only('ExampleSlidingWindowOracle', () => {
   let token0: Contract
   let token1: Contract
   let pair: Contract
+  let weth: Contract
   let slidingWindowOracle: Contract
 
   async function addLiquidity() {
@@ -37,17 +38,29 @@ describe.only('ExampleSlidingWindowOracle', () => {
     await pair.mint(wallet.address, overrides)
   }
 
+  const period = 86400
+  const numBuckets = 24
+
+  function epochBucket(timestamp: number): number {
+    return Math.floor(timestamp / (period / numBuckets))
+  }
+
+  function bucketIndex(timestamp: number): number {
+    return epochBucket(timestamp) % numBuckets
+  }
+
   beforeEach('deploy fixture', async function() {
     const fixture = await loadFixture(v2Fixture)
 
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
+    weth = fixture.WETH;
 
     slidingWindowOracle = await deployContract(
       wallet,
       ExampleSlidingWindowOracle,
-      [fixture.factoryV2.address, 86400, 24],
+      [fixture.factoryV2.address, period, numBuckets],
       overrides
     )
   })
@@ -62,15 +75,75 @@ describe.only('ExampleSlidingWindowOracle', () => {
     it('sets the appropriate epoch slot', async () => {
       const blockTimestamp = (await pair.getReserves())[2]
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
-      const slot = blockTimestamp /
-      expect(await slidingWindowOracle.pairPriceData(pair.address, ))
-        .to.eq([])
-    })
+      expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+        await pair.price0CumulativeLast(),
+        await pair.price1CumulativeLast(),
+        epochBucket(blockTimestamp),
+        blockTimestamp
+      ])
+    }).retries(2) // we may have slight differences between pair blockTimestamp and the expected timestamp
+    // because the previous block timestamp may differ from the current block timestamp by 1 second
 
-    it('gas', async () => {
+    it('gas for first update (allocates empty array)', async () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('176053')
+      expect(receipt.gasUsed).to.eq('131142')
+    })
+
+    it('gas for second update', async () => {
+      await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      const receipt = await tx.wait()
+      expect(receipt.gasUsed).to.eq('50718')
+    }).retries(2) // sometimes gas used is wrong
+
+    it('pair not exists', async () => {
+      await expect(slidingWindowOracle.update(weth.address, token1.address))
+        .to.be.reverted
+    })
+  })
+
+  describe('#consult', () => {
+    let blockTimestamp: number
+    let previousBlockTimestamp: number
+    let previousCumulativePrices: any
+    beforeEach('add some prices', async () => {
+      previousBlockTimestamp = (await pair.getReserves())[2]
+      previousCumulativePrices = [await pair.price0CumulativeLast(), await pair.price1CumulativeLast()]
+      await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      blockTimestamp = previousBlockTimestamp + 60 * 60 * 23
+      await mineBlock(provider, blockTimestamp)
+      await slidingWindowOracle.update(token0.address, token1.address, overrides)
+    })
+
+    it('has prices in previous bucket', async () => {
+      expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(previousBlockTimestamp))).to.deep.eq([
+        previousCumulativePrices[0],
+        previousCumulativePrices[1],
+        epochBucket(previousBlockTimestamp),
+        previousBlockTimestamp
+      ])
+    })
+
+    it('has prices in current bucket', async () => {
+      expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+        await pair.price0CumulativeLast(),
+        await pair.price1CumulativeLast(),
+        epochBucket(blockTimestamp),
+        blockTimestamp
+      ])
+    })
+
+    it('pair not exists', async () => {
+      await expect(slidingWindowOracle.consult(weth.address, 0, token1.address))
+        .to.be.reverted
+    })
+
+    it('provides the current ratio in consult token0', async () => {
+      expect(await slidingWindowOracle.consult(token0.address, 100, token1.address)).to.eq(200)
+    })
+    it('provides the current ratio in consult token1', async () => {
+      expect(await slidingWindowOracle.consult(token1.address, 100, token0.address)).to.eq(50)
     })
   })
 })
