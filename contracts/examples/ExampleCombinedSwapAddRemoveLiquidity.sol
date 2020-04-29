@@ -5,9 +5,9 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/lib/contracts/libraries/Babylonian.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 
-import "./interfaces/IUniswapV2Router01.sol";
-import "./libraries/SafeMath.sol";
-import "./libraries/UniswapV2Library.sol";
+import "../interfaces/IUniswapV2Router01.sol";
+import "../interfaces/IWETH.sol";
+import "../libraries/SafeMath.sol";
 
 // enables adding and removing liquidity with a single token to/from a pair
 // adds liquidity via a single token of the pair, by first swapping against the pair and then adding liquidity
