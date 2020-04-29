@@ -132,7 +132,7 @@ describe.only('ExampleSlidingWindowOracle', () => {
           prices[0].mul(timeElapsed),
           prices[1].mul(timeElapsed)
         ])
-      })
+      }).retries(2) // test flaky because timestamps aren't mocked
 
       it('pair not exists', async () => {
         await expect(slidingWindowOracle.consult(weth.address, 0, token1.address)).to.be.reverted
