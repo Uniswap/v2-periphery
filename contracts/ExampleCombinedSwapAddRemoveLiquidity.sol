@@ -27,8 +27,8 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
     // to the swapper's ratio of tokens
     // note this depends only on the number of tokens the caller wishes to swap and the current reserves of that token,
     // and not the current reserves of the other token
-    function calculateSwapInAmount(uint reserve, uint userIn) public pure returns (uint) {
-        return Babylonian.sqrt(reserve.mul(userIn.mul(3988000) + reserve.mul(3988009))).sub(reserve.mul(1997)) / 1994;
+    function calculateSwapInAmount(uint reserveIn, uint userIn) public pure returns (uint) {
+        return Babylonian.sqrt(reserveIn.mul(userIn.mul(3988000) + reserveIn.mul(3988009))).sub(reserveIn.mul(1997)) / 1994;
     }
 
     // computes the exact amount of tokens that should be swapped before adding liquidity for a given token
@@ -115,7 +115,6 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         );
 
         // send the amount in that we received in the burn
-        TransferHelper.safeTransfer(desiredToken, to, amountOutToTransfer);
         TransferHelper.safeApprove(undesiredToken, address(router), amountInToSwap);
 
         address[] memory path = new address[](2);
@@ -131,6 +130,8 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
             deadline
         )[1];
 
+        // we do this after the swap to save gas in the case where we do not meet the minimum output
+        TransferHelper.safeTransfer(desiredToken, to, amountOutToTransfer);
         amountDesiredTokenOut = amountOutToTransfer + amountOutSwap;
     }
 }

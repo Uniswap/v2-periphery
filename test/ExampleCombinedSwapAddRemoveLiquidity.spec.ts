@@ -15,6 +15,10 @@ const overrides = {
   gasLimit: 9999999
 }
 
+const MaxUint112 = bigNumberify(2)
+  .pow(112)
+  .sub(1)
+
 const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
 describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
@@ -23,7 +27,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
-  const [wallet] = provider.getWallets()
+  const [wallet, otherWallet] = provider.getWallets()
   const loadFixture = createFixtureLoader(provider, [wallet])
 
   let token0: Contract
@@ -59,30 +63,45 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     await pair.approve(combinedSwap.address, MaxUint256)
   })
 
-  describe('#calculateSwapInAmount', () => {
-    it('X0 == 150 and Xin = 10', async () => {
-      expect(await combinedSwap.calculateSwapInAmount(expandTo18Decimals(150), expandTo18Decimals(10))).to.eq(
-        '4926724110726670487'
-      )
-    })
-    it('X0 == 5 and Xin = 10', async () => {
-      expect(await combinedSwap.calculateSwapInAmount(expandTo18Decimals(5), expandTo18Decimals(10))).to.eq(
-        '3665754415082470298'
-      )
-    })
+  function describeAmount(n: BigNumber) {
+    if (n.eq(MaxUint256)) return 'max uint256'
+    else if (n.eq(MaxUint112)) return 'max uint112'
+    else return n.div(bigNumberify(10).pow(18))
+  }
 
-    it('works with max reserves and 10k tokens', async () => {
-      expect(
-        await combinedSwap.calculateSwapInAmount(
-          bigNumberify(2)
-            .pow(112)
-            .sub(1),
-          expandTo18Decimals(10000)
-        )
-      ).to.eq(
-        '5007511266897939502255' // 5k tokens
-      )
-    })
+  describe('#calculateSwapInAmount', () => {
+    for (let [reserveIn, reserveOut, userIn] of [
+      [expandTo18Decimals(150), expandTo18Decimals(10), expandTo18Decimals(10)],
+      [expandTo18Decimals(5), expandTo18Decimals(30), expandTo18Decimals(10)],
+      [expandTo18Decimals(5), expandTo18Decimals(10), expandTo18Decimals(10)],
+      [expandTo18Decimals(5), expandTo18Decimals(10), expandTo18Decimals(5)],
+      [expandTo18Decimals(155), expandTo18Decimals(10), expandTo18Decimals(5)],
+      [expandTo18Decimals(155), expandTo18Decimals(20), expandTo18Decimals(5)],
+      [expandTo18Decimals(5), expandTo18Decimals(5), expandTo18Decimals(10)],
+      // max reserves
+      [MaxUint112, MaxUint112, expandTo18Decimals(10000)]
+    ]) {
+      it(`ratios match for reserveIn = ${describeAmount(reserveIn)}, reserveOut = ${describeAmount(
+        reserveOut
+      )}, userIn = ${describeAmount(userIn)}`, async () => {
+        const swapIn = await combinedSwap.calculateSwapInAmount(reserveIn, userIn)
+        const receiveOut = reserveOut.sub(reserveIn.mul(reserveOut).div(reserveIn.add(swapIn.mul(997).div(1000))))
+        // check the difference in ratios <= 1 (integer math truncation)
+        expect(
+          userIn
+            .sub(swapIn)
+            .div(receiveOut)
+            .sub(reserveIn.add(swapIn).div(reserveOut.sub(receiveOut)))
+            .abs()
+        ).to.lte(1)
+        expect(
+          receiveOut
+            .div(userIn.sub(swapIn))
+            .sub(reserveOut.sub(receiveOut).div(reserveIn.add(swapIn)))
+            .abs()
+        ).to.lte(1)
+      })
+    }
   })
 
   describe('#swapExactTokensAndAddLiquidity', () => {
@@ -100,8 +119,9 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
           token1.address,
           userAddToken0Amount,
           expectedAmountB,
-          wallet.address,
-          MaxUint256
+          otherWallet.address,
+          MaxUint256,
+          overrides
         )
       )
         .to.emit(token0, 'Transfer')
@@ -116,25 +136,76 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
   })
 
   describe('#removeLiquidityAndSwapToToken', () => {
+    const reserve0 = expandTo18Decimals(20)
+    const reserve1 = expandTo18Decimals(180)
     beforeEach('add liquidity', async () => {
-      await addLiquidity(expandTo18Decimals(20), expandTo18Decimals(180))
+      await addLiquidity(reserve0, reserve1)
       expect(await pair.balanceOf(wallet.address)).to.eq(expandTo18Decimals(60).sub(MINIMUM_LIQUIDITY))
     })
     it('burns and swaps', async () => {
       const removeLiquidityAmount = expandTo18Decimals(6)
-      const minToken1Out = expandTo18Decimals(20) // greater than 180 * 0.1 (6/60)
+      const minDesiredTokenOut = expandTo18Decimals(20) // greater than 180 * 0.1 (6/60)
+      const expectedBurnAmountUndesiredToken = expandTo18Decimals(2)
+      const expectedBurnAmountDesiredToken = expandTo18Decimals(18)
+      const undesiredToken = token0
+      const desiredToken = token1
+      const reserve0AfterBurn = reserve0.sub(expectedBurnAmountUndesiredToken)
+      const reserve1AfterBurn = reserve1.sub(expectedBurnAmountDesiredToken)
+      const kAfterBurn = reserve0AfterBurn.mul(reserve1AfterBurn)
+      const expectedAmountFromSwapAfterBurn = reserve1
+        .sub(expectedBurnAmountDesiredToken)
+        .sub(kAfterBurn.div(reserve0AfterBurn.add(expectedBurnAmountUndesiredToken.mul(997).div(1000))))
       await expect(
         combinedSwap.removeLiquidityAndSwapToToken(
-          token0.address,
-          token1.address,
+          undesiredToken.address,
+          desiredToken.address,
           removeLiquidityAmount,
-          minToken1Out,
-          wallet.address,
-          MaxUint256
+          minDesiredTokenOut,
+          otherWallet.address,
+          MaxUint256,
+          overrides
         )
       )
+        // burns the liquidity
         .to.emit(pair, 'Transfer')
-        .withArgs(wallet.address, pair.address, removeLiquidityAmount)
+        .withArgs(wallet.address, combinedSwap.address, removeLiquidityAmount)
+        .to.emit(pair, 'Approval')
+        .withArgs(combinedSwap.address, router.address, removeLiquidityAmount)
+        .to.emit(pair, 'Transfer')
+        .withArgs(combinedSwap.address, pair.address, removeLiquidityAmount)
+        .to.emit(undesiredToken, 'Transfer')
+        .withArgs(pair.address, combinedSwap.address, expectedBurnAmountUndesiredToken)
+        .to.emit(desiredToken, 'Transfer')
+        .withArgs(pair.address, combinedSwap.address, expectedBurnAmountDesiredToken)
+        .to.emit(pair, 'Burn')
+        .withArgs(
+          router.address,
+          expectedBurnAmountUndesiredToken,
+          expectedBurnAmountDesiredToken,
+          combinedSwap.address
+        )
+        // then swaps the undesired token through the router
+        .to.emit(undesiredToken, 'Approval')
+        .withArgs(combinedSwap.address, router.address, expectedBurnAmountUndesiredToken)
+        .to.emit(undesiredToken, 'Transfer')
+        .withArgs(combinedSwap.address, pair.address, expectedBurnAmountUndesiredToken)
+        // .to.emit(desiredToken, 'Transfer')
+        // .withArgs(pair.address, otherWallet.address, expectedAmountFromSwapAfterBurn)
+        // receives desired token from the swap
+        // .to.emit(pair, 'Swap')
+        // .withArgs(
+        //   combinedSwap.address,
+        //   expectedBurnAmountUndesiredToken,
+        //   0,
+        //   0,
+        //   expectedAmountFromSwapAfterBurn,
+        //   otherWallet.address
+        // )
+        // then transfers the desired token from the burn to the to address
+        .to.emit(desiredToken, 'Transfer')
+        .withArgs(combinedSwap.address, otherWallet.address, expectedBurnAmountDesiredToken)
+
+      expect(desiredToken.balanceOf(otherWallet.address)).gte(minDesiredTokenOut);
     })
   })
 })
