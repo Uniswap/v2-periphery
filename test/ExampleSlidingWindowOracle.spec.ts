@@ -38,11 +38,13 @@ describe('ExampleSlidingWindowOracle', () => {
     await pair.mint(wallet.address, overrides)
   }
 
-  const period = 86400
-  const numBuckets = 24
+  const windowSize = 86400 // 24 hours
+  const granularity = 24 // 1 hour each
 
-  function observationIndex(timestamp: number): number {
-    return Math.floor((timestamp % period) / (period / numBuckets))
+  function observationIndexOf(timestamp: number): number {
+    const periodSize = Math.floor(windowSize / granularity)
+    const epochPeriod = Math.floor(timestamp / periodSize)
+    return epochPeriod % granularity
   }
 
   beforeEach('deploy fixture', async function() {
@@ -56,7 +58,7 @@ describe('ExampleSlidingWindowOracle', () => {
     slidingWindowOracle = await deployContract(
       wallet,
       ExampleSlidingWindowOracle,
-      [fixture.factoryV2.address, period, numBuckets],
+      [fixture.factoryV2.address, windowSize, granularity],
       overrides
     )
   })
@@ -71,8 +73,8 @@ describe('ExampleSlidingWindowOracle', () => {
     it('sets the appropriate epoch slot', async () => {
       const blockTimestamp = (await pair.getReserves())[2]
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
-      expect(await slidingWindowOracle.pairObservations(pair.address, observationIndex(blockTimestamp))).to.deep.eq([
-        blockTimestamp,
+      expect(await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(blockTimestamp))).to.deep.eq([
+        bigNumberify(blockTimestamp),
         await pair.price0CumulativeLast(),
         await pair.price1CumulativeLast()
       ])
@@ -82,14 +84,21 @@ describe('ExampleSlidingWindowOracle', () => {
     it('gas for first update (allocates empty array)', async () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('117730')
+      expect(receipt.gasUsed).to.eq('116913')
     }).retries(2) // gas test inconsistent
 
-    it('gas for second update', async () => {
+    it('gas for second update same period', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('34052')
+      expect(receipt.gasUsed).to.eq('25671')
+    }).retries(2) // gas test inconsistent
+
+    it('gas for second update different period', async () => {
+      await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
+      const receipt = await tx.wait()
+      expect(receipt.gasUsed).to.eq('25671')
     }).retries(2) // gas test inconsistent
 
     it('pair not exists', async () => {
@@ -120,18 +129,16 @@ describe('ExampleSlidingWindowOracle', () => {
 
       it('has cumulative price in previous bucket', async () => {
         expect(
-          await slidingWindowOracle.pairObservations(pair.address, observationIndex(previousBlockTimestamp))
-        ).to.deep.eq([previousBlockTimestamp, previousCumulativePrices[0], previousCumulativePrices[1]])
+          await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(previousBlockTimestamp))
+        ).to.deep.eq([bigNumberify(previousBlockTimestamp), previousCumulativePrices[0], previousCumulativePrices[1]])
       })
 
       it('has cumulative price in current bucket', async () => {
         const timeElapsed = blockTimestamp - previousBlockTimestamp
         const prices = encodePrice(token0Amount, token1Amount)
-        expect(await slidingWindowOracle.pairObservations(pair.address, observationIndex(blockTimestamp))).to.deep.eq([
-          blockTimestamp,
-          prices[0].mul(timeElapsed),
-          prices[1].mul(timeElapsed)
-        ])
+        expect(
+          await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(blockTimestamp))
+        ).to.deep.eq([bigNumberify(blockTimestamp), prices[0].mul(timeElapsed), prices[1].mul(timeElapsed)])
       }).retries(5) // test flaky because timestamps aren't mocked
 
       it('pair not exists', async () => {
