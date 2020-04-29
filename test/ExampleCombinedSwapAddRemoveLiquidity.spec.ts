@@ -205,7 +205,8 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
         .to.emit(desiredToken, 'Transfer')
         .withArgs(combinedSwap.address, otherWallet.address, expectedBurnAmountDesiredToken)
 
-      expect(desiredToken.balanceOf(otherWallet.address)).gte(minDesiredTokenOut)
+      expect(await desiredToken.balanceOf(otherWallet.address)).gte(minDesiredTokenOut)
+      expect(await undesiredToken.balanceOf(otherWallet.address)).eq(0)
     })
   })
 })
