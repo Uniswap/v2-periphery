@@ -15,6 +15,8 @@ const overrides = {
   gasLimit: 9999999
 }
 
+const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
+
 describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
@@ -27,6 +29,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
   let token0: Contract
   let token1: Contract
   let pair: Contract
+  let router: Contract
   let combinedSwap: Contract
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
@@ -41,6 +44,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
+    router = fixture.router
     combinedSwap = await deployContract(
       wallet,
       ExampleCombinedSwapAddRemoveLiquidity,
@@ -49,9 +53,10 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     )
   })
 
-  beforeEach('approve transfers to combined swap', async () => {
+  beforeEach('approve transfers of all tokens to combined swap', async () => {
     await token0.approve(combinedSwap.address, MaxUint256)
     await token1.approve(combinedSwap.address, MaxUint256)
+    await pair.approve(combinedSwap.address, MaxUint256);
   })
 
   describe('#calculateSwapInAmount', () => {
@@ -67,40 +72,61 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     })
 
     it('works with max reserves and 10k tokens', async () => {
-      expect(await combinedSwap.calculateSwapInAmount(bigNumberify(2).pow(112).sub(1), expandTo18Decimals(10000))).to.eq(
+      expect(
+        await combinedSwap.calculateSwapInAmount(
+          bigNumberify(2)
+            .pow(112)
+            .sub(1),
+          expandTo18Decimals(10000)
+        )
+      ).to.eq(
         '5007511266897939502255' // 5k tokens
       )
     })
   })
 
   describe('#swapExactTokensAndAddLiquidity', () => {
-    it.only('works with 5:10 token0:token1', async () => {
-      await addLiquidity(expandTo18Decimals(50), expandTo18Decimals(100))
-      expect(
-        await combinedSwap.swapExactTokensAndAddLiquidity(
+    it('works with 5:10 token0:token1', async () => {
+      const reserve0 = expandTo18Decimals(50)
+      const reserve1 = expandTo18Decimals(100)
+      const k0 = reserve0.mul(reserve1)
+      const userAddToken0Amount = expandTo18Decimals(5)
+      await addLiquidity(reserve0, reserve1)
+      const swapAmount = await combinedSwap.calculateSwapInAmount(reserve0, userAddToken0Amount)
+      const expectedAmountB = reserve1.sub(k0.div(reserve0.add(swapAmount.mul(997).div(1000))))
+      await expect(
+        combinedSwap.swapExactTokensAndAddLiquidity(
           token0.address,
           token1.address,
-          expandTo18Decimals(5),
-          0,
+          userAddToken0Amount,
+          expectedAmountB,
           wallet.address,
           MaxUint256
         )
       )
-      // .to.emit(pair, '')
+        .to.emit(token0, 'Transfer')
+        .withArgs(wallet.address, combinedSwap.address, userAddToken0Amount)
+        .to.emit(token0, 'Approval')
+        .withArgs(combinedSwap.address, router.address, userAddToken0Amount)
+        .to.emit(token0, 'Transfer')
+        .withArgs(combinedSwap.address, pair.address, swapAmount)
+        .to.emit(token1, 'Transfer')
+        .withArgs(pair.address, combinedSwap.address, expectedAmountB.add(1))
     })
   })
 
   describe('#removeLiquidityAndSwapToToken', () => {
-    beforeEach('add liquidity', () => {
-      // results in 5 lp tokens
-      addLiquidity(expandTo18Decimals(4), expandTo18Decimals(3))
+    beforeEach('add liquidity', async () => {
+      await addLiquidity(expandTo18Decimals(20), expandTo18Decimals(180))
+      expect(await pair.balanceOf(wallet.address)).to.eq(expandTo18Decimals(60).sub(MINIMUM_LIQUIDITY))
     })
-    it('burns and swaps', async () => {
+    it.only('burns and swaps', async () => {
+      const removeLiquidityAmount = expandTo18Decimals(5);
       await expect(
         combinedSwap.removeLiquidityAndSwapToToken(
-          token0.address, token1.address,
-          expandTo18Decimals(2),
-          /* 3 * (2/5) + (4*2/5) swapped in = 1.6, so let's say minimum out of 1.2 + 1 = 2 */
+          token0.address,
+          token1.address,
+          removeLiquidityAmount,
           expandTo18Decimals(2),
           wallet.address,
           MaxUint256

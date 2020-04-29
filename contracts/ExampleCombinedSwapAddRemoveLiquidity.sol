@@ -94,9 +94,15 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         address desiredToken,
         uint liquidity,
         uint minDesiredTokenOut,
-        address to, uint deadline
-    ) external returns (uint amountTokenOut) {
-        (uint amountInSwap, uint amountOutRemove) = router.removeLiquidity(
+        address to,
+        uint deadline
+    ) external returns (uint amountDesiredTokenOut) {
+        address pair = UniswapV2Library.pairFor(address(factory), undesiredToken, desiredToken);
+        // take possession of liquidity and give access to the router
+        TransferHelper.safeTransferFrom(pair, msg.sender, address(this), liquidity);
+        TransferHelper.safeApprove(pair, address(router), liquidity);
+
+        (uint amountInToSwap, uint amountOutToTransfer) = router.removeLiquidity(
             undesiredToken,
             desiredToken,
             liquidity,
@@ -109,22 +115,22 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         );
 
         // send the amount in that we received in the burn
-        TransferHelper.safeTransfer(desiredToken, to, amountOutRemove);
-        TransferHelper.safeApprove(undesiredToken, address(router), amountInSwap);
+        TransferHelper.safeTransfer(desiredToken, to, amountOutToTransfer);
+        TransferHelper.safeApprove(undesiredToken, address(router), amountInToSwap);
 
         address[] memory path = new address[](2);
         path[0] = undesiredToken;
         path[1] = desiredToken;
 
         uint amountOutSwap = router.swapExactTokensForTokens(
-            amountInSwap,
-        // we must get at least this much from the swap to meet the minAmountOut parameter
-            minDesiredTokenOut > amountOutRemove ? minDesiredTokenOut - amountOutRemove : 0,
+            amountInToSwap,
+        // we must get at least this much from the swap to meet the minDesiredTokenOut parameter
+            minDesiredTokenOut > amountOutToTransfer ? minDesiredTokenOut - amountOutToTransfer : 0,
             path,
             to,
             deadline
         )[1];
 
-        amountTokenOut = amountOutRemove + amountOutSwap;
+        amountDesiredTokenOut = amountOutToTransfer + amountOutSwap;
     }
 }
