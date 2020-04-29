@@ -125,7 +125,7 @@ describe.only('ExampleSlidingWindowOracle', () => {
       })
 
       it('has cumulative price in current bucket', async () => {
-        const timeElapsed = (blockTimestamp - previousBlockTimestamp)
+        const timeElapsed = blockTimestamp - previousBlockTimestamp
         const prices = encodePrice(token0Amount, token1Amount)
         expect(await slidingWindowOracle.pairObservations(pair.address, observationIndex(blockTimestamp))).to.deep.eq([
           blockTimestamp,
