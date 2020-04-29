@@ -75,11 +75,10 @@ describe('ExampleSlidingWindowOracle', () => {
     it('sets the appropriate epoch slot', async () => {
       const blockTimestamp = (await pair.getReserves())[2]
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
-      expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+      expect(await slidingWindowOracle.pairObservations(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+        blockTimestamp,
         await pair.price0CumulativeLast(),
-        await pair.price1CumulativeLast(),
-        epochBucket(blockTimestamp),
-        blockTimestamp
+        await pair.price1CumulativeLast()
       ])
     }).retries(2) // we may have slight differences between pair blockTimestamp and the expected timestamp
     // because the previous block timestamp may differ from the current block timestamp by 1 second
@@ -87,14 +86,14 @@ describe('ExampleSlidingWindowOracle', () => {
     it('gas for first update (allocates empty array)', async () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('131142')
+      expect(receipt.gasUsed).to.eq('117691')
     }).retries(2) // gas test inconsistent
 
     it('gas for second update', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('50718')
+      expect(receipt.gasUsed).to.eq('34013')
     }).retries(2) // gas test inconsistent
 
     it('pair not exists', async () => {
@@ -103,18 +102,10 @@ describe('ExampleSlidingWindowOracle', () => {
   })
 
   describe('#consult', () => {
-    it('fails if current bucket not updated', async () => {
-      await slidingWindowOracle.update(token0.address, token1.address, overrides)
-      await mineBlock(provider, (await pair.getReserves())[2] + period / numBuckets) // advance one bucket
-      await expect(slidingWindowOracle.consult(token0.address, 0, token1.address)).to.be.revertedWith(
-        'SlidingWindowOracle: CURRENT_BUCKET_NOT_UPDATED'
-      )
-    })
-
     it('fails if previous bucket not set', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       await expect(slidingWindowOracle.consult(token0.address, 0, token1.address)).to.be.revertedWith(
-        'SlidingWindowOracle: MISSING_PREVIOUS_BUCKET'
+        'SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION'
       )
     })
 
@@ -132,20 +123,16 @@ describe('ExampleSlidingWindowOracle', () => {
       })
 
       it('has prices in previous bucket', async () => {
-        expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(previousBlockTimestamp))).to.deep.eq([
-          previousCumulativePrices[0],
-          previousCumulativePrices[1],
-          epochBucket(previousBlockTimestamp),
-          previousBlockTimestamp
-        ])
+        expect(
+          await slidingWindowOracle.pairObservations(pair.address, bucketIndex(previousBlockTimestamp))
+        ).to.deep.eq([previousBlockTimestamp, previousCumulativePrices[0], previousCumulativePrices[1]])
       })
 
-      it('has prices in current bucket', async () => {
-        expect(await slidingWindowOracle.pairPriceData(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+      it.skip('has prices in current bucket', async () => {
+        expect(await slidingWindowOracle.pairObservations(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+          blockTimestamp,
           await pair.price0CumulativeLast(),
-          await pair.price1CumulativeLast(),
-          epochBucket(blockTimestamp),
-          blockTimestamp
+          await pair.price1CumulativeLast()
         ])
       })
 
