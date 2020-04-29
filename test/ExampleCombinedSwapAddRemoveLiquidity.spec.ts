@@ -120,7 +120,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
       await addLiquidity(expandTo18Decimals(20), expandTo18Decimals(180))
       expect(await pair.balanceOf(wallet.address)).to.eq(expandTo18Decimals(60).sub(MINIMUM_LIQUIDITY))
     })
-    it.only('burns and swaps', async () => {
+    it('burns and swaps', async () => {
       const removeLiquidityAmount = expandTo18Decimals(6)
       const minToken1Out = expandTo18Decimals(20) // greater than 180 * 0.1 (6/60)
       await expect(
