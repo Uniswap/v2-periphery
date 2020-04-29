@@ -39,7 +39,7 @@ contract ExampleOracleSimple {
 
     function update() external {
         (uint32 blockTimestamp, uint price0Cumulative, uint price1Cumulative) =
-            UniswapV2OracleLibrary.currentCumulativePrices(pair);
+            UniswapV2OracleLibrary.currentCumulativePrices(address(pair));
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
         // ensure that at least one full period has passed since the last update
