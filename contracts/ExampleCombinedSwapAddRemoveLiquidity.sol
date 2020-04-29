@@ -37,9 +37,12 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
     // excessive slippage or front running
     // liquidity provider shares are minted to the 'to' address
     function swapExactTokensAndAddLiquidity(
-        address tokenIn, address otherToken,
-        uint amountIn, uint minOtherTokenIn,
-        address to, uint deadline
+        address tokenIn,
+        address otherToken,
+        uint amountIn,
+        uint minOtherTokenIn,
+        address to,
+        uint deadline
     ) external returns (uint amountTokenIn, uint amountTokenOther, uint liquidity) {
         // compute how much we should swap in to match the reserve ratio of tokenIn / otherToken of the pair
         uint swapInAmount;

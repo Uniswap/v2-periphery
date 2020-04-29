@@ -108,11 +108,10 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     it('works with 5:10 token0:token1', async () => {
       const reserve0 = expandTo18Decimals(50)
       const reserve1 = expandTo18Decimals(100)
-      const k0 = reserve0.mul(reserve1)
       const userAddToken0Amount = expandTo18Decimals(5)
       await addLiquidity(reserve0, reserve1)
       const swapAmount = await combinedSwap.calculateSwapInAmount(reserve0, userAddToken0Amount)
-      const expectedAmountB = reserve1.sub(k0.div(reserve0.add(swapAmount.mul(997).div(1000))))
+      const expectedAmountB = await router.getAmountOut(swapAmount, reserve0, reserve1)
       await expect(
         combinedSwap.swapExactTokensAndAddLiquidity(
           token0.address,
@@ -124,6 +123,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
           overrides
         )
       )
+        // first swaps
         .to.emit(token0, 'Transfer')
         .withArgs(wallet.address, combinedSwap.address, userAddToken0Amount)
         .to.emit(token0, 'Approval')
@@ -131,7 +131,10 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
         .to.emit(token0, 'Transfer')
         .withArgs(combinedSwap.address, pair.address, swapAmount)
         .to.emit(token1, 'Transfer')
-        .withArgs(pair.address, combinedSwap.address, expectedAmountB.add(1))
+        .withArgs(pair.address, combinedSwap.address, expectedAmountB)
+        .to.emit(pair, 'Transfer')
+
+      expect(await pair.balanceOf(otherWallet.address)).to.be.gt(0)
     })
   })
 
@@ -151,10 +154,11 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
       const desiredToken = token1
       const reserve0AfterBurn = reserve0.sub(expectedBurnAmountUndesiredToken)
       const reserve1AfterBurn = reserve1.sub(expectedBurnAmountDesiredToken)
-      const kAfterBurn = reserve0AfterBurn.mul(reserve1AfterBurn)
-      const expectedAmountFromSwapAfterBurn = reserve1
-        .sub(expectedBurnAmountDesiredToken)
-        .sub(kAfterBurn.div(reserve0AfterBurn.add(expectedBurnAmountUndesiredToken.mul(997).div(1000))))
+      const expectedAmountFromSwapAfterBurn = await router.getAmountOut(
+        expectedBurnAmountUndesiredToken,
+        reserve0AfterBurn,
+        reserve1AfterBurn
+      )
       await expect(
         combinedSwap.removeLiquidityAndSwapToToken(
           undesiredToken.address,
@@ -189,10 +193,11 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
         .withArgs(combinedSwap.address, router.address, expectedBurnAmountUndesiredToken)
         .to.emit(undesiredToken, 'Transfer')
         .withArgs(combinedSwap.address, pair.address, expectedBurnAmountUndesiredToken)
-        // .to.emit(desiredToken, 'Transfer')
-        // .withArgs(pair.address, otherWallet.address, expectedAmountFromSwapAfterBurn)
+        .to.emit(desiredToken, 'Transfer')
+        .withArgs(pair.address, otherWallet.address, expectedAmountFromSwapAfterBurn)
         // receives desired token from the swap
-        // .to.emit(pair, 'Swap')
+        .to.emit(pair, 'Swap')
+        // TODO(moodysalem): understand why this fails
         // .withArgs(
         //   combinedSwap.address,
         //   expectedBurnAmountUndesiredToken,
@@ -205,7 +210,9 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
         .to.emit(desiredToken, 'Transfer')
         .withArgs(combinedSwap.address, otherWallet.address, expectedBurnAmountDesiredToken)
 
-      expect(await desiredToken.balanceOf(otherWallet.address)).gte(minDesiredTokenOut)
+      expect(await desiredToken.balanceOf(otherWallet.address)).eq(
+        expectedAmountFromSwapAfterBurn.add(expectedBurnAmountDesiredToken)
+      )
       expect(await undesiredToken.balanceOf(otherWallet.address)).eq(0)
     })
   })
