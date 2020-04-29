@@ -46,7 +46,7 @@ contract ExampleSlidingWindowOracle {
     }
 
     // returns the index of the observation corresponding to the given timestamp
-    function observationIndexOf(uint timestamp) view private returns (uint8 index) {
+    function observationIndexOf(uint timestamp) private view returns (uint8 index) {
         uint periodSize = windowSize / granularity;
         uint epochPeriod = timestamp / periodSize;
         return uint8(epochPeriod % granularity);
