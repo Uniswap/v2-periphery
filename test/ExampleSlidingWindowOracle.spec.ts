@@ -17,7 +17,7 @@ const overrides = {
 const token0Amount = expandTo18Decimals(5)
 const token1Amount = expandTo18Decimals(10)
 
-describe.only('ExampleSlidingWindowOracle', () => {
+describe('ExampleSlidingWindowOracle', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -132,7 +132,7 @@ describe.only('ExampleSlidingWindowOracle', () => {
           prices[0].mul(timeElapsed),
           prices[1].mul(timeElapsed)
         ])
-      }).retries(2) // test flaky because timestamps aren't mocked
+      }).retries(5) // test flaky because timestamps aren't mocked
 
       it('pair not exists', async () => {
         await expect(slidingWindowOracle.consult(weth.address, 0, token1.address)).to.be.reverted
