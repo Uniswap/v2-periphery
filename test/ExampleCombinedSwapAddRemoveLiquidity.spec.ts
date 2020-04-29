@@ -56,7 +56,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
   beforeEach('approve transfers of all tokens to combined swap', async () => {
     await token0.approve(combinedSwap.address, MaxUint256)
     await token1.approve(combinedSwap.address, MaxUint256)
-    await pair.approve(combinedSwap.address, MaxUint256);
+    await pair.approve(combinedSwap.address, MaxUint256)
   })
 
   describe('#calculateSwapInAmount', () => {
@@ -121,19 +121,20 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
       expect(await pair.balanceOf(wallet.address)).to.eq(expandTo18Decimals(60).sub(MINIMUM_LIQUIDITY))
     })
     it.only('burns and swaps', async () => {
-      const removeLiquidityAmount = expandTo18Decimals(5);
+      const removeLiquidityAmount = expandTo18Decimals(6)
+      const minToken1Out = expandTo18Decimals(20) // greater than 180 * 0.1 (6/60)
       await expect(
         combinedSwap.removeLiquidityAndSwapToToken(
           token0.address,
           token1.address,
           removeLiquidityAmount,
-          expandTo18Decimals(2),
+          minToken1Out,
           wallet.address,
           MaxUint256
         )
       )
         .to.emit(pair, 'Transfer')
-        .withArgs(wallet.address, pair.address, 2)
+        .withArgs(wallet.address, pair.address, removeLiquidityAmount)
     })
   })
 })
