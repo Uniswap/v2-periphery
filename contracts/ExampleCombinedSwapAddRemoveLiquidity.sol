@@ -15,8 +15,8 @@ import "./libraries/UniswapV2Library.sol";
 contract ExampleCombinedSwapAddRemoveLiquidity {
     using SafeMath for uint;
 
-    IUniswapV2Factory public /*immutable*/ factory;
-    IUniswapV2Router01 public /*immutable*/ router;
+    IUniswapV2Factory public immutable factory;
+    IUniswapV2Router01 public immutable router;
 
     constructor(IUniswapV2Factory factory_, IUniswapV2Router01 router_) public {
         factory = factory_;
