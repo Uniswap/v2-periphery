@@ -17,7 +17,7 @@ const overrides = {
 const token0Amount = expandTo18Decimals(5)
 const token1Amount = expandTo18Decimals(10)
 
-describe('ExampleSlidingWindowOracle', () => {
+describe.only('ExampleSlidingWindowOracle', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -41,12 +41,8 @@ describe('ExampleSlidingWindowOracle', () => {
   const period = 86400
   const numBuckets = 24
 
-  function epochBucket(timestamp: number): number {
-    return Math.floor(timestamp / (period / numBuckets))
-  }
-
-  function bucketIndex(timestamp: number): number {
-    return epochBucket(timestamp) % numBuckets
+  function observationIndex(timestamp: number): number {
+    return Math.floor((timestamp % period) / (period / numBuckets))
   }
 
   beforeEach('deploy fixture', async function() {
@@ -75,7 +71,7 @@ describe('ExampleSlidingWindowOracle', () => {
     it('sets the appropriate epoch slot', async () => {
       const blockTimestamp = (await pair.getReserves())[2]
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
-      expect(await slidingWindowOracle.pairObservations(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+      expect(await slidingWindowOracle.pairObservations(pair.address, observationIndex(blockTimestamp))).to.deep.eq([
         blockTimestamp,
         await pair.price0CumulativeLast(),
         await pair.price1CumulativeLast()
@@ -86,14 +82,14 @@ describe('ExampleSlidingWindowOracle', () => {
     it('gas for first update (allocates empty array)', async () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('117691')
+      expect(receipt.gasUsed).to.eq('117730')
     }).retries(2) // gas test inconsistent
 
     it('gas for second update', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('34013')
+      expect(receipt.gasUsed).to.eq('34052')
     }).retries(2) // gas test inconsistent
 
     it('pair not exists', async () => {
@@ -122,17 +118,19 @@ describe('ExampleSlidingWindowOracle', () => {
         await slidingWindowOracle.update(token0.address, token1.address, overrides)
       })
 
-      it('has prices in previous bucket', async () => {
+      it('has cumulative price in previous bucket', async () => {
         expect(
-          await slidingWindowOracle.pairObservations(pair.address, bucketIndex(previousBlockTimestamp))
+          await slidingWindowOracle.pairObservations(pair.address, observationIndex(previousBlockTimestamp))
         ).to.deep.eq([previousBlockTimestamp, previousCumulativePrices[0], previousCumulativePrices[1]])
       })
 
-      it.skip('has prices in current bucket', async () => {
-        expect(await slidingWindowOracle.pairObservations(pair.address, bucketIndex(blockTimestamp))).to.deep.eq([
+      it('has cumulative price in current bucket', async () => {
+        const timeElapsed = (blockTimestamp - previousBlockTimestamp)
+        const prices = encodePrice(token0Amount, token1Amount)
+        expect(await slidingWindowOracle.pairObservations(pair.address, observationIndex(blockTimestamp))).to.deep.eq([
           blockTimestamp,
-          await pair.price0CumulativeLast(),
-          await pair.price1CumulativeLast()
+          prices[0].mul(timeElapsed),
+          prices[1].mul(timeElapsed)
         ])
       })
 
@@ -143,6 +141,7 @@ describe('ExampleSlidingWindowOracle', () => {
       it('provides the current ratio in consult token0', async () => {
         expect(await slidingWindowOracle.consult(token0.address, 100, token1.address)).to.eq(200)
       })
+
       it('provides the current ratio in consult token1', async () => {
         expect(await slidingWindowOracle.consult(token1.address, 100, token0.address)).to.eq(50)
       })
