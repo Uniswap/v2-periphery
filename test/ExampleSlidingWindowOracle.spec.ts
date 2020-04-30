@@ -84,21 +84,21 @@ describe('ExampleSlidingWindowOracle', () => {
     it('gas for first update (allocates empty array)', async () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('116913')
+      expect(receipt.gasUsed).to.eq('116816')
     }).retries(2) // gas test inconsistent
 
-    it('gas for second update same period', async () => {
+    it('gas for second update in the same period (skips)', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('25671')
+      expect(receipt.gasUsed).to.eq('25574')
     }).retries(2) // gas test inconsistent
 
-    it('gas for second update different period', async () => {
+    it('gas for second update different period (no allocate, no skip)', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('25671')
+      expect(receipt.gasUsed).to.eq('25574')
     }).retries(2) // gas test inconsistent
 
     it('pair not exists', async () => {

@@ -33,31 +33,35 @@ contract ExampleSlidingWindowOracle {
     //   the period:
     //   [now - [22 hours, 24 hours], now]
     uint8 public immutable granularity;
+    // this is redundant with granularity and windowSize, but stored for gas savings & informational purposes.
+    uint public immutable periodSize;
 
     // mapping from pair address to a list of price observations of that pair
     mapping(address => Observation[]) public pairObservations;
 
     constructor(address factory_, uint windowSize_, uint8 granularity_) public {
         require(granularity_ > 1, 'SlidingWindowOracle: GRANULARITY');
-        require((windowSize_ / granularity_) * granularity_ == windowSize_, 'SlidingWindowOracle: WINDOW_NOT_EVENLY_DIVISIBLE');
+        require(
+            (periodSize = windowSize_ / granularity_) * granularity_ == windowSize_,
+            'SlidingWindowOracle: WINDOW_NOT_EVENLY_DIVISIBLE'
+        );
         factory = factory_;
         windowSize = windowSize_;
         granularity = granularity_;
     }
 
     // returns the index of the observation corresponding to the given timestamp
-    function observationIndexOf(uint timestamp) private view returns (uint8 index) {
-        uint periodSize = windowSize / granularity;
+    function observationIndexOf(uint timestamp) public view returns (uint8 index) {
         uint epochPeriod = timestamp / periodSize;
         return uint8(epochPeriod % granularity);
     }
 
     // returns the observation from the oldest epoch (at the beginning of the window) relative to the current time
-    function getHistoricalObservation(address pair) private view returns (Observation storage historicalObservation) {
+    function getFirstObservationInWindow(address pair) private view returns (Observation storage firstObservation) {
         uint8 observationIndex = observationIndexOf(block.timestamp);
         // no overflow issue. if observationIndex + 1 overflows, result is still zero.
-        uint8 historicalObservationIndex = (observationIndex + 1) % granularity;
-        historicalObservation = pairObservations[pair][historicalObservationIndex];
+        uint8 firstObservationIndex = (observationIndex + 1) % granularity;
+        firstObservation = pairObservations[pair][firstObservationIndex];
     }
 
     // update the cumulative price for the observation at the current timestamp. each observation is updated at most
@@ -76,8 +80,8 @@ contract ExampleSlidingWindowOracle {
 
         // we only want to commit updates once per period (i.e. windowSize / granularity)
         uint timeElapsed = block.timestamp - observation.timestamp;
-        if (timeElapsed > windowSize / granularity) {
-            (,uint price0Cumulative, uint price1Cumulative) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
+        if (timeElapsed > periodSize) {
+            (uint price0Cumulative, uint price1Cumulative,) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
             observation.timestamp = block.timestamp;
             observation.price0Cumulative = price0Cumulative;
             observation.price1Cumulative = price1Cumulative;
@@ -99,22 +103,22 @@ contract ExampleSlidingWindowOracle {
 
     // returns the amount out corresponding to the amount in for a given token using the moving average over the time
     // range [now - windowSize, now]
-    // update must have been called for the bucket corresponding to `now - period` as well as the bucket corresponding
-    // to `now`
+    // update must have been called for the bucket corresponding to timestamp `now - period` as well as the bucket
+    // corresponding to `now`
     function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {
         address pair = UniswapV2Library.pairFor(factory, tokenIn, tokenOut);
-        Observation storage historicalObservation = getHistoricalObservation(pair);
+        Observation storage firstObservation = getFirstObservationInWindow(pair);
 
-        uint timeElapsed = block.timestamp - historicalObservation.timestamp;
+        uint timeElapsed = block.timestamp - firstObservation.timestamp;
         require(timeElapsed <= windowSize, 'SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');
 
-        (,uint price0Cumulative, uint price1Cumulative) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
+        (uint price0Cumulative, uint price1Cumulative,) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
         (address token0,) = UniswapV2Library.sortTokens(tokenIn, tokenOut);
 
         if (token0 == tokenIn) {
-            return computeAmountOut(historicalObservation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);
+            return computeAmountOut(firstObservation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);
         } else {
-            return computeAmountOut(historicalObservation.price1Cumulative, price1Cumulative, timeElapsed, amountIn);
+            return computeAmountOut(firstObservation.price1Cumulative, price1Cumulative, timeElapsed, amountIn);
         }
     }
 }
