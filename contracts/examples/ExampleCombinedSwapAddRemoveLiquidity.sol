@@ -189,9 +189,9 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
     }
 
     // only WETH can send to this contract without a function call.
-    /*receive() payable external {
+    receive() payable external {
         require(msg.sender == address(weth), 'CombinedSwapAddRemoveLiquidity: RECEIVE_NOT_FROM_WETH');
-    }*/
+    }
 
     // similar to the above method but for when the desired token is WETH, handles unwrapping
     function removeLiquidityAndSwapToETH(
