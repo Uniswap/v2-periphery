@@ -111,6 +111,8 @@ contract ExampleSlidingWindowOracle {
 
         uint timeElapsed = block.timestamp - firstObservation.timestamp;
         require(timeElapsed <= windowSize, 'SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');
+        // should never happen.
+        require(timeElapsed >= windowSize - periodSize * 2, 'SlidingWindowOracle: UNEXPECTED_TIME_ELAPSED');
 
         (uint price0Cumulative, uint price1Cumulative,) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
         (address token0,) = UniswapV2Library.sortTokens(tokenIn, tokenOut);
