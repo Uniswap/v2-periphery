@@ -104,7 +104,7 @@ describe('ExampleSlidingWindowOracle', () => {
       expect(await oracle.observationIndexOf(86400)).to.eq(0)
       expect(await oracle.observationIndexOf(90000)).to.eq(1)
     })
-    it('overflow safe', async( )=> {
+    it('overflow safe', async () => {
       const oracle = await deployOracle(25500, 255) // 100 period size
       expect(await oracle.observationIndexOf(0)).to.eq(0)
       expect(await oracle.observationIndexOf(99)).to.eq(0)
