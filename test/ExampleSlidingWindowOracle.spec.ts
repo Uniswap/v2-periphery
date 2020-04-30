@@ -104,6 +104,15 @@ describe('ExampleSlidingWindowOracle', () => {
       expect(await oracle.observationIndexOf(86400)).to.eq(0)
       expect(await oracle.observationIndexOf(90000)).to.eq(1)
     })
+    it('overflow safe', async( )=> {
+      const oracle = await deployOracle(25500, 255) // 100 period size
+      expect(await oracle.observationIndexOf(0)).to.eq(0)
+      expect(await oracle.observationIndexOf(99)).to.eq(0)
+      expect(await oracle.observationIndexOf(100)).to.eq(1)
+      expect(await oracle.observationIndexOf(199)).to.eq(1)
+      expect(await oracle.observationIndexOf(25499)).to.eq(254) // 255th element
+      expect(await oracle.observationIndexOf(25500)).to.eq(0)
+    })
     it('matches offline computation', async () => {
       const oracle = await deployOracle(defaultWindowSize, defaultGranularity)
       for (let timestamp of [0, 5000, 1000, 25000, 86399, 86400, 86401]) {
