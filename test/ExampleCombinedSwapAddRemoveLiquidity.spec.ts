@@ -35,11 +35,22 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
   let pair: Contract
   let router: Contract
   let combinedSwap: Contract
+  let weth: Contract
+  let wethPartner: Contract
+  let wethPair: Contract
 
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
     await token0.transfer(pair.address, token0Amount)
     await token1.transfer(pair.address, token1Amount)
     await pair.mint(wallet.address, overrides)
+  }
+
+  async function addETHLiquidity(ethAmount: BigNumber, partnerAmount: BigNumber) {
+    // get weth
+    await weth.deposit({ ...overrides, value: ethAmount })
+    await weth.transfer(wethPair.address, ethAmount)
+    await wethPartner.transfer(wethPair.address, partnerAmount)
+    await wethPair.mint(wallet.address, overrides)
   }
 
   beforeEach(async function() {
@@ -49,10 +60,13 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     token1 = fixture.token1
     pair = fixture.pair
     router = fixture.router
+    weth = fixture.WETH
+    wethPartner = fixture.WETHPartner
+    wethPair = fixture.WETHPair
     combinedSwap = await deployContract(
       wallet,
       ExampleCombinedSwapAddRemoveLiquidity,
-      [fixture.factoryV2.address, fixture.router.address],
+      [fixture.factoryV2.address, fixture.router.address, fixture.WETH.address],
       overrides
     )
   })
@@ -112,6 +126,9 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
       await addLiquidity(reserve0, reserve1)
       const swapAmount = await combinedSwap.calculateSwapInAmount(reserve0, userAddToken0Amount)
       const expectedAmountB = await router.getAmountOut(swapAmount, reserve0, reserve1)
+
+      expect(await pair.balanceOf(otherWallet.address)).to.eq(0)
+
       await expect(
         combinedSwap.swapExactTokensAndAddLiquidity(
           token0.address,
@@ -135,6 +152,42 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
         .to.emit(pair, 'Transfer')
 
       expect(await pair.balanceOf(otherWallet.address)).to.be.gt(0)
+    })
+  })
+
+  describe('#swapExactETHAndAddLiquidity', () => {
+    it.skip('works with 5:10 eth:partner', async () => {
+      const reserveETH = expandTo18Decimals(1)
+      const reserveToken = expandTo18Decimals(10)
+      const userAddETHAmount = expandTo18Decimals(1)
+
+      await addETHLiquidity(reserveETH, reserveToken)
+
+      const swapAmount = await combinedSwap.calculateSwapInAmount(reserveETH, userAddETHAmount)
+      const expectedAmountPartner = await router.getAmountOut(swapAmount, reserveETH, reserveToken)
+
+      expect(await wethPair.balanceOf(otherWallet.address)).to.eq(0)
+
+      await expect(
+        combinedSwap.swapExactETHAndAddLiquidity(
+          wethPartner.address,
+          expectedAmountPartner,
+          otherWallet.address,
+          MaxUint256,
+          { ...overrides, value: userAddETHAmount }
+        )
+      )
+        .to.emit(weth.address, 'Deposit')
+        .withArgs(combinedSwap.address, userAddETHAmount)
+        .to.emit(weth.address, 'Approval')
+        .withArgs(combinedSwap.address, router.address, userAddETHAmount)
+        .to.emit(weth.address, 'Transfer')
+        .withArgs(combinedSwap.address, wethPair.address, swapAmount)
+        .to.emit(wethPartner.address, 'Transfer')
+        .withArgs(wethPair.address, combinedSwap.address, expectedAmountPartner)
+        .to.emit(wethPair, 'Transfer')
+
+      expect(await wethPair.balanceOf(otherWallet.address)).to.be.gt(0)
     })
   })
 
@@ -197,15 +250,14 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
         .withArgs(pair.address, otherWallet.address, expectedAmountFromSwapAfterBurn)
         // receives desired token from the swap
         .to.emit(pair, 'Swap')
-        // TODO(moodysalem): understand why this fails
-        // .withArgs(
-        //   combinedSwap.address,
-        //   expectedBurnAmountUndesiredToken,
-        //   0,
-        //   0,
-        //   expectedAmountFromSwapAfterBurn,
-        //   otherWallet.address
-        // )
+        .withArgs(
+          router.address,
+          expectedBurnAmountUndesiredToken,
+          0,
+          0,
+          expectedAmountFromSwapAfterBurn,
+          otherWallet.address
+        )
         // then transfers the desired token from the burn to the to address
         .to.emit(desiredToken, 'Transfer')
         .withArgs(combinedSwap.address, otherWallet.address, expectedBurnAmountDesiredToken)
