@@ -74,7 +74,7 @@ contract ExampleSlidingWindowOracle {
             pairObservations[pair].push();
         }
 
-        // get the observation for the correct epoch
+        // get the observation for the current period
         uint8 observationIndex = observationIndexOf(block.timestamp);
         Observation storage observation = pairObservations[pair][observationIndex];
 
@@ -102,9 +102,8 @@ contract ExampleSlidingWindowOracle {
     }
 
     // returns the amount out corresponding to the amount in for a given token using the moving average over the time
-    // range [now - windowSize, now]
-    // update must have been called for the bucket corresponding to timestamp `now - period` as well as the bucket
-    // corresponding to `now`
+    // range [now - [windowSize, windowSize - periodSize * 2], now]
+    // update must have been called for the bucket corresponding to timestamp `now - windowSize`
     function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {
         address pair = UniswapV2Library.pairFor(factory, tokenIn, tokenOut);
         Observation storage firstObservation = getFirstObservationInWindow(pair);
