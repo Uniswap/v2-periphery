@@ -7,6 +7,9 @@ import './ExampleSlidingWindowOracle.sol';
 
 // hub contract that deploys several oracles and manages updating them all when necessary as well as reimbursing callers
 contract ExampleOracleHub {
+    // max gas price that will be reimbursed by this contract
+    uint public constant MAX_REIMBURSABLE_GAS_PRICE = 0xBA43B7400; // 50 Gwei
+
     // mapping from pair address to a uint encoding 4 different uint64s, each representing
     // the last update epoch period of different oracles.
     mapping(address => uint) private lastUpdated;
@@ -66,8 +69,8 @@ contract ExampleOracleHub {
         lastUpdated[pair] = toSave + hp;
     }
 
-    // updates oracles, and returns true if oracles were updated. can be called by the public if this contract runs out
-    // of funds.
+    // updates oracles, and returns true if oracles were updated. can be called whether this contract has funds to
+    // reimburse for the updates.
     function updateOracles(address pair) public returns (bool) {
         (uint64 lastHourlyPeriod, uint64 lastDailyPeriod, uint64 lastWeeklyPeriod, uint64 lastMonthlyPeriod) = getLastPairUpdated(pair);
         (uint64 hp, uint64 dp, uint64 wp, uint64 mp) = currentEpochPeriods();
@@ -100,7 +103,8 @@ contract ExampleOracleHub {
         }
         uint gasBefore = gasleft();
         if (updateOracles(pair)) {
-            uint owed = (gasBefore - gasleft()) * tx.gasprice;
+            uint gasPricePayable = tx.gasprice > MAX_REIMBURSABLE_GAS_PRICE ? MAX_REIMBURSABLE_GAS_PRICE : tx.gasprice;
+            uint owed = (gasBefore - gasleft()) * gasPricePayable;
             TransferHelper.safeTransferETH(refundTo, owed > address(this).balance ? address(this).balance : owed);
         }
     }
