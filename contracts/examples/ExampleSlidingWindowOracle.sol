@@ -101,25 +101,55 @@ contract ExampleSlidingWindowOracle {
         amountOut = priceAverage.mul(amountIn).decode144();
     }
 
-    // returns the amount out corresponding to the amount in for a given token using the moving average over the time
-    // range [now - [windowSize, windowSize - periodSize * 2], now]
-    // update must have been called for the bucket corresponding to timestamp `now - windowSize`
-    function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {
-        address pair = UniswapV2Library.pairFor(factory, tokenIn, tokenOut);
-        Observation storage firstObservation = getFirstObservationInWindow(pair);
-
-        uint timeElapsed = block.timestamp - firstObservation.timestamp;
-        require(timeElapsed <= windowSize, 'SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');
-        // should never happen.
-        require(timeElapsed >= windowSize - periodSize * 2, 'SlidingWindowOracle: UNEXPECTED_TIME_ELAPSED');
-
+    function computeAmountOut(Observation storage observation, address pair, address tokenIn, uint amountIn, address tokenOut, uint timeElapsed) view private returns (uint amountOut) {
         (uint price0Cumulative, uint price1Cumulative,) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
         (address token0,) = UniswapV2Library.sortTokens(tokenIn, tokenOut);
 
         if (token0 == tokenIn) {
-            return computeAmountOut(firstObservation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);
+            amountOut = computeAmountOut(observation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);
         } else {
-            return computeAmountOut(firstObservation.price1Cumulative, price1Cumulative, timeElapsed, amountIn);
+            amountOut = computeAmountOut(observation.price1Cumulative, price1Cumulative, timeElapsed, amountIn);
         }
+    }
+
+    // returns the average price over a period of size between `desiredWindowSize` and `minWindowSize` for the range
+    // [periodStartTimestamp, now] where periodStartTimestamp is between `now - desiredWindowSize` and
+    // `now - minWindowSize`
+    function consult(address tokenIn, uint amountIn, address tokenOut, uint desiredWindowSize, uint minWindowSize) public view returns (
+            uint amountOut, uint periodStartTimestamp
+        ) {
+        require(desiredWindowSize <= windowSize, 'SlidingWindowOracle: INVALID_DESIRED_WINDOW_SIZE');
+        require(minWindowSize < desiredWindowSize, 'SlidingWindowOracle: INVALID_MIN_WINDOW_SIZE');
+
+        address pair = UniswapV2Library.pairFor(factory, tokenIn, tokenOut);
+        uint currentWindowIndex = observationIndexOf(block.timestamp);
+
+        uint index = observationIndexOf(block.timestamp - desiredWindowSize);
+        if (index == currentWindowIndex) {
+            index = (index + 1) % granularity;
+        }
+
+        while (index != currentWindowIndex) {
+            Observation storage observation = pairObservations[pair][index];
+            periodStartTimestamp = observation.timestamp;
+            uint timeElapsed = block.timestamp - periodStartTimestamp;
+
+            if (timeElapsed > desiredWindowSize) {
+                index = (index + 1) % granularity;
+                continue; // TODO(moodysalem): we may need to revert in the case where this is due to an actual missing observation
+            } else if (timeElapsed < minWindowSize) {
+                revert('SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');
+            }
+
+            amountOut = computeAmountOut(observation, pair, tokenIn, amountIn, tokenOut, timeElapsed);
+            break;
+        }
+    }
+
+    // returns the amount out corresponding to the amount in for a given token using the moving average over the time
+    // range [now - [windowSize, windowSize - periodSize * 2], now]
+    // update must have been called for the bucket corresponding to timestamp `now - windowSize`
+    function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {
+        (amountOut,) = consult(tokenIn, amountIn, tokenOut, windowSize, windowSize - periodSize * 2);
     }
 }
