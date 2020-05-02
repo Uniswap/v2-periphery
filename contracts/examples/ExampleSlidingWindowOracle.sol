@@ -101,6 +101,7 @@ contract ExampleSlidingWindowOracle {
         amountOut = priceAverage.mul(amountIn).decode144();
     }
 
+    // this many parameter overload is just to avoid stack too deep errors in #consultAdvanced.
     function computeAmountOut(Observation storage observation, address pair, address tokenIn, uint amountIn, address tokenOut, uint timeElapsed) view private returns (uint amountOut) {
         (uint price0Cumulative, uint price1Cumulative,) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
         (address token0,) = UniswapV2Library.sortTokens(tokenIn, tokenOut);
@@ -115,41 +116,42 @@ contract ExampleSlidingWindowOracle {
     // returns the average price over a period of size between `desiredWindowSize` and `minWindowSize` for the range
     // [periodStartTimestamp, now] where periodStartTimestamp is between `now - desiredWindowSize` and
     // `now - minWindowSize`
-    function consult(address tokenIn, uint amountIn, address tokenOut, uint desiredWindowSize, uint minWindowSize) public view returns (
+    function consultAdvanced(address tokenIn, uint amountIn, address tokenOut, uint desiredWindowSize, uint minWindowSize) public view returns (
             uint amountOut, uint periodStartTimestamp
         ) {
         require(desiredWindowSize <= windowSize, 'SlidingWindowOracle: INVALID_DESIRED_WINDOW_SIZE');
         require(minWindowSize < desiredWindowSize, 'SlidingWindowOracle: INVALID_MIN_WINDOW_SIZE');
 
         address pair = UniswapV2Library.pairFor(factory, tokenIn, tokenOut);
-        uint currentWindowIndex = observationIndexOf(block.timestamp);
 
-        uint index = observationIndexOf(block.timestamp - desiredWindowSize);
-        if (index == currentWindowIndex) {
-            index = (index + 1) % granularity;
+        uint8 startIndex = observationIndexOf(block.timestamp - desiredWindowSize);
+        if (startIndex == observationIndexOf(block.timestamp)) {
+            startIndex = (startIndex + 1) % granularity;
         }
+        uint8 endIndexExclusive = (observationIndexOf(block.timestamp - minWindowSize) + 1) % granularity;
 
-        while (index != currentWindowIndex) {
+        for (uint8 index = startIndex; index != endIndexExclusive; index = (index + 1) % granularity) {
             Observation storage observation = pairObservations[pair][index];
             periodStartTimestamp = observation.timestamp;
             uint timeElapsed = block.timestamp - periodStartTimestamp;
 
             if (timeElapsed > desiredWindowSize) {
-                index = (index + 1) % granularity;
-                continue; // TODO(moodysalem): we may need to revert in the case where this is due to an actual missing observation
+                continue;
             } else if (timeElapsed < minWindowSize) {
                 revert('SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');
             }
 
             amountOut = computeAmountOut(observation, pair, tokenIn, amountIn, tokenOut, timeElapsed);
-            break;
+            return (amountOut, periodStartTimestamp);
         }
+
+        revert('SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');
     }
 
     // returns the amount out corresponding to the amount in for a given token using the moving average over the time
     // range [now - [windowSize, windowSize - periodSize * 2], now]
     // update must have been called for the bucket corresponding to timestamp `now - windowSize`
     function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {
-        (amountOut,) = consult(tokenIn, amountIn, tokenOut, windowSize, windowSize - periodSize * 2);
+        (amountOut,) = consultAdvanced(tokenIn, amountIn, tokenOut, windowSize, windowSize - periodSize * 2);
     }
 }

@@ -11,10 +11,10 @@ contract ExampleOracleHub {
     // the last update epoch period of different oracles.
     mapping(address => uint) private lastUpdated;
 
-    ExampleSlidingWindowOracle public hourlyOracle;
-    ExampleSlidingWindowOracle public dailyOracle;
-    ExampleSlidingWindowOracle public weeklyOracle;
-    ExampleSlidingWindowOracle public monthlyOracle;
+    ExampleSlidingWindowOracle public immutable hourlyOracle;
+    ExampleSlidingWindowOracle public immutable dailyOracle;
+    ExampleSlidingWindowOracle public immutable weeklyOracle;
+    ExampleSlidingWindowOracle public immutable monthlyOracle;
 
     constructor(address factory) public {
         // updates every 10 minutes
@@ -71,6 +71,7 @@ contract ExampleOracleHub {
     function updateOracles(address pair) public returns (bool) {
         (uint64 lastHourlyPeriod, uint64 lastDailyPeriod, uint64 lastWeeklyPeriod, uint64 lastMonthlyPeriod) = getLastPairUpdated(pair);
         (uint64 hp, uint64 dp, uint64 wp, uint64 mp) = currentEpochPeriods();
+        // note this is wasteful where oracle periods overlap, e.g. timestamp 0 is a new period for all 4 oracles.
         if (lastHourlyPeriod != hp) {
             address token0 = IUniswapV2Pair(pair).token0();
             address token1 = IUniswapV2Pair(pair).token1();
@@ -110,13 +111,13 @@ contract ExampleOracleHub {
         uint amountOut, uint periodStartTimestamp
     ) {
         if (desiredWindowSize <= 3600) {
-            return hourlyOracle.consult(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
+            return hourlyOracle.consultAdvanced(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
         } else if (desiredWindowSize <= 86400) {
-            return dailyOracle.consult(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
+            return dailyOracle.consultAdvanced(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
         } else if (desiredWindowSize <= 604800) {
-            return weeklyOracle.consult(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
+            return weeklyOracle.consultAdvanced(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
         } else if (desiredWindowSize <= 2592000) {
-            return monthlyOracle.consult(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
+            return monthlyOracle.consultAdvanced(tokenIn, amountIn, tokenOut, desiredWindowSize, minWindowSize);
         } else {
             revert('OracleHub: WINDOW_SIZE_NOT_SUPPORTED');
         }
