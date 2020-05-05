@@ -218,8 +218,8 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
 
         // the token we receive from v2 vs. the token we send back to v2
         (address tokenReceived, uint amountReceived, address tokenReturn) = amount0 > 0 ?
-        (token0, amount0, token1) :
-    (token1, amount1, token0);
+            (token0, amount0, token1) :
+            (token1, amount1, token0);
 
         // do the v1 swap
         if (tokenReceived == address(weth)) {
