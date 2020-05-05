@@ -41,18 +41,29 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
     }
 
     // this is necessary to avoid multiplication overflow.
-    uint private constant PROFIT_DERIVATIVE_DOWNSCALING_BITS = 20; // roughly ~10^6
+    uint private constant PROFIT_DERIVATIVE_DOWNSCALING_BITS_STEP = 8;
+
     // compute whether profit increases if we withdraw more from v2 to sell on v1
     // used in order to do a binary search and find the maximally profitable withdraw amount
     function profitDerivativePositive(uint x0, uint y0, uint x1, uint y1, uint withdrawX1) pure public returns (bool) {
-        uint leftTop = x1.mul(y1);
-        uint leftBottom = x1.sub(withdrawX1).mul(x1.sub(withdrawX1));
+        uint leftTop = x1.mul(y1); // 224 bits
+        uint leftBottom = x1.sub(withdrawX1).mul(x1.sub(withdrawX1)); // 224 bits
 
-        uint rightTop = x0.mul(y0).mul(994009);
+        uint rightTop = x0.mul(y0).mul(994009); // assumed not to exceed 224 bits
+        // probably < 256 bits
         uint rightBottom = withdrawX1.mul(997).add(x0.mul(1000)).mul(withdrawX1.mul(997).add(x0.mul(1000)));
 
-        return (leftTop >> PROFIT_DERIVATIVE_DOWNSCALING_BITS).mul(rightBottom) <
-            (rightTop >> PROFIT_DERIVATIVE_DOWNSCALING_BITS).mul(leftBottom);
+        // while left and right variables are both greater than max, scale them down
+        while (leftTop > uint128(-1) || rightTop > uint128(-1)) {
+            leftTop >>= PROFIT_DERIVATIVE_DOWNSCALING_BITS_STEP;
+            rightTop >>= PROFIT_DERIVATIVE_DOWNSCALING_BITS_STEP;
+        }
+        while (rightBottom > uint128(-1) || leftBottom > uint128(-1)) {
+            rightBottom >>= PROFIT_DERIVATIVE_DOWNSCALING_BITS_STEP;
+            leftBottom >>= PROFIT_DERIVATIVE_DOWNSCALING_BITS_STEP;
+        }
+
+        return leftTop.mul(rightBottom) < rightTop.mul(leftBottom);
     }
 
     uint private constant NUM_ITERATIONS_BINARY_SEARCH = 12;

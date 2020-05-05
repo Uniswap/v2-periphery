@@ -96,6 +96,18 @@ describe('ExampleFlashArbitrage', () => {
         )
       ).to.eq(false)
     })
+    it('works with reserves up to uint112', async() => {
+      const MaxUint112 = bigNumberify(2).pow(112).sub(1);
+      expect(
+        await flashArbitrage.profitDerivativePositive(
+          MaxUint112,
+          MaxUint112,
+          MaxUint112,
+          MaxUint112,
+          MaxUint112.div(2)
+        )
+      ).to.eq(false)
+    })
   })
 
   describe('#arbitrage', () => {
