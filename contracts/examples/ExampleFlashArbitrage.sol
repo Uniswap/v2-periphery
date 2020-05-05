@@ -1,51 +1,54 @@
 pragma solidity >=0.6.2;
 
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 import '@uniswap/lib/contracts/libraries/Babylonian.sol';
 
-import "./interfaces/V1/IUniswapV1Factory.sol";
-import "./interfaces/V1/IUniswapV1Exchange.sol";
-import "./interfaces/IERC20.sol";
-import "./interfaces/IWETH.sol";
-import "./libraries/SafeMath.sol";
-import "./UniswapV2Library.sol";
+import '../interfaces/V1/IUniswapV1Factory.sol';
+import '../interfaces/V1/IUniswapV1Exchange.sol';
+import '../interfaces/IERC20.sol';
+import '../interfaces/IWETH.sol';
+import '../libraries/SafeMath.sol';
+import '../libraries/UniswapV2Library.sol';
+import '../interfaces/IWETH.sol';
 
 // uses flash swaps in UniswapV2 to arbitrage against UniswapV1 with zero price risk
 // i.e. any caller can provide a token pair and the liquidity in UniswapV2 will be used to move the marginal price in V1
 // to be the same as the marginal price in V2, and forward any resulting profits
 // all the caller pays for is gas. gas and gas prices are not considered in the arbitrage profitability.
-contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
+contract ExampleFlashArbitrage is IUniswapV2Callee {
     using SafeMath for uint;
 
     IUniswapV1Factory public immutable v1Factory;
+    IUniswapV2Factory public immutable v2Factory;
     IWETH public immutable weth;
 
     // this is temporarily set during the callback so we can prevent ETH from accidentally being sent to this contract
     address private pendingReceiveAddress;
 
-    constructor(IUniswapV1Factory v1Factory_, address v2Factory_, IWETH weth_) UniswapV2Library(v2Factory_) public {
+    constructor(IUniswapV1Factory v1Factory_, IUniswapV2Factory v2Factory_, IWETH weth_) public {
         v1Factory = v1Factory_;
+        v2Factory = v2Factory_;
         weth = weth_;
     }
 
     // receives ETH from V1 exchanges. must first be prepared to receive via pendingReceiveAddress.
     receive() external payable {
-        require(msg.sender == pendingReceiveAddress, "ExampleFlashArbitrage: RECEIVE_NOT_PENDING");
+        require(msg.sender == pendingReceiveAddress, "FlashArbitrage: RECEIVE_NOT_PENDING");
     }
 
     // computes the withdraw amount to arbitrage between v1 and v2 eth/token pairs
     // cannot be used for token/token pairs because token/token pairs must make multiple hops in v1
     function computeWithdrawAmountETH(uint v1Eth, uint v1Token, uint v2Eth, uint v2Token) private pure returns (uint withdrawAmount, bool withdrawEth) {
-        require(v1Eth > 0 && v1Eth > 0 && v2Eth > 0 && v2Token > 0, 'ExampleFlashArbitrage: ALL_INPUTS_NONZERO');
+        require(v1Eth > 0 && v1Eth > 0 && v2Eth > 0 && v2Token > 0, 'FlashArbitrage: ALL_INPUTS_NONZERO');
 
         {
             uint left = v2Token.mul(v1Eth) / v2Eth;
             uint right = v1Token;
-            require(left != right, 'ExampleFlashArbitrage: EQUIVALENT_PRICE');
+            require(left != right, 'FlashArbitrage: EQUIVALENT_PRICE');
             // if the tokens to eth is less in v2 than v1, eth is cheaper in v2 in terms of token.
             // that means we should withdraw eth from v2 and sell it on v1 for tokens.
             // otherwise we should withdraw tokens from v2 and sell it on v1 for eth.
@@ -65,16 +68,16 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
     // to do that you should use the WETH contract
     // the computation for optimal token/ETH pairs arbitrage amounts is simpler because it only requires one v1 swap
     function arbitrageETH(address token, address recipient) private {
-        require(token != address(weth), "ExampleFlashArbitrage: INVALID_TOKEN");
+        require(token != address(weth), 'FlashArbitrage: INVALID_TOKEN');
         address v1Exchange = v1Factory.getExchange(token);
-        require(v1Exchange != address(0), "ExampleFlashArbitrage: V1_EXCHANGE_NOT_EXIST");
+        require(v1Exchange != address(0), 'FlashArbitrage: V1_EXCHANGE_NOT_EXIST');
 
         uint256 tokenBalanceV1 = IERC20(token).balanceOf(v1Exchange);
         uint256 ethBalanceV1 = v1Exchange.balance;
-        require(tokenBalanceV1 > 0 && ethBalanceV1 > 0, "ExampleFlashArbitrage: V1_NO_LIQUIDITY");
+        require(tokenBalanceV1 > 0 && ethBalanceV1 > 0, 'FlashArbitrage: V1_NO_LIQUIDITY');
 
-        address v2Pair = pairFor(token, address(weth));
-        require(v2Pair != address(0), "ExampleFlashArbitrage: V2_PAIR_NOT_EXIST");
+        address v2Pair = UniswapV2Library.pairFor(address(v2Factory), token, address(weth));
+        require(v2Pair != address(0), 'FlashArbitrage: V2_PAIR_NOT_EXIST');
         IUniswapV2Pair(v2Pair).sync();
 
         uint256 tokenBalanceV2;
@@ -87,10 +90,10 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
                 (uint256(reserve1), uint256(reserve0));
         }
 
-        require(tokenBalanceV2 > 0 && ethBalanceV2 > 0, "ExampleFlashArbitrage: V2_NO_LIQUIDITY");
+        require(tokenBalanceV2 > 0 && ethBalanceV2 > 0, 'FlashArbitrage: V2_NO_LIQUIDITY');
 
         (uint withdrawAmount, bool withdrawEth) =
-            computeWithdrawAmountETH(ethBalanceV1, tokenBalanceV1, ethBalanceV2, tokenBalanceV2);
+        computeWithdrawAmountETH(ethBalanceV1, tokenBalanceV1, ethBalanceV2, tokenBalanceV2);
 
         // the amount of eth we withdraw should be the amount that moves the marginal price of the token in ETH to be
         // the same in both V1 and V2.
@@ -98,11 +101,11 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),
-                getAmountIn(withdrawAmount, tokenBalanceV2, ethBalanceV2)
+                UniswapV2Library.getAmountIn(withdrawAmount, tokenBalanceV2, ethBalanceV2)
             );
 
             IUniswapV2Pair(v2Pair)
-                .swap(isToken0Eth ? withdrawAmount : 0, isToken0Eth ? 0 : withdrawAmount, address(this), callback_data);
+            .swap(isToken0Eth ? withdrawAmount : 0, isToken0Eth ? 0 : withdrawAmount, address(this), callback_data);
 
             // just forward the whole balance of the token we ended up with
             uint profit = IERC20(token).balanceOf(address(this));
@@ -117,11 +120,11 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),
-                getAmountIn(withdrawAmount, ethBalanceV2, tokenBalanceV2)
+                UniswapV2Library.getAmountIn(withdrawAmount, ethBalanceV2, tokenBalanceV2)
             );
 
             IUniswapV2Pair(v2Pair)
-                .swap(isToken0Eth ? 0 : withdrawAmount, isToken0Eth ? withdrawAmount : 0, address(this), callback_data);
+            .swap(isToken0Eth ? 0 : withdrawAmount, isToken0Eth ? withdrawAmount : 0, address(this), callback_data);
 
             uint profit = IERC20(address(weth)).balanceOf(address(this));
             // just forward the whole balance of ETH we ended up with
@@ -137,7 +140,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
     // arbitrage any two tokens. if token0 or token1 are WETH, falls back to arbitrageETH
     function arbitrage(address token0, address token1, address recipient) external {
-        require(recipient != address(0), 'ExampleFlashArbitrage: INVALID_TO');
+        require(recipient != address(0), 'FlashArbitrage: INVALID_TO');
 
         if (token0 == address(weth)) {
             arbitrageETH(token1, recipient);
@@ -147,7 +150,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             return;
         }
 
-        revert("ExampleFlashArbitrage: TODO_MULTIHOP_ARBITRAGE");
+        revert('FlashArbitrage: TODO_MULTIHOP_ARBITRAGE');
     }
 
     // this callback takes any amount received of token0 and token1 and exchanges the entire amount on uniswap v1 for
@@ -155,10 +158,10 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
     // it has special case handling for weth to wrap/unwrap the token when interacting with V1.
     function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) override external {
         // this contract should initiate all flash swaps
-        require(sender == address(this), "ExampleFlashArbitrage: FLASH_SWAP_FROM_OTHER");
+        require(sender == address(this), 'FlashArbitrage: FLASH_SWAP_FROM_OTHER');
 
         // only trades in a single direction
-        require((amount0 > 0 && amount1 == 0) || (amount0 == 0 && amount1 > 0), "ExampleFlashArbitrage: CALLBACK_AMOUNT_XOR");
+        require((amount0 > 0 && amount1 == 0) || (amount0 == 0 && amount1 > 0), 'FlashArbitrage: CALLBACK_AMOUNT_XOR');
 
         // at this point we have received the loan to this contract and we must trade the full amount to
         // uniswap v1 and complete the swap
@@ -166,8 +169,8 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
 
         // the token we receive from v2 vs. the token we send back to v2
         (address tokenReceived, uint amountReceived, address tokenReturn) = amount0 > 0 ?
-            (token0, amount0, token1) :
-            (token1, amount1, token0);
+        (token0, amount0, token1) :
+    (token1, amount1, token0);
 
         // do the v1 swap
         if (tokenReceived == address(weth)) {
@@ -177,7 +180,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             delete pendingReceiveAddress;
 
             IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReturn));
-            returnExchange.ethToTokenSwapInput{value: amountReceived}(1, block.timestamp);
+            returnExchange.ethToTokenSwapInput{value : amountReceived}(1, block.timestamp);
         } else if (tokenReturn == address(weth)) {
             IUniswapV1Exchange receivedExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
             TransferHelper.safeApprove(tokenReceived, address(receivedExchange), amountReceived);
@@ -188,7 +191,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
 
-            weth.deposit{value: ethReceived}();
+            weth.deposit{value : ethReceived}();
         } else {
             IUniswapV1Exchange receivedExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReceived));
             IUniswapV1Exchange returnExchange = IUniswapV1Exchange(v1Factory.getExchange(tokenReturn));
@@ -200,7 +203,7 @@ contract ExampleFlashArbitrage is UniswapV2Library, IUniswapV2Callee {
             // refund most of the gas from the temporary set
             delete pendingReceiveAddress;
 
-            returnExchange.ethToTokenSwapInput{value: ethReceived}(1, block.timestamp);
+            returnExchange.ethToTokenSwapInput{value : ethReceived}(1, block.timestamp);
         }
 
         // now pay back v2 what is owed
