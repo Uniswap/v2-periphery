@@ -4,6 +4,9 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
+import '../libraries/UniswapV2OracleLibrary.sol';
+import '../libraries/UniswapV2Library.sol';
+
 // fixed window oracle that recomputes the average price for the entire period once every period
 // note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
 contract ExampleOracleSimple {
@@ -22,7 +25,7 @@ contract ExampleOracleSimple {
     FixedPoint.uq112x112 public price1Average;
 
     constructor(address factory, address tokenA, address tokenB) public {
-        IUniswapV2Pair _pair = IUniswapV2Pair(IUniswapV2Factory(factory).getPair(tokenA, tokenB));
+        IUniswapV2Pair _pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
         pair = _pair;
         token0 = _pair.token0();
         token1 = _pair.token1();
@@ -32,27 +35,15 @@ contract ExampleOracleSimple {
         uint112 reserve1;
         (reserve0, reserve1, blockTimestampLast) = _pair.getReserves();
         require(reserve0 != 0 && reserve1 != 0, 'ExampleOracleSimple: NO_RESERVES'); // ensure that there's liquidity in the pair
-        require(blockTimestampLast != 0, 'ExampleOracleSimple: NO_PRICE_HISTORY'); // ensure there's a price history
     }
 
     function update() external {
-        uint32 blockTimestamp = uint32(block.timestamp % 2**32);
+        (uint price0Cumulative, uint price1Cumulative, uint32 blockTimestamp) =
+            UniswapV2OracleLibrary.currentCumulativePrices(address(pair));
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
         // ensure that at least one full period has passed since the last update
         require(timeElapsed >= PERIOD, 'ExampleOracleSimple: PERIOD_NOT_ELAPSED');
-
-        uint price0Cumulative = pair.price0CumulativeLast();
-        uint price1Cumulative = pair.price1CumulativeLast();
-
-        // if time has elapsed since the last update on the pair, mock the accumulated price values
-        // alternately, call pair.sync() before reading the cumulative last price from the pair
-        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLastFromPair) = pair.getReserves();
-        if (blockTimestampLastFromPair != blockTimestamp) {
-            uint timeElapsedPartial = blockTimestamp - blockTimestampLastFromPair; // overflow is desired
-            price0Cumulative += uint(FixedPoint.fraction(reserve1, reserve0)._x) * timeElapsedPartial; // counterfactual
-            price1Cumulative += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsedPartial; // counterfactual
-        }
 
         // overflow is desired, casting never truncates
         // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
@@ -64,6 +55,7 @@ contract ExampleOracleSimple {
         blockTimestampLast = blockTimestamp;
     }
 
+    // note this will always return 0 before update has been called successfully for the first time.
     function consult(address token, uint amountIn) external view returns (uint amountOut) {
         if (token == token0) {
             amountOut = price0Average.mul(amountIn).decode144();
