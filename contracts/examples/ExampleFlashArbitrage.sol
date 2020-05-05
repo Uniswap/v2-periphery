@@ -40,7 +40,8 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
         require(msg.sender == pendingReceiveAddress, "FlashArbitrage: RECEIVE_NOT_PENDING");
     }
 
-    uint private constant PROFIT_DERIVATIVE_PRECISION = 1_000_000;
+    // this is necessary to avoid multiplication overflow.
+    uint private constant PROFIT_DERIVATIVE_DOWNSCALING_BITS = 20; // roughly ~10^6
     // compute whether profit increases if we withdraw more from v2 to sell on v1
     // used in order to do a binary search and find the maximally profitable withdraw amount
     function profitDerivativePositive(uint x0, uint y0, uint x1, uint y1, uint withdrawX1) pure public returns (bool) {
@@ -50,7 +51,8 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
         uint rightTop = x0.mul(y0).mul(994009);
         uint rightBottom = withdrawX1.mul(997).add(x0.mul(1000)).mul(withdrawX1.mul(997).add(x0.mul(1000)));
 
-        return (leftTop / PRECISION).mul(rightBottom) < (rightTop / PRECISION).mul(leftBottom);
+        return (leftTop >> PROFIT_DERIVATIVE_DOWNSCALING_BITS).mul(rightBottom) <
+            (rightTop >> PROFIT_DERIVATIVE_DOWNSCALING_BITS).mul(leftBottom);
     }
 
     uint private constant NUM_ITERATIONS_BINARY_SEARCH = 12;
