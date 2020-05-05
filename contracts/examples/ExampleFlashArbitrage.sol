@@ -40,9 +40,24 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
         require(msg.sender == pendingReceiveAddress, "FlashArbitrage: RECEIVE_NOT_PENDING");
     }
 
+    uint private constant PROFIT_DERIVATIVE_PRECISION = 1_000_000;
+    // compute whether profit increases if we withdraw more from v2 to sell on v1
+    // used in order to do a binary search and find the maximally profitable withdraw amount
+    function profitDerivativePositive(uint x0, uint y0, uint x1, uint y1, uint withdrawX1) pure public returns (bool) {
+        uint leftTop = x1.mul(y1);
+        uint leftBottom = x1.sub(withdrawX1).mul(x1.sub(withdrawX1));
+
+        uint rightTop = x0.mul(y0).mul(994009);
+        uint rightBottom = withdrawX1.mul(997).add(x0.mul(1000)).mul(withdrawX1.mul(997).add(x0.mul(1000)));
+
+        return (leftTop / PRECISION).mul(rightBottom) < (rightTop / PRECISION).mul(leftBottom);
+    }
+
+    uint private constant NUM_ITERATIONS_BINARY_SEARCH = 12;
+
     // computes the withdraw amount to arbitrage between v1 and v2 eth/token pairs
     // cannot be used for token/token pairs because token/token pairs must make multiple hops in v1
-    function computeWithdrawAmountETH(uint v1Eth, uint v1Token, uint v2Eth, uint v2Token) private pure returns (uint withdrawAmount, bool withdrawEth) {
+    function computeWithdrawAmountETH(uint v1Eth, uint v1Token, uint v2Eth, uint v2Token) private pure returns (uint withdrawAmount, bool withdrawETH) {
         require(v1Eth > 0 && v1Eth > 0 && v2Eth > 0 && v2Token > 0, 'FlashArbitrage: ALL_INPUTS_NONZERO');
 
         {
@@ -53,11 +68,32 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
             // that means we should withdraw eth from v2 and sell it on v1 for tokens.
             // otherwise we should withdraw tokens from v2 and sell it on v1 for eth.
             // division by zero not possible
-            withdrawEth = left < right;
+            withdrawETH = left < right;
         }
 
-        // TODO(moodysalem): Compute this.
-        withdrawAmount = 1000;
+        if (withdrawETH) {
+            uint lo = 0;
+            uint hi = v2Eth - 1;
+            for (uint i = 0; i < NUM_ITERATIONS_BINARY_SEARCH; i++) {
+                withdrawAmount = (lo + hi) >> 1;
+                if (profitDerivativePositive(v1Eth, v1Token, v2Eth, v2Token, withdrawAmount)) {
+                    lo = withdrawAmount + 1;
+                } else {
+                    hi = withdrawAmount;
+                }
+            }
+        } else {
+            uint lo = 0;
+            uint hi = v2Token - 1;
+            for (uint i = 0; i < NUM_ITERATIONS_BINARY_SEARCH; i++) {
+                withdrawAmount = (lo + hi) >> 1;
+                if (profitDerivativePositive(v1Token, v1Eth, v2Token, v2Eth, withdrawAmount)) {
+                    lo = withdrawAmount + 1;
+                } else {
+                    hi = withdrawAmount;
+                }
+            }
+        }
     }
 
     // emitted when a successful arbitrage occurs
@@ -92,12 +128,12 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
 
         require(tokenBalanceV2 > 0 && ethBalanceV2 > 0, 'FlashArbitrage: V2_NO_LIQUIDITY');
 
-        (uint withdrawAmount, bool withdrawEth) =
+        (uint withdrawAmount, bool withdrawETH) =
         computeWithdrawAmountETH(ethBalanceV1, tokenBalanceV1, ethBalanceV2, tokenBalanceV2);
 
         // the amount of eth we withdraw should be the amount that moves the marginal price of the token in ETH to be
         // the same in both V1 and V2.
-        if (withdrawEth) {
+        if (withdrawETH) {
             bytes memory callback_data = abi.encode(
                 isToken0Eth ? address(weth) : token,
                 isToken0Eth ? token : address(weth),

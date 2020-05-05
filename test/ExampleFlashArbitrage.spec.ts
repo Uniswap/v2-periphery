@@ -15,7 +15,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe.only('ExampleFlashArbitrage', () => {
+describe('ExampleFlashArbitrage', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -73,6 +73,31 @@ describe.only('ExampleFlashArbitrage', () => {
     await WETHPair.mint(wallet.address, overrides)
   }
 
+  describe('#profitDerivativePositive', () => {
+    it('is correct for positive', async () => {
+      expect(
+        await flashArbitrage.profitDerivativePositive(
+          expandTo18Decimals(1),
+          expandTo18Decimals(10),
+          expandTo18Decimals(1),
+          expandTo18Decimals(5),
+          bigNumberify(169).mul(bigNumberify(10).pow(15))
+        )
+      ).to.eq(true)
+    })
+    it('is correct for negative', async () => {
+      expect(
+        await flashArbitrage.profitDerivativePositive(
+          expandTo18Decimals(1),
+          expandTo18Decimals(10),
+          expandTo18Decimals(1),
+          expandTo18Decimals(5),
+          bigNumberify(171).mul(bigNumberify(10).pow(15))
+        )
+      ).to.eq(false)
+    })
+  })
+
   describe('#arbitrage', () => {
     describe('token/WETH pairs', () => {
       let token0: string
@@ -83,6 +108,14 @@ describe.only('ExampleFlashArbitrage', () => {
             ? [WETH.address, WETHPartner.address]
             : [WETHPartner.address, WETH.address]
       })
+
+      function ethProfitArgs(ethProfit: BigNumber) {
+        return token0 === WETH.address ? [token0, ethProfit, token1, 0] : [token0, 0, token1, ethProfit]
+      }
+
+      function tokenProfitArgs(tokenProfit: BigNumber) {
+        return token0 === WETH.address ? [token0, 0, token1, tokenProfit] : [token0, tokenProfit, token1, 0]
+      }
 
       describe('V1 eth is expensive', () => {
         describe('more liquidity in V1 than V2', () => {
@@ -96,10 +129,9 @@ describe.only('ExampleFlashArbitrage', () => {
           })
 
           it('creates optimal profit', async () => {
-            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)).to.emit(
-              flashArbitrage,
-              'Arbitrage'
-            )
+            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides))
+              .to.emit(flashArbitrage, 'Arbitrage')
+              .withArgs(...tokenProfitArgs(bigNumberify('422087501631153901')))
           })
         })
 
@@ -114,10 +146,9 @@ describe.only('ExampleFlashArbitrage', () => {
           })
 
           it('creates optimal profit', async () => {
-            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)).to.emit(
-              flashArbitrage,
-              'Arbitrage'
-            )
+            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides))
+              .to.emit(flashArbitrage, 'Arbitrage')
+              .withArgs(...tokenProfitArgs(bigNumberify('563065591255017808')))
           })
         })
 
@@ -132,10 +163,9 @@ describe.only('ExampleFlashArbitrage', () => {
           })
 
           it('creates optimal profit', async () => {
-            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)).to.emit(
-              flashArbitrage,
-              'Arbitrage'
-            )
+            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides))
+              .to.emit(flashArbitrage, 'Arbitrage')
+              .withArgs(...tokenProfitArgs(bigNumberify('1654991685866901935')))
           })
         })
       })
@@ -152,10 +182,9 @@ describe.only('ExampleFlashArbitrage', () => {
           })
 
           it('creates optimal profit', async () => {
-            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)).to.emit(
-              flashArbitrage,
-              'Arbitrage'
-            )
+            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides))
+              .to.emit(flashArbitrage, 'Arbitrage')
+              .withArgs(...ethProfitArgs(bigNumberify('84417500326230779')))
           })
         })
 
@@ -170,10 +199,9 @@ describe.only('ExampleFlashArbitrage', () => {
           })
 
           it('creates optimal profit', async () => {
-            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)).to.emit(
-              flashArbitrage,
-              'Arbitrage'
-            )
+            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides))
+              .to.emit(flashArbitrage, 'Arbitrage')
+              .withArgs(...ethProfitArgs(bigNumberify('56306559125501779')))
           })
         })
 
@@ -188,10 +216,9 @@ describe.only('ExampleFlashArbitrage', () => {
           })
 
           it('creates optimal profit', async () => {
-            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address)).to.emit(
-              flashArbitrage,
-              'Arbitrage'
-            )
+            await expect(flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides))
+              .to.emit(flashArbitrage, 'Arbitrage')
+              .withArgs(...ethProfitArgs(bigNumberify('330998337173380386')))
           })
         })
       })
