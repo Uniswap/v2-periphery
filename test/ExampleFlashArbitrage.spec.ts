@@ -125,6 +125,23 @@ describe('ExampleFlashArbitrage', () => {
         return token0 === WETH.address ? [token0, 0, token1, tokenProfit] : [token0, tokenProfit, token1, 0]
       }
 
+      describe('gas', () => {
+        beforeEach(async () => {
+          await setupEthLiquidity({
+            v1Eth: 1,
+            v1Token: 10,
+            v2Eth: 2,
+            v2Token: 10
+          })
+        })
+
+        it('gas check', async () => {
+          const tx = await flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides)
+          const receipt = await tx.wait()
+          expect(receipt.gasUsed).to.eq('204394')
+        }).retries(3) // gas test inconsistent
+      })
+
       describe('V1 eth is expensive', () => {
         describe('more liquidity in V1 than V2', () => {
           beforeEach(async () => {
