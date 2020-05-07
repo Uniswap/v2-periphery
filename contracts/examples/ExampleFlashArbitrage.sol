@@ -126,7 +126,6 @@ contract ExampleFlashArbitrage is IUniswapV2Callee {
         require(tokenBalanceV1 > 0 && ethBalanceV1 > 0, 'FlashArbitrage: V1_NO_LIQUIDITY');
 
         address v2Pair = UniswapV2Library.pairFor(address(v2Factory), token, address(weth));
-        require(v2Pair != address(0), 'FlashArbitrage: V2_PAIR_NOT_EXIST');
         IUniswapV2Pair(v2Pair).sync();
 
         uint256 tokenBalanceV2;
