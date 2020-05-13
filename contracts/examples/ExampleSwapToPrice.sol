@@ -1,6 +1,6 @@
 pragma solidity =0.6.6;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+import '@uniswap/v2-core/contracts/interfaces/IDXswapPair.sol';
 import '@uniswap/lib/contracts/libraries/Babylonian.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
@@ -25,17 +25,18 @@ contract ExampleSwapToPrice {
         uint256 truePriceTokenA,
         uint256 truePriceTokenB,
         uint256 reserveA,
-        uint256 reserveB
+        uint256 reserveB,
+        uint256 swapFee
     ) pure public returns (bool aToB, uint256 amountIn) {
         aToB = reserveA.mul(truePriceTokenB) / reserveB < truePriceTokenA;
 
         uint256 invariant = reserveA.mul(reserveB);
 
         uint256 leftSide = Babylonian.sqrt(
-            invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
-            uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+            invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(10000) /
+            uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(uint(10000).sub(swapFee))
         );
-        uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
+        uint256 rightSide = (aToB ? reserveA.mul(10000) : reserveB.mul(10000)) / uint(10000).sub(swapFee);
 
         // compute the amount that must be sent to move the price to the profit-maximizing price
         amountIn = leftSide.sub(rightSide);
@@ -63,9 +64,10 @@ contract ExampleSwapToPrice {
         uint256 amountIn;
         {
             (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
+            uint256 swapFee = UniswapV2Library.getSwapFee(factory, tokenA, tokenB);
             (aToB, amountIn) = computeProfitMaximizingTrade(
                 truePriceTokenA, truePriceTokenB,
-                reserveA, reserveB
+                reserveA, reserveB, swapFee
             );
         }
 

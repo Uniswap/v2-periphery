@@ -1,6 +1,6 @@
 pragma solidity =0.6.6;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
+import '@uniswap/v2-core/contracts/interfaces/IDXswapCallee.sol';
 
 import '../libraries/UniswapV2Library.sol';
 import '../interfaces/V1/IUniswapV1Factory.sol';
@@ -9,7 +9,7 @@ import '../interfaces/IUniswapV2Router01.sol';
 import '../interfaces/IERC20.sol';
 import '../interfaces/IWETH.sol';
 
-contract ExampleFlashSwap is IUniswapV2Callee {
+contract ExampleFlashSwap is IDXswapCallee {
     IUniswapV1Factory immutable factoryV1;
     address immutable factory;
     IWETH immutable WETH;
@@ -25,13 +25,13 @@ contract ExampleFlashSwap is IUniswapV2Callee {
     receive() external payable {}
 
     // gets tokens/WETH via a V2 flash swap, swaps for the ETH/tokens on V1, repays V2, and keeps the rest!
-    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external override {
+    function DXswapCall(address sender, uint amount0, uint amount1, bytes calldata data) external override {
         address[] memory path = new address[](2);
         uint amountToken;
         uint amountETH;
         { // scope for token{0,1}, avoids stack too deep errors
-        address token0 = IUniswapV2Pair(msg.sender).token0();
-        address token1 = IUniswapV2Pair(msg.sender).token1();
+        address token0 = IDXswapPair(msg.sender).token0();
+        address token1 = IDXswapPair(msg.sender).token1();
         assert(msg.sender == UniswapV2Library.pairFor(factory, token0, token1)); // ensure that msg.sender is actually a V2 pair
         assert(amount0 == 0 || amount1 == 0); // this strategy is unidirectional
         path[0] = amount0 == 0 ? token0 : token1;
