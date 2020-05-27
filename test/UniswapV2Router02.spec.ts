@@ -16,7 +16,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Router01', () => {
+describe('UniswapV2Router02', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -40,7 +40,7 @@ describe('UniswapV2Router01', () => {
     WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
     factory = fixture.factoryV2
-    router = fixture.router01
+    router = fixture.router02
     pair = fixture.pair
     WETHPair = fixture.WETHPair
   })

@@ -40,7 +40,7 @@ describe('ExampleFlashSwap', () => {
     flashSwapExample = await deployContract(
       wallet,
       ExampleFlashSwap,
-      [fixture.factoryV2.address, fixture.factoryV1.address, fixture.router.address],
+      [fixture.factoryV2.address, fixture.factoryV1.address, fixture.router01.address],
       overrides
     )
   })

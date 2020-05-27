@@ -33,7 +33,7 @@ describe('UniswapV2Migrator', () => {
     const fixture = await loadFixture(v2Fixture)
     WETHPartner = fixture.WETHPartner
     WETHPair = fixture.WETHPair
-    router = fixture.router
+    router = fixture.router01
     migrator = fixture.migrator
     WETHExchangeV1 = fixture.WETHExchangeV1
   })

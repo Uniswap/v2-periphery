@@ -34,11 +34,11 @@ describe('ExampleSwapToPrice', () => {
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
-    router = fixture.router
+    router = fixture.router01
     swapToPriceExample = await deployContract(
       wallet,
       ExampleSwapToPrice,
-      [fixture.factoryV2.address, fixture.router.address],
+      [fixture.factoryV2.address, fixture.router01.address],
       overrides
     )
   })
