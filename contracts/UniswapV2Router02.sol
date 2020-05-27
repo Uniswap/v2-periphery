@@ -130,7 +130,8 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
             address(this),
             deadline
         );
-        TransferHelper.safeTransfer(token, to, amountToken);
+        // use the current balance instead of amountToken to support deflationary tokens
+        TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
     }
