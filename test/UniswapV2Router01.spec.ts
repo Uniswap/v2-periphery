@@ -16,46 +16,46 @@ const overrides = {
   gasLimit: 9999999
 }
 
+enum RouterVersion {
+  UniswapV2Router01 = 'UniswapV2Router01',
+  UniswapV2Router02 = 'UniswapV2Router02'
+}
+
 describe('UniswapV2Router{01,02}', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
-  const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  for (const routerVersion of Object.keys(RouterVersion)) {
+    const provider = new MockProvider({
+      hardfork: 'istanbul',
+      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+      gasLimit: 9999999
+    })
+    const [wallet] = provider.getWallets()
+    const loadFixture = createFixtureLoader(provider, [wallet])
 
-  let token0: Contract
-  let token1: Contract
-  let WETH: Contract
-  let WETHPartner: Contract
-  let factory: Contract
-  let router01: Contract
-  let router02: Contract
-  let pair: Contract
-  let WETHPair: Contract
-  beforeEach(async function() {
-    const fixture = await loadFixture(v2Fixture)
-    token0 = fixture.token0
-    token1 = fixture.token1
-    WETH = fixture.WETH
-    WETHPartner = fixture.WETHPartner
-    factory = fixture.factoryV2
-    router01 = fixture.router01
-    router02 = fixture.router02
-    pair = fixture.pair
-    WETHPair = fixture.WETHPair
-  })
-
-  const routers = [router01!, router02!]
-  for (let i = 0; i < routers.length; i++) {
-    let router: Contract = routers[i]
+    let token0: Contract
+    let token1: Contract
+    let WETH: Contract
+    let WETHPartner: Contract
+    let factory: Contract
+    let router: Contract
+    let pair: Contract
+    let WETHPair: Contract
+    beforeEach(async function() {
+      const fixture = await loadFixture(v2Fixture)
+      token0 = fixture.token0
+      token1 = fixture.token1
+      WETH = fixture.WETH
+      WETHPartner = fixture.WETHPartner
+      factory = fixture.factoryV2
+      router = routerVersion === RouterVersion.UniswapV2Router01 ? fixture.router01 : fixture.router02
+      pair = fixture.pair
+      WETHPair = fixture.WETHPair
+    })
 
     afterEach(async function() {
       expect(await provider.getBalance(router.address)).to.eq(Zero)
     })
 
-    describe(`router0${i + 1}`, () => {
+    describe(routerVersion, () => {
       it('factory, WETH', async () => {
         expect(await router.factory()).to.eq(factory.address)
         expect(await router.WETH()).to.eq(WETH.address)
@@ -347,7 +347,7 @@ describe('UniswapV2Router{01,02}', () => {
           overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(101876)
+        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 101876 : 109094)
       })
 
       it('swapTokensForExactTokens', async () => {
@@ -444,7 +444,7 @@ describe('UniswapV2Router{01,02}', () => {
           }
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(138770)
+        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 138770 : 146018)
       })
 
       it('swapTokensForExactETH', async () => {
