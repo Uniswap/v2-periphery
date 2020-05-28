@@ -28,6 +28,7 @@ interface V2Fixture {
   factoryV2: Contract
   router01: Contract
   router02: Contract
+  router: Contract
   migrator: Contract
   WETHExchangeV1: Contract
   pair: Contract
@@ -84,6 +85,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
     factoryV2,
     router01,
     router02,
+    router: router02,
     migrator,
     WETHExchangeV1,
     pair,
