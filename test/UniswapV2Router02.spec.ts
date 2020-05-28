@@ -2,13 +2,16 @@ import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
 import { AddressZero, Zero, MaxUint256 } from 'ethers/constants'
 import { BigNumber, bigNumberify } from 'ethers/utils'
-import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
+import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 import { ecsign } from 'ethereumjs-util'
+import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
 
 import { expandTo18Decimals, getApprovalDigest, mineBlock } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
 chai.use(solidity)
+
+import DeflatingERC20 from '../build/DeflatingERC20.json'
 
 const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
@@ -132,6 +135,7 @@ describe('UniswapV2Router02', () => {
     await token1.transfer(pair.address, token1Amount)
     await pair.mint(wallet.address, overrides)
   }
+
   it('removeLiquidity', async () => {
     const token0Amount = expandTo18Decimals(1)
     const token1Amount = expandTo18Decimals(4)
@@ -557,5 +561,63 @@ describe('UniswapV2Router02', () => {
         WETHPairToken0 === WETHPartner.address ? 0 : outputAmount,
         wallet.address
       )
+  })
+})
+
+describe('Deflation Test', () => {
+  const provider = new MockProvider({
+    hardfork: 'istanbul',
+    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+    gasLimit: 9999999
+  })
+  const [wallet] = provider.getWallets()
+  const loadFixture = createFixtureLoader(provider, [wallet])
+
+  let DTT: Contract
+  let WETH: Contract
+  let router: Contract
+  let pair: Contract
+  beforeEach(async function() {
+    const fixture = await loadFixture(v2Fixture)
+
+    WETH = fixture.WETH
+    router = fixture.router02
+
+    DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
+
+    // make a DTT<>WETH pair
+    await fixture.factoryV2.createPair(DTT.address, WETH.address)
+    const pairAddress = await fixture.factoryV2.getPair(DTT.address, WETH.address)
+    pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+  })
+
+  afterEach(async function() {
+    expect(await provider.getBalance(router.address)).to.eq(Zero)
+  })
+
+  async function addLiquidity(DTTAmount: BigNumber, WETHAmount: BigNumber) {
+    await DTT.approve(router.address, MaxUint256)
+    await expect(
+      router.addLiquidityETH(DTT.address, DTTAmount, DTTAmount, WETHAmount, wallet.address, MaxUint256, {
+        ...overrides,
+        value: WETHAmount
+      })
+    )
+  }
+
+  it('can successfully remove ETH liquidity', async () => {
+    const DTTAmount = expandTo18Decimals(1)
+    const ETHAmount = expandTo18Decimals(4)
+    await addLiquidity(DTTAmount, ETHAmount)
+
+    const DTTInPair = await DTT.balanceOf(pair.address)
+    const WETHInPair = await WETH.balanceOf(pair.address)
+    const liquidity = await pair.balanceOf(wallet.address)
+    const totalSupply = await pair.totalSupply()
+    const NaiveDTTExpected = DTTInPair.mul(liquidity).div(totalSupply)
+    const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply)
+
+    await pair.approve(router.address, MaxUint256)
+    await router.removeLiquidityETH(DTT.address, liquidity, NaiveDTTExpected, WETHExpected, wallet.address, MaxUint256)
   })
 })
