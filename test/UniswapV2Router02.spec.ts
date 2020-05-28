@@ -577,6 +577,7 @@ describe('Deflation Test', () => {
   let WETH: Contract
   let router: Contract
   let pair: Contract
+
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
@@ -597,12 +598,10 @@ describe('Deflation Test', () => {
 
   async function addLiquidity(DTTAmount: BigNumber, WETHAmount: BigNumber) {
     await DTT.approve(router.address, MaxUint256)
-    await expect(
-      router.addLiquidityETH(DTT.address, DTTAmount, DTTAmount, WETHAmount, wallet.address, MaxUint256, {
-        ...overrides,
-        value: WETHAmount
-      })
-    )
+    await router.addLiquidityETH(DTT.address, DTTAmount, DTTAmount, WETHAmount, wallet.address, MaxUint256, {
+      ...overrides,
+      value: WETHAmount
+    })
   }
 
   it('can successfully remove ETH liquidity', async () => {
@@ -618,6 +617,82 @@ describe('Deflation Test', () => {
     const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply)
 
     await pair.approve(router.address, MaxUint256)
-    await router.removeLiquidityETH(DTT.address, liquidity, NaiveDTTExpected, WETHExpected, wallet.address, MaxUint256)
+    await router.removeLiquidityETH(
+      DTT.address,
+      liquidity,
+      NaiveDTTExpected,
+      WETHExpected,
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
+  })
+
+  it('can successfully swap from an exact amount of tokens', async () => {
+    const DTTAmount = expandTo18Decimals(5)
+    const ETHAmount = expandTo18Decimals(5)
+    await addLiquidity(DTTAmount, ETHAmount)
+
+    const amountIn = expandTo18Decimals(1)
+    await DTT.approve(router.address, MaxUint256)
+    await router.swapExactTokensForTokens(
+      amountIn,
+      Zero,
+      [DTT.address, WETH.address],
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
+  })
+
+  it('can successfully swap to an exact amount of tokens', async () => {
+    const DTTAmount = expandTo18Decimals(5)
+    const ETHAmount = expandTo18Decimals(5)
+    await addLiquidity(DTTAmount, ETHAmount)
+
+    const amountOut = expandTo18Decimals(1)
+    await DTT.approve(router.address, MaxUint256)
+    await router.swapTokensForExactTokens(
+      amountOut,
+      MaxUint256,
+      [DTT.address, WETH.address],
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
+  })
+
+  it('can successfully swap an exact amount of tokens for ETH', async () => {
+    const DTTAmount = expandTo18Decimals(5)
+    const ETHAmount = expandTo18Decimals(5)
+    await addLiquidity(DTTAmount, ETHAmount)
+
+    const amountOut = expandTo18Decimals(1)
+    await DTT.approve(router.address, MaxUint256)
+    await router.swapExactTokensForETH(
+      amountOut,
+      Zero,
+      [DTT.address, WETH.address],
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
+  })
+
+  it('can successfully swap tokens for an exact amount of ETH', async () => {
+    const DTTAmount = expandTo18Decimals(5)
+    const ETHAmount = expandTo18Decimals(5)
+    await addLiquidity(DTTAmount, ETHAmount)
+
+    const amountIn = expandTo18Decimals(1)
+    await DTT.approve(router.address, MaxUint256)
+    await router.swapTokensForExactETH(
+      amountIn,
+      MaxUint256,
+      [DTT.address, WETH.address],
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
   })
 })

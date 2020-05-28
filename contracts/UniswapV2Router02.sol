@@ -175,10 +175,10 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         for (uint i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, input, output));
+            // use balanceOf - reserve instead of amounts[i + 1] (from calling functions) to support deflationary tokens
             uint amountOut;
             { // scope to avoid stack too deep errors
             (uint reserveInput, uint reserveOutput) = UniswapV2Library.getReserves(factory, input, output);
-            // use balanceOf - reserve instead of amounts[i + 1] to support deflationary tokens
             uint amountIn = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
             amountOut = UniswapV2Library.getAmountOut(amountIn, reserveInput, reserveOutput);
             }
@@ -243,8 +243,10 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(path, address(this));
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        // using balanceOf instead of amounts[amounts.length - 1] to support deflationary tokens
+        uint ETHAmount = IERC20(WETH).balanceOf(address(this));
+        IWETH(WETH).withdraw(ETHAmount);
+        TransferHelper.safeTransferETH(to, ETHAmount);
     }
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
@@ -259,8 +261,10 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(path, address(this));
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        // using balanceOf instead of amounts[amounts.length - 1] to support deflationary tokens
+        uint ETHAmount = IERC20(WETH).balanceOf(address(this));
+        IWETH(WETH).withdraw(ETHAmount);
+        TransferHelper.safeTransferETH(to, ETHAmount);
     }
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
         external
