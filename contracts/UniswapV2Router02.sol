@@ -289,7 +289,7 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
     }
 
     function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) public pure override returns (uint amountIn) {
-        return UniswapV2Library.getAmountOut(amountOut, reserveIn, reserveOut);
+        return UniswapV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
     function getAmountsOut(uint amountIn, address[] memory path) public view override returns (uint[] memory amounts) {
