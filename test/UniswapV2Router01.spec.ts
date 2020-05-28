@@ -347,7 +347,7 @@ describe('UniswapV2Router{01,02}', () => {
           overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 101876 : 109094)
+        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 101876 : 101876)
       })
 
       it('swapTokensForExactTokens', async () => {
@@ -444,7 +444,7 @@ describe('UniswapV2Router{01,02}', () => {
           }
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 138770 : 146018)
+        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 138770 : 138770)
       })
 
       it('swapTokensForExactETH', async () => {
