@@ -18,10 +18,11 @@ const overrides = {
 
 enum RouterVersion {
   UniswapV2Router01 = 'UniswapV2Router01',
-  UniswapV2Router02 = 'UniswapV2Router02'
+  UniswapV2Router02 = 'UniswapV2Router02',
+  UniswapV2Router03 = 'UniswapV2Router03'
 }
 
-describe('UniswapV2Router{01,02}', () => {
+describe('UniswapV2Router{01,02,03}', () => {
   for (const routerVersion of Object.keys(RouterVersion)) {
     const provider = new MockProvider({
       hardfork: 'istanbul',
@@ -46,7 +47,11 @@ describe('UniswapV2Router{01,02}', () => {
       WETH = fixture.WETH
       WETHPartner = fixture.WETHPartner
       factory = fixture.factoryV2
-      router = routerVersion === RouterVersion.UniswapV2Router01 ? fixture.router01 : fixture.router02
+      router = {
+        [RouterVersion.UniswapV2Router01]: fixture.router01,
+        [RouterVersion.UniswapV2Router02]: fixture.router02,
+        [RouterVersion.UniswapV2Router03]: fixture.router03
+      }[routerVersion as RouterVersion]
       pair = fixture.pair
       WETHPair = fixture.WETHPair
     })
@@ -347,7 +352,13 @@ describe('UniswapV2Router{01,02}', () => {
           overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 101876 : 101876)
+        expect(receipt.gasUsed).to.eq(
+          {
+            [RouterVersion.UniswapV2Router01]: 101876,
+            [RouterVersion.UniswapV2Router02]: 101876,
+            [RouterVersion.UniswapV2Router03]: 101876
+          }[routerVersion as RouterVersion]
+        )
       })
 
       it('swapTokensForExactTokens', async () => {
@@ -444,7 +455,13 @@ describe('UniswapV2Router{01,02}', () => {
           }
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(routerVersion === RouterVersion.UniswapV2Router01 ? 138770 : 138770)
+        expect(receipt.gasUsed).to.eq(
+          {
+            [RouterVersion.UniswapV2Router01]: 138770,
+            [RouterVersion.UniswapV2Router02]: 138770,
+            [RouterVersion.UniswapV2Router03]: 138770
+          }[routerVersion as RouterVersion]
+        )
       })
 
       it('swapTokensForExactETH', async () => {
