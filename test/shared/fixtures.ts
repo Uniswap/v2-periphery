@@ -15,6 +15,7 @@ import UniswapV2Router01 from '../../build/UniswapV2Router01.json'
 import UniswapV2Migrator from '../../build/UniswapV2Migrator.json'
 import UniswapV2Router02 from '../../build/UniswapV2Router02.json'
 import UniswapV2Router03 from '../../build/UniswapV2Router03.json'
+import RouterEventEmitter from '../../build/RouterEventEmitter.json'
 
 const overrides = {
   gasLimit: 9999999
@@ -30,6 +31,7 @@ interface V2Fixture {
   router01: Contract
   router02: Contract
   router03: Contract
+  routerEventEmitter: Contract
   router: Contract
   migrator: Contract
   WETHExchangeV1: Contract
@@ -55,6 +57,9 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   const router01 = await deployContract(wallet, UniswapV2Router01, [factoryV2.address, WETH.address], overrides)
   const router02 = await deployContract(wallet, UniswapV2Router02, [factoryV2.address, WETH.address], overrides)
   const router03 = await deployContract(wallet, UniswapV2Router03, [factoryV2.address, WETH.address], overrides)
+
+  // event emitter for testing
+  const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
 
   // deploy migrator
   const migrator = await deployContract(wallet, UniswapV2Migrator, [factoryV1.address, router01.address], overrides)
@@ -90,6 +95,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
     router02,
     router03,
     router: router02, // the default router, 01 had a minor bug, 03 is for fee-on-transfer tokens
+    routerEventEmitter,
     migrator,
     WETHExchangeV1,
     pair,
