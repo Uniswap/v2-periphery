@@ -374,7 +374,7 @@ describe('UniswapV2Router{01,02,03}', () => {
             {
               [RouterVersion.UniswapV2Router01]: 101876,
               [RouterVersion.UniswapV2Router02]: 101876,
-              [RouterVersion.UniswapV2Router03]: 104184
+              [RouterVersion.UniswapV2Router03]: 104152
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -524,7 +524,7 @@ describe('UniswapV2Router{01,02,03}', () => {
             {
               [RouterVersion.UniswapV2Router01]: 138770,
               [RouterVersion.UniswapV2Router02]: 138770,
-              [RouterVersion.UniswapV2Router03]: 141078
+              [RouterVersion.UniswapV2Router03]: 141010
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
