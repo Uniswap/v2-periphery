@@ -19,8 +19,7 @@ contract RouterEventEmitter {
             IUniswapV2Router01(router).swapExactTokensForTokens.selector, amountIn, amountOutMin, path, to, deadline
         ));
         assert(success);
-        uint[] memory amounts = abi.decode(returnData, (uint[]));
-        emit Amounts(amounts);
+        emit Amounts(abi.decode(returnData, (uint[])));
     }
 
     function swapTokensForExactTokens(
@@ -35,8 +34,7 @@ contract RouterEventEmitter {
             IUniswapV2Router01(router).swapTokensForExactTokens.selector, amountOut, amountInMax, path, to, deadline
         ));
         assert(success);
-        uint[] memory amounts = abi.decode(returnData, (uint[]));
-        emit Amounts(amounts);
+        emit Amounts(abi.decode(returnData, (uint[])));
     }
 
     function swapExactETHForTokens(
@@ -50,8 +48,7 @@ contract RouterEventEmitter {
             IUniswapV2Router01(router).swapExactETHForTokens.selector, amountOutMin, path, to, deadline
         ));
         assert(success);
-        uint[] memory amounts = abi.decode(returnData, (uint[]));
-        emit Amounts(amounts);
+        emit Amounts(abi.decode(returnData, (uint[])));
     }
 
     function swapTokensForExactETH(
@@ -66,8 +63,7 @@ contract RouterEventEmitter {
             IUniswapV2Router01(router).swapTokensForExactETH.selector, amountOut, amountInMax, path, to, deadline
         ));
         assert(success);
-        uint[] memory amounts = abi.decode(returnData, (uint[]));
-        emit Amounts(amounts);
+        emit Amounts(abi.decode(returnData, (uint[])));
     }
 
     function swapExactTokensForETH(
@@ -82,8 +78,7 @@ contract RouterEventEmitter {
             IUniswapV2Router01(router).swapExactTokensForETH.selector, amountIn, amountOutMin, path, to, deadline
         ));
         assert(success);
-        uint[] memory amounts = abi.decode(returnData, (uint[]));
-        emit Amounts(amounts);
+        emit Amounts(abi.decode(returnData, (uint[])));
     }
 
     function swapETHForExactTokens(
@@ -97,7 +92,6 @@ contract RouterEventEmitter {
             IUniswapV2Router01(router).swapETHForExactTokens.selector, amountOut, path, to, deadline
         ));
         assert(success);
-        uint[] memory amounts = abi.decode(returnData, (uint[]));
-        emit Amounts(amounts);
+        emit Amounts(abi.decode(returnData, (uint[])));
     }
 }
