@@ -186,7 +186,6 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
             address(this),
             deadline
         );
-        // use the current balance instead of amountToken to support fee-on-transfer tokens
         TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
