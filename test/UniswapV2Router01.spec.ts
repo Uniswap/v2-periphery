@@ -5,12 +5,10 @@ import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { ecsign } from 'ethereumjs-util'
 
-import { expandTo18Decimals, getApprovalDigest, mineBlock } from './shared/utilities'
+import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
 chai.use(solidity)
-
-const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
 const overrides = {
   gasLimit: 9999999
@@ -18,11 +16,10 @@ const overrides = {
 
 enum RouterVersion {
   UniswapV2Router01 = 'UniswapV2Router01',
-  UniswapV2Router02 = 'UniswapV2Router02',
-  UniswapV2Router03 = 'UniswapV2Router03'
+  UniswapV2Router02 = 'UniswapV2Router02'
 }
 
-describe('UniswapV2Router{01,02,03}', () => {
+describe('UniswapV2Router{01,02}', () => {
   for (const routerVersion of Object.keys(RouterVersion)) {
     const provider = new MockProvider({
       hardfork: 'istanbul',
@@ -50,8 +47,7 @@ describe('UniswapV2Router{01,02,03}', () => {
       factory = fixture.factoryV2
       router = {
         [RouterVersion.UniswapV2Router01]: fixture.router01,
-        [RouterVersion.UniswapV2Router02]: fixture.router02,
-        [RouterVersion.UniswapV2Router03]: fixture.router03
+        [RouterVersion.UniswapV2Router02]: fixture.router02
       }[routerVersion as RouterVersion]
       pair = fixture.pair
       WETHPair = fixture.WETHPair
@@ -373,8 +369,7 @@ describe('UniswapV2Router{01,02,03}', () => {
           expect(receipt.gasUsed).to.eq(
             {
               [RouterVersion.UniswapV2Router01]: 101876,
-              [RouterVersion.UniswapV2Router02]: 101876,
-              [RouterVersion.UniswapV2Router03]: 104152
+              [RouterVersion.UniswapV2Router02]: 101898
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -523,8 +518,7 @@ describe('UniswapV2Router{01,02,03}', () => {
           expect(receipt.gasUsed).to.eq(
             {
               [RouterVersion.UniswapV2Router01]: 138770,
-              [RouterVersion.UniswapV2Router02]: 138770,
-              [RouterVersion.UniswapV2Router03]: 141010
+              [RouterVersion.UniswapV2Router02]: 138770
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
