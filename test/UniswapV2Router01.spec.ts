@@ -340,7 +340,7 @@ describe('UniswapV2Router01', () => {
       overrides
     )
     const receipt = await tx.wait()
-    expect(receipt.gasUsed).to.eq(101876)
+    expect(receipt.gasUsed).to.eq(108023)
   })
 
   it('swapTokensForExactTokens', async () => {
@@ -429,7 +429,7 @@ describe('UniswapV2Router01', () => {
       value: swapAmount
     })
     const receipt = await tx.wait()
-    expect(receipt.gasUsed).to.eq(138770)
+    expect(receipt.gasUsed).to.eq(144981)
   })
 
   it('swapTokensForExactETH', async () => {
