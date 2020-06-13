@@ -8,7 +8,7 @@
   "homepage": "https://uniswap.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
+    "url": "https://github.com/levelkdev/dxswap-periphery"
   },
   "files": [
     "build",
@@ -16,7 +16,7 @@
   ],
   "dependencies": {
     "@uniswap/lib": "1.1.1",
-    "@uniswap/v2-core": "git://github.com/levelkdev/dxswap-core.git#develop"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#develop"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
