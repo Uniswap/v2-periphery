@@ -35,11 +35,7 @@ library UniswapV2Library {
     // fetches and sorts the reserves for a pair
     function getSwapFee(address factory, address tokenA, address tokenB) internal view returns (uint swapFee) {
         (address token0,) = sortTokens(tokenA, tokenB);
-<<<<<<< HEAD
         swapFee = IDXswapPair(pairFor(factory, tokenA, tokenB)).swapFee();
-=======
-        swapFee = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).swapFee();
->>>>>>> f56dad4... feat(contracts): Update contracts to supprt dynamic fee from dxswap-core contracts
     }
 
     // given some amount of an asset and pair reserves, returns an equivalent amount of the other asset
