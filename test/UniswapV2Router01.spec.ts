@@ -16,7 +16,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Router01', () => {
+describe('DXswapRouter01', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',

@@ -1,14 +1,13 @@
 {
-  "name": "@uniswap/v2-periphery",
-  "version": "1.0.0-beta.0",
-  "description": "🎚 Peripheral smart contracts for interacting with Uniswap V2",
+  "name": "dxswap-periphery",
+  "version": "1.0.0",
+  "description": "Peripheral smart contracts for interacting with DXswap core contracts",
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://uniswap.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
+    "url": "https://github.com/levelkdev/dxswap-periphery"
   },
   "files": [
     "build",
@@ -16,7 +15,7 @@
   ],
   "dependencies": {
     "@uniswap/lib": "1.1.1",
-    "@uniswap/v2-core": "git://github.com/levelkdev/dxswap-core.git#develop"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#develop"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",

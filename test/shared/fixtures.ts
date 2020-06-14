@@ -4,15 +4,15 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import UniswapV2Factory from '@uniswap/v2-core/build/DXswapFactory.json'
-import IUniswapV2Pair from '@uniswap/v2-core/build/IDXswapPair.json'
+import DXswapFactory from 'dxswap-core/build/DXswapFactory.json'
+import IDXswapPair from 'dxswap-core/build/IDXswapPair.json'
 
 import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
 import UniswapV1Exchange from '../../build/UniswapV1Exchange.json'
 import UniswapV1Factory from '../../build/UniswapV1Factory.json'
-import UniswapV2Router01 from '../../build/UniswapV2Router01.json'
-import UniswapV2Migrator from '../../build/UniswapV2Migrator.json'
+import DXswapRouter01 from '../../build/DXswapRouter01.json'
+import DXswapMigrator from '../../build/DXswapMigrator.json'
 
 const overrides = {
   gasLimit: 9999999
@@ -44,11 +44,11 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   await factoryV1.initializeFactory((await deployContract(wallet, UniswapV1Exchange, [])).address)
 
   // deploy V2
-  const factoryV2 = await deployContract(wallet, UniswapV2Factory, [wallet.address])
+  const factoryV2 = await deployContract(wallet, DXswapFactory, [wallet.address])
 
   // deploy router and migrator
-  const router = await deployContract(wallet, UniswapV2Router01, [factoryV2.address, WETH.address], overrides)
-  const migrator = await deployContract(wallet, UniswapV2Migrator, [factoryV1.address, router.address], overrides)
+  const router = await deployContract(wallet, DXswapRouter01, [factoryV2.address, WETH.address], overrides)
+  const migrator = await deployContract(wallet, DXswapMigrator, [factoryV1.address, router.address], overrides)
 
   // initialize V1
   await factoryV1.createExchange(WETHPartner.address, overrides)
@@ -60,7 +60,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   // initialize V2
   await factoryV2.createPair(tokenA.address, tokenB.address)
   const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
-  const pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+  const pair = new Contract(pairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
@@ -68,7 +68,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
 
   await factoryV2.createPair(WETH.address, WETHPartner.address)
   const WETHPairAddress = await factoryV2.getPair(WETH.address, WETHPartner.address)
-  const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+  const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
 
   return {
     token0,
