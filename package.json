@@ -29,7 +29,8 @@
     "rimraf": "^3.0.0",
     "solc": "0.6.6",
     "ts-node": "^8.5.4",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.3",
+    "truffle-flattener": "^1.4.4"
   },
   "scripts": {
     "lint": "yarn prettier ./test/*.ts --check",
@@ -41,7 +42,8 @@
     "postcompile": "yarn copy-v1-artifacts",
     "pretest": "yarn compile",
     "test": "mocha",
-    "prepublishOnly": "yarn test"
+    "prepublishOnly": "yarn test",
+    "flattener": "npx truffle-flattener contracts/DXswapRouter01.sol > contracts/flattened/DXswapRouter01.sol & npx truffle-flattener contracts/DXswapMigrator.sol > contracts/flattened/DXswapMigrator.sol"
   },
   "license": "GPL-3.0-or-later"
 }
