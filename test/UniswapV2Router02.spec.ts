@@ -307,3 +307,74 @@ describe('fee-on-transfer tokens', () => {
     )
   })
 })
+
+describe('fee-on-transfer tokens: reloaded', () => {
+  const provider = new MockProvider({
+    hardfork: 'istanbul',
+    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+    gasLimit: 9999999
+  })
+  const [wallet] = provider.getWallets()
+  const loadFixture = createFixtureLoader(provider, [wallet])
+
+  let DTT: Contract
+  let DTT2: Contract
+  let router: Contract
+  beforeEach(async function() {
+    const fixture = await loadFixture(v2Fixture)
+
+    router = fixture.router02
+
+    DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
+    DTT2 = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
+
+    // make a DTT<>WETH pair
+    await fixture.factoryV2.createPair(DTT.address, DTT2.address)
+    const pairAddress = await fixture.factoryV2.getPair(DTT.address, DTT2.address)
+  })
+
+  afterEach(async function() {
+    expect(await provider.getBalance(router.address)).to.eq(0)
+  })
+
+  async function addLiquidity(DTTAmount: BigNumber, DTT2Amount: BigNumber) {
+    await DTT.approve(router.address, MaxUint256)
+    await DTT2.approve(router.address, MaxUint256)
+    await router.addLiquidity(
+      DTT.address,
+      DTT2.address,
+      DTTAmount,
+      DTT2Amount,
+      DTTAmount,
+      DTT2Amount,
+      wallet.address,
+      MaxUint256,
+      overrides
+    )
+  }
+
+  describe('swapExactTokensForTokensSupportingFeeOnTransferTokens', () => {
+    const DTTAmount = expandTo18Decimals(5)
+      .mul(100)
+      .div(99)
+    const DTT2Amount = expandTo18Decimals(5)
+    const amountIn = expandTo18Decimals(1)
+
+    beforeEach(async () => {
+      await addLiquidity(DTTAmount, DTT2Amount)
+    })
+
+    it('DTT -> DTT2', async () => {
+      await DTT.approve(router.address, MaxUint256)
+
+      await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        amountIn,
+        0,
+        [DTT.address, DTT2.address],
+        wallet.address,
+        MaxUint256,
+        overrides
+      )
+    })
+  })
+})
