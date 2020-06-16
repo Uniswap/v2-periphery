@@ -12,7 +12,9 @@ import WETH9 from '../../build/WETH9.json'
 import UniswapV1Exchange from '../../build/UniswapV1Exchange.json'
 import UniswapV1Factory from '../../build/UniswapV1Factory.json'
 import DXswapRouter01 from '../../build/DXswapRouter01.json'
+import DXswapRouter02 from '../../build/DXswapRouter02.json'
 import DXswapMigrator from '../../build/DXswapMigrator.json'
+import RouterEventEmitter from '../../build/RouterEventEmitter.json'
 
 const overrides = {
   gasLimit: 9999999
@@ -25,6 +27,9 @@ interface V2Fixture {
   WETHPartner: Contract
   factoryV1: Contract
   factoryV2: Contract
+  router01: Contract
+  router02: Contract
+  routerEventEmitter: Contract
   router: Contract
   migrator: Contract
   WETHExchangeV1: Contract
@@ -46,9 +51,15 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   // deploy V2
   const factoryV2 = await deployContract(wallet, DXswapFactory, [wallet.address])
 
-  // deploy router and migrator
-  const router = await deployContract(wallet, DXswapRouter01, [factoryV2.address, WETH.address], overrides)
-  const migrator = await deployContract(wallet, DXswapMigrator, [factoryV1.address, router.address], overrides)
+  // deploy routers
+  const router01 = await deployContract(wallet, DXswapRouter01, [factoryV2.address, WETH.address], overrides)
+  const router02 = await deployContract(wallet, DXswapRouter02, [factoryV2.address, WETH.address], overrides)
+
+  // event emitter for testing
+  const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
+
+  // deploy migrator
+  const migrator = await deployContract(wallet, DXswapMigrator, [factoryV1.address, router01.address], overrides)
 
   // initialize V1
   await factoryV1.createExchange(WETHPartner.address, overrides)
@@ -77,7 +88,10 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
     WETHPartner,
     factoryV1,
     factoryV2,
-    router,
+    router01,
+    router02,
+    router: router02, // the default router, 01 had a minor bug
+    routerEventEmitter,
     migrator,
     WETHExchangeV1,
     pair,
