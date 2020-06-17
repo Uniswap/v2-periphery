@@ -43,7 +43,7 @@
     "pretest": "yarn compile",
     "test": "mocha",
     "prepublishOnly": "yarn test",
-    "flattener": "npx truffle-flattener contracts/DXswapRouter01.sol > contracts/flattened/DXswapRouter01.sol & npx truffle-flattener contracts/DXswapMigrator.sol > contracts/flattened/DXswapMigrator.sol"
+    "flattener": "./scripts/flattener.sh"
   },
   "license": "GPL-3.0-or-later"
 }
