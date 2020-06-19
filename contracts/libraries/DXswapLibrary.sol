@@ -21,7 +21,7 @@ library DXswapLibrary {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'd0d9bad4e674acbddd29729f10773af2aee1e9dee499c51bdf5ea12210740304' // init code hash
+                hex'c12df094d952118426a3680de1a396a7cfeff86597d53f897ddc5e0e4aeef5fd' // init code hash
             ))));
     }
 

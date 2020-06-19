@@ -7,7 +7,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import ExampleFlashSwap from '../build/ExampleFlashSwap.json'
+import ExampleFlashSwap from '../build/contracts/ExampleFlashSwap.json'
 
 chai.use(solidity)
 
