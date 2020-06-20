@@ -6,7 +6,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import ExampleSlidingWindowOracle from '../build/ExampleSlidingWindowOracle.json'
+import ExampleSlidingWindowOracle from '../build/contracts/ExampleSlidingWindowOracle.json'
 
 chai.use(solidity)
 
@@ -150,14 +150,14 @@ describe('ExampleSlidingWindowOracle', () => {
     it('gas for first update (allocates empty array)', async () => {
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('116816')
+      expect(receipt.gasUsed).to.eq('117302')
     }).retries(2) // gas test inconsistent
 
     it('gas for second update in the same period (skips)', async () => {
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('25574')
+      expect(receipt.gasUsed).to.eq('25688')
     }).retries(2) // gas test inconsistent
 
     it('gas for second update different period (no allocate, no skip)', async () => {
@@ -165,7 +165,7 @@ describe('ExampleSlidingWindowOracle', () => {
       await mineBlock(provider, startTime + 3600)
       const tx = await slidingWindowOracle.update(token0.address, token1.address, overrides)
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('94542')
+      expect(receipt.gasUsed).to.eq('94848')
     }).retries(2) // gas test inconsistent
 
     it('second update in one timeslot does not overwrite', async () => {

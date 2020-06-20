@@ -4,17 +4,17 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import DXswapFactory from 'dxswap-core/build/DXswapFactory.json'
-import IDXswapPair from 'dxswap-core/build/IDXswapPair.json'
+import DXswapFactory from 'dxswap-core/build/contracts/DXswapFactory.json'
+import IDXswapPair from 'dxswap-core/build/contracts/IDXswapPair.json'
 
-import ERC20 from '../../build/ERC20.json'
-import WETH9 from '../../build/WETH9.json'
-import UniswapV1Exchange from '../../build/UniswapV1Exchange.json'
-import UniswapV1Factory from '../../build/UniswapV1Factory.json'
-import DXswapRouter01 from '../../build/DXswapRouter01.json'
-import DXswapRouter02 from '../../build/DXswapRouter02.json'
-import DXswapMigrator from '../../build/DXswapMigrator.json'
-import RouterEventEmitter from '../../build/RouterEventEmitter.json'
+import ERC20 from '../../build/contracts/ERC20.json'
+import WETH9 from '../../build/contracts/WETH9.json'
+import UniswapV1Exchange from '../../build/contracts/UniswapV1Exchange.json'
+import UniswapV1Factory from '../../build/contracts/UniswapV1Factory.json'
+import DXswapRouter01 from '../../build/contracts/DXswapRouter01.json'
+import DXswapRouter02 from '../../build/contracts/DXswapRouter02.json'
+import DXswapMigrator from '../../build/contracts/DXswapMigrator.json'
+import RouterEventEmitter from '../../build/contracts/RouterEventEmitter.json'
 
 const overrides = {
   gasLimit: 9999999

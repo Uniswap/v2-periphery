@@ -1,0 +1,62 @@
+{
+  "contracts": {
+    "DXswapLibrary": {
+      "address": "0xb73E00D36a43099d996a2E9B567dD91EFe3f53d9",
+      "constructorCode": "60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe",
+      "bodyBytecodeHash": "ee73aad5bd038ce2475e754f20e3ab26185542921d592fb0d073842a183ee677",
+      "localBytecodeHash": "4bffc79c339357805a6807e3a9bf61258bf4f865ed87546869cc5a2d72ac9c19",
+      "deployedBytecodeHash": "4bffc79c339357805a6807e3a9bf61258bf4f865ed87546869cc5a2d72ac9c19",
+      "types": {},
+      "storage": [],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "DXswapOracleLibrary": {
+      "address": "0x9Fd0A02a3d67F5C1ABa3f713D28aBc1baBf74145",
+      "constructorCode": "60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe",
+      "bodyBytecodeHash": "ee73aad5bd038ce2475e754f20e3ab26185542921d592fb0d073842a183ee677",
+      "localBytecodeHash": "4bffc79c339357805a6807e3a9bf61258bf4f865ed87546869cc5a2d72ac9c19",
+      "deployedBytecodeHash": "4bffc79c339357805a6807e3a9bf61258bf4f865ed87546869cc5a2d72ac9c19",
+      "types": {},
+      "storage": [],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    }
+  },
+  "solidityLibs": {},
+  "proxies": {
+    "dxswap-periphery/DXswapRouter01": [
+      {
+        "address": "0x6228D4e7Ecd0C4abb0E302A373925029a6F2dEB9",
+        "kind": "NonProxy",
+        "bytecodeHash": "fb2dc5f9d3c06a6564f56fbcfa212390b88af4544f62fcfe553eaa7f00a4de7b"
+      }
+    ],
+    "dxswap-periphery/DXswapRouter02": [
+      {
+        "address": "0x7a65D71CCcDcFf20C35edA963A99C3bBC819fBcf",
+        "kind": "NonProxy",
+        "bytecodeHash": "0fd56a59a9302c7c19adf8d124df5c12eda262f2a368b6974a9a9a2fbdfad2b8"
+      }
+    ],
+    "dxswap-periphery/DXswapMigrator": [
+      {
+        "address": "0x5ddc6F1feA0D249e80cF4e2a1e1347Bf18ea0F7b",
+        "kind": "NonProxy",
+        "bytecodeHash": "6d100da7bb579b03aaea64cad15fca503ed39c61f78828397706c9e3571bb9c2"
+      }
+    ]
+  },
+  "manifestVersion": "2.2",
+  "version": "1.0.0"
+}
