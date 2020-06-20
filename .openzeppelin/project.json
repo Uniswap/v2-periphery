@@ -1,6 +1,12 @@
 {
   "manifestVersion": "2.2",
-  "contracts": {},
+  "contracts": {
+    "DXswapLibrary": "DXswapLibrary",
+    "DXswapOracleLibrary": "DXswapOracleLibrary",
+    "DXswapMigrator": "DXswapMigrator",
+    "DXswapRouter01": "DXswapRouter01",
+    "DXswapRouter02": "DXswapRouter02"
+  },
   "dependencies": {},
   "name": "dxswap-periphery",
   "version": "1.0.0",
