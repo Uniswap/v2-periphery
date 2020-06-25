@@ -37,21 +37,21 @@
   "proxies": {
     "dxswap-periphery/DXswapRouter01": [
       {
-        "address": "0x6228D4e7Ecd0C4abb0E302A373925029a6F2dEB9",
+        "address": "0xB464327281C5F446856a4c34D7c702a767F73E32",
         "kind": "NonProxy",
-        "bytecodeHash": "fb2dc5f9d3c06a6564f56fbcfa212390b88af4544f62fcfe553eaa7f00a4de7b"
+        "bytecodeHash": "3e9e3c3dff9cf3045193ad0c5a1f8428a2ffa75c053cb517907f8c6001168d0b"
       }
     ],
     "dxswap-periphery/DXswapRouter02": [
       {
-        "address": "0x7a65D71CCcDcFf20C35edA963A99C3bBC819fBcf",
+        "address": "0x30e9C3F139B9348E929B948f0dce5F11B2112eB5",
         "kind": "NonProxy",
-        "bytecodeHash": "0fd56a59a9302c7c19adf8d124df5c12eda262f2a368b6974a9a9a2fbdfad2b8"
+        "bytecodeHash": "0d147281b3e4b621e1b8635352e627ee7653e218be3e1ef4d47bfda61c44c082"
       }
     ],
     "dxswap-periphery/DXswapMigrator": [
       {
-        "address": "0x5ddc6F1feA0D249e80cF4e2a1e1347Bf18ea0F7b",
+        "address": "0xa25A3435f8bAead9Aac0BE6B94ad2c00820D4082",
         "kind": "NonProxy",
         "bytecodeHash": "6d100da7bb579b03aaea64cad15fca503ed39c61f78828397706c9e3571bb9c2"
       }
