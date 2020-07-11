@@ -7,7 +7,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-import ExampleFlashSwap from '../build/ExampleFlashSwap.json'
+import ExampleFlashSwap from '../build/contracts/ExampleFlashSwap.json'
 
 chai.use(solidity)
 
@@ -45,7 +45,7 @@ describe('ExampleFlashSwap', () => {
     )
   })
 
-  it('uniswapV2Call:0', async () => {
+  it('DXswapCall:0', async () => {
     // add liquidity to V1 at a rate of 1 ETH / 200 X
     const WETHPartnerAmountV1 = expandTo18Decimals(2000)
     const ETHAmountV1 = expandTo18Decimals(10)
@@ -65,7 +65,7 @@ describe('ExampleFlashSwap', () => {
 
     const balanceBefore = await WETHPartner.balanceOf(wallet.address)
 
-    // now, execute arbitrage via uniswapV2Call:
+    // now, execute arbitrage via DXswapCall:
     // receive 1 ETH from V2, get as much X from V1 as we can, repay V2 with minimum X, keep the rest!
     const arbitrageAmount = expandTo18Decimals(1)
     // instead of being 'hard-coded', the above value could be calculated optimally off-chain. this would be
@@ -98,7 +98,7 @@ describe('ExampleFlashSwap', () => {
     expect(priceV2.toString()).to.eq('123') // we pushed the v2 price up to ~123
   })
 
-  it('uniswapV2Call:1', async () => {
+  it('DXswapCall:1', async () => {
     // add liquidity to V1 at a rate of 1 ETH / 100 X
     const WETHPartnerAmountV1 = expandTo18Decimals(1000)
     const ETHAmountV1 = expandTo18Decimals(10)
@@ -118,7 +118,7 @@ describe('ExampleFlashSwap', () => {
 
     const balanceBefore = await provider.getBalance(wallet.address)
 
-    // now, execute arbitrage via uniswapV2Call:
+    // now, execute arbitrage via DXswapCall:
     // receive 200 X from V2, get as much ETH from V1 as we can, repay V2 with minimum ETH, keep the rest!
     const arbitrageAmount = expandTo18Decimals(200)
     // instead of being 'hard-coded', the above value could be calculated optimally off-chain. this would be

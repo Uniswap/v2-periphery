@@ -1,0 +1,171 @@
+{
+  "fileName": "IUniswapV1Factory.sol",
+  "contractName": "IUniswapV1Factory",
+  "source": "pragma solidity >=0.5.0;\n\ninterface IUniswapV1Factory {\n    function getExchange(address) external view returns (address);\n}\n",
+  "sourcePath": "contracts/interfaces/V1/IUniswapV1Factory.sol",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "getExchange",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "ast": {
+    "absolutePath": "contracts/interfaces/V1/IUniswapV1Factory.sol",
+    "exportedSymbols": {
+      "IUniswapV1Factory": [
+        4046
+      ]
+    },
+    "id": 4047,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 4038,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.5",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:11"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 4046,
+        "linearizedBaseContracts": [
+          4046
+        ],
+        "name": "IUniswapV1Factory",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "functionSelector": "06f2bf62",
+            "id": 4045,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getExchange",
+            "nodeType": "FunctionDefinition",
+            "overrides": null,
+            "parameters": {
+              "id": 4041,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 4040,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 4045,
+                  "src": "81:7:11",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 4039,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "81:7:11",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "80:9:11"
+            },
+            "returnParameters": {
+              "id": 4044,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 4043,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 4045,
+                  "src": "113:7:11",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 4042,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "113:7:11",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "112:9:11"
+            },
+            "scope": 4046,
+            "src": "60:62:11",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 4047,
+        "src": "26:98:11"
+      }
+    ],
+    "src": "0:125:11"
+  },
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "compiler": {
+    "name": "solc",
+    "version": "0.6.6+commit.6c089d02.Emscripten.clang",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "istanbul"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "manifestVersion": "2.2",
+  "contracts": {
+    "DXswapLibrary": "DXswapLibrary",
+    "DXswapOracleLibrary": "DXswapOracleLibrary",
+    "DXswapMigrator": "DXswapMigrator",
+    "DXswapRouter": "DXswapRouter"
+  },
+  "dependencies": {},
+  "name": "dxswap-periphery",
+  "version": "0.1.0",
+  "compiler": {
+    "compilerSettings": {
+      "evmVersion": "istanbul",
+      "optimizer": {
+        "enabled": true,
+        "runs": "200"
+      }
+    },
+    "manager": "openzeppelin",
+    "typechain": {
+      "enabled": true,
+      "outDir": "./build/types/",
+      "target": "web3-v1"
+    },
+    "solcVersion": "0.6.6",
+    "artifactsDir": "build/contracts",
+    "contractsDir": "contracts"
+  },
+  "telemetryOptIn": true
+}

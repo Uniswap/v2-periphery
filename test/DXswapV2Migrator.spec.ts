@@ -5,17 +5,15 @@ import { bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 
 import { v2Fixture } from './shared/fixtures'
-import { expandTo18Decimals } from './shared/utilities'
+import { expandTo18Decimals, MINIMUM_LIQUIDITY } from './shared/utilities'
 
 chai.use(solidity)
-
-const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
 const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Migrator', () => {
+describe('DXswapMigrator', () => {
   const provider = new MockProvider({
     hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',

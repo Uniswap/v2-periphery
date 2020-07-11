@@ -1,34 +1,37 @@
 {
-  "name": "@uniswap/v2-periphery",
-  "version": "1.0.0-beta.0",
-  "description": "🎚 Peripheral smart contracts for interacting with Uniswap V2",
+  "name": "dxswap-periphery",
+  "version": "0.1.0",
+  "description": "Peripheral smart contracts for interacting with DXswap core contracts",
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://uniswap.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
+    "url": "https://github.com/levelkdev/dxswap-periphery"
   },
   "files": [
     "build",
     "contracts"
   ],
   "dependencies": {
-    "@uniswap/lib": "1.1.1",
-    "@uniswap/v2-core": "1.0.0"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#v0.1.0"
   },
   "devDependencies": {
+    "@openzeppelin/cli": "^2.8.2",
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
     "ethereum-waffle": "^2.4.1",
     "ethereumjs-util": "^6.2.0",
+    "ethers": "^4.0.45",
     "mocha": "^6.2.2",
     "ncp": "^2.0.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
     "solc": "0.6.6",
+    "truffle-flattener": "^1.4.4",
+    "truffle-hdwallet-provider": "^1.0.17",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.3"
   },
@@ -36,13 +39,14 @@
     "lint": "yarn prettier ./test/*.ts --check",
     "lint:fix": "yarn prettier ./test/*.ts --write",
     "clean": "rimraf ./build/",
-    "copy-v1-artifacts": "ncp ./buildV1 ./build",
+    "copy-v1-artifacts": "ncp ./buildV1 ./build/contracts",
     "precompile": "yarn clean",
-    "compile": "waffle .waffle.json",
+    "compile": "npx oz compile",
     "postcompile": "yarn copy-v1-artifacts",
     "pretest": "yarn compile",
     "test": "mocha",
-    "prepublishOnly": "yarn test"
+    "prepublishOnly": "yarn test",
+    "flattener": "./scripts/flattener.sh"
   },
   "license": "GPL-3.0-or-later"
 }
