@@ -1,8 +1,8 @@
 pragma solidity =0.6.6;
 
 import 'dxswap-core/contracts/interfaces/IDXswapFactory.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
+import './libraries/TransferHelper.sol';
 import './interfaces/IDXswapRouter02.sol';
 import './libraries/DXswapLibrary.sol';
 import './libraries/SafeMath.sol';

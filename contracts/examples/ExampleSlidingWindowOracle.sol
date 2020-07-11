@@ -2,8 +2,8 @@ pragma solidity =0.6.6;
 
 import 'dxswap-core/contracts/interfaces/IDXswapFactory.sol';
 import 'dxswap-core/contracts/interfaces/IDXswapPair.sol';
-import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 
+import '../libraries/FixedPoint.sol';
 import '../libraries/SafeMath.sol';
 import '../libraries/DXswapLibrary.sol';
 import '../libraries/DXswapOracleLibrary.sol';
