@@ -4,16 +4,16 @@ import './libraries/TransferHelper.sol';
 import './interfaces/IDXswapMigrator.sol';
 import './interfaces/V1/IUniswapV1Factory.sol';
 import './interfaces/V1/IUniswapV1Exchange.sol';
-import './interfaces/IDXswapRouter01.sol';
+import './interfaces/IDXswapRouter.sol';
 import './interfaces/IERC20.sol';
 
 contract DXswapMigrator is IDXswapMigrator {
     IUniswapV1Factory immutable factoryV1;
-    IDXswapRouter01 immutable router;
+    IDXswapRouter immutable router;
 
     constructor(address _factoryV1, address _router) public {
         factoryV1 = IUniswapV1Factory(_factoryV1);
-        router = IDXswapRouter01(_router);
+        router = IDXswapRouter(_router);
     }
 
     // needs to accept ETH from any v1 exchange and the router. ideally this could be enforced, as in the router,
