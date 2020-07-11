@@ -1,6 +1,6 @@
 {
   "name": "dxswap-periphery",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Peripheral smart contracts for interacting with DXswap core contracts",
   "engines": {
     "node": ">=10"
