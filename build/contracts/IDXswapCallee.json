@@ -39,14 +39,14 @@
     "absolutePath": "dxswap-core/contracts/interfaces/IDXswapCallee.sol",
     "exportedSymbols": {
       "IDXswapCallee": [
-        8028
+        7089
       ]
     },
-    "id": 8029,
+    "id": 7090,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8016,
+        "id": 7077,
         "literals": [
           "solidity",
           ">=",
@@ -54,7 +54,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:24"
+        "src": "0:24:25"
       },
       {
         "abstract": false,
@@ -63,9 +63,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 8028,
+        "id": 7089,
         "linearizedBaseContracts": [
-          8028
+          7089
         ],
         "name": "IDXswapCallee",
         "nodeType": "ContractDefinition",
@@ -74,7 +74,7 @@
             "body": null,
             "documentation": null,
             "functionSelector": "78b94ae6",
-            "id": 8027,
+            "id": 7088,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -82,18 +82,18 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 8025,
+              "id": 7086,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8018,
+                  "id": 7079,
                   "mutability": "mutable",
                   "name": "sender",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 8027,
-                  "src": "76:14:24",
+                  "scope": 7088,
+                  "src": "76:14:25",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -101,10 +101,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8017,
+                    "id": 7078,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "76:7:24",
+                    "src": "76:7:25",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -116,13 +116,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 8020,
+                  "id": 7081,
                   "mutability": "mutable",
                   "name": "amount0",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 8027,
-                  "src": "92:12:24",
+                  "scope": 7088,
+                  "src": "92:12:25",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -130,10 +130,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8019,
+                    "id": 7080,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "92:4:24",
+                    "src": "92:4:25",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -144,13 +144,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 8022,
+                  "id": 7083,
                   "mutability": "mutable",
                   "name": "amount1",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 8027,
-                  "src": "106:12:24",
+                  "scope": 7088,
+                  "src": "106:12:25",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -158,10 +158,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8021,
+                    "id": 7082,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "106:4:24",
+                    "src": "106:4:25",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -172,13 +172,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 8024,
+                  "id": 7085,
                   "mutability": "mutable",
                   "name": "data",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 8027,
-                  "src": "120:19:24",
+                  "scope": 7088,
+                  "src": "120:19:25",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -186,10 +186,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 8023,
+                    "id": 7084,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "120:5:24",
+                    "src": "120:5:25",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -199,26 +199,26 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "75:65:24"
+              "src": "75:65:25"
             },
             "returnParameters": {
-              "id": 8026,
+              "id": 7087,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "149:0:24"
+              "src": "149:0:25"
             },
-            "scope": 8028,
-            "src": "56:94:24",
+            "scope": 7089,
+            "src": "56:94:25",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 8029,
-        "src": "26:126:24"
+        "scope": 7090,
+        "src": "26:126:25"
       }
     ],
-    "src": "0:153:24"
+    "src": "0:153:25"
   },
   "bytecode": "0x",
   "deployedBytecode": "0x",
