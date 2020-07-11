@@ -4,12 +4,11 @@
     "DXswapLibrary": "DXswapLibrary",
     "DXswapOracleLibrary": "DXswapOracleLibrary",
     "DXswapMigrator": "DXswapMigrator",
-    "DXswapRouter01": "DXswapRouter01",
-    "DXswapRouter02": "DXswapRouter02"
+    "DXswapRouter": "DXswapRouter"
   },
   "dependencies": {},
   "name": "dxswap-periphery",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "compiler": {
     "compilerSettings": {
       "evmVersion": "istanbul",
