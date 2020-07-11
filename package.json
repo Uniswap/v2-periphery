@@ -1,6 +1,6 @@
 {
   "name": "dxswap-periphery",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Peripheral smart contracts for interacting with DXswap core contracts",
   "engines": {
     "node": ">=10"
@@ -14,8 +14,7 @@
     "contracts"
   ],
   "dependencies": {
-    "@uniswap/lib": "1.1.1",
-    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#develop"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#v0.1.0"
   },
   "devDependencies": {
     "@openzeppelin/cli": "^2.8.2",

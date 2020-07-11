@@ -1,7 +1,8 @@
 pragma solidity >=0.5.0;
 
 import 'dxswap-core/contracts/interfaces/IDXswapPair.sol';
-import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
+
+import './FixedPoint.sol';
 
 // library with helper methods for oracles that are concerned with computing average prices
 library DXswapOracleLibrary {

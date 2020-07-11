@@ -1,15 +1,15 @@
 pragma solidity =0.6.6;
 
 import 'dxswap-core/contracts/interfaces/IDXswapFactory.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import './interfaces/IDXswapRouter02.sol';
+import './libraries/TransferHelper.sol';
+import './interfaces/IDXswapRouter.sol';
 import './libraries/DXswapLibrary.sol';
 import './libraries/SafeMath.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
-contract DXswapRouter02 is IDXswapRouter02 {
+contract DXswapRouter is IDXswapRouter {
     using SafeMath for uint;
 
     address public immutable override factory;

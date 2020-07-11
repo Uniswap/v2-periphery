@@ -35,23 +35,16 @@
   },
   "solidityLibs": {},
   "proxies": {
-    "dxswap-periphery/DXswapRouter01": [
+    "dxswap-periphery/DXswapRouter": [
       {
-        "address": "0xB464327281C5F446856a4c34D7c702a767F73E32",
-        "kind": "NonProxy",
-        "bytecodeHash": "3e9e3c3dff9cf3045193ad0c5a1f8428a2ffa75c053cb517907f8c6001168d0b"
-      }
-    ],
-    "dxswap-periphery/DXswapRouter02": [
-      {
-        "address": "0x30e9C3F139B9348E929B948f0dce5F11B2112eB5",
+        "address": "0x8D70406B983ec7CA89d7ca413815CF3675770888",
         "kind": "NonProxy",
         "bytecodeHash": "0d147281b3e4b621e1b8635352e627ee7653e218be3e1ef4d47bfda61c44c082"
       }
     ],
     "dxswap-periphery/DXswapMigrator": [
       {
-        "address": "0xa25A3435f8bAead9Aac0BE6B94ad2c00820D4082",
+        "address": "0x164Faef5f12D1624724d4d90581FCA79c38b9151",
         "kind": "NonProxy",
         "bytecodeHash": "6d100da7bb579b03aaea64cad15fca503ed39c61f78828397706c9e3571bb9c2"
       }

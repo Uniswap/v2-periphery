@@ -31,7 +31,7 @@ describe('DXswapMigrator', () => {
     const fixture = await loadFixture(v2Fixture)
     WETHPartner = fixture.WETHPartner
     WETHPair = fixture.WETHPair
-    router = fixture.router01 // we used router01 for this contract
+    router = fixture.router
     migrator = fixture.migrator
     WETHExchangeV1 = fixture.WETHExchangeV1
   })

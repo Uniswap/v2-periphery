@@ -5,7 +5,7 @@ import 'dxswap-core/contracts/interfaces/IDXswapCallee.sol';
 import '../libraries/DXswapLibrary.sol';
 import '../interfaces/V1/IUniswapV1Factory.sol';
 import '../interfaces/V1/IUniswapV1Exchange.sol';
-import '../interfaces/IDXswapRouter01.sol';
+import '../interfaces/IDXswapRouter.sol';
 import '../interfaces/IERC20.sol';
 import '../interfaces/IWETH.sol';
 
@@ -17,7 +17,7 @@ contract ExampleFlashSwap is IDXswapCallee {
     constructor(address _factory, address _factoryV1, address router) public {
         factoryV1 = IUniswapV1Factory(_factoryV1);
         factory = _factory;
-        WETH = IWETH(IDXswapRouter01(router).WETH());
+        WETH = IWETH(IDXswapRouter(router).WETH());
     }
 
     // needs to accept ETH from any V1 exchange and WETH. ideally this could be enforced, as in the router,
