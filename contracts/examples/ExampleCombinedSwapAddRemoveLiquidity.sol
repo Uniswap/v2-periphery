@@ -29,7 +29,12 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
 
     // grants unlimited approval for a token to the router unless the existing allowance is high enough
     function approveRouter(address _token, uint256 _amount) internal {
-        if (IERC20(_token).allowance(address(this), address(router)) < _amount) {
+        uint256 allowance = IERC20(_token).allowance(address(this), address(router));
+        if (allowance < _amount) {
+            if (allowance > 0) {
+                // clear the existing allowance
+                TransferHelper.safeApprove(_token, address(router), 0);
+            }
             TransferHelper.safeApprove(_token, address(router), uint256(-1));
         }
     }
