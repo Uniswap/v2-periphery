@@ -7,6 +7,7 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 
 import "../interfaces/IUniswapV2Router01.sol";
 import "../interfaces/IWETH.sol";
+import "../interfaces/IERC20.sol";
 import "../libraries/SafeMath.sol";
 import "../libraries/UniswapV2Library.sol";
 
@@ -24,6 +25,13 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         factory = factory_;
         router = router_;
         weth = weth_;
+    }
+
+    // grants unlimited approval for a token to the router unless the existing allowance is high enough
+    function approveRouter(address _token, uint256 _amount) internal {
+        if (IERC20(_token).allowance(address(this), address(router)) < _amount) {
+            TransferHelper.safeApprove(_token, address(router), uint256(-1));
+        }
     }
 
     // returns the amount of token that should be swapped in such that ratio of reserves in the pair is equivalent
@@ -56,7 +64,7 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
             TransferHelper.safeTransferFrom(tokenIn, from, address(this), amountIn);
         }
         // approve for the swap, and then later the add liquidity. total is amountIn
-        TransferHelper.safeApprove(tokenIn, address(router), amountIn);
+        approveRouter(tokenIn, amountIn);
 
         {
             address[] memory path = new address[](2);
@@ -73,7 +81,7 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         }
 
         // approve the other token for the add liquidity call
-        TransferHelper.safeApprove(otherToken, address(router), amountTokenOther);
+        approveRouter(otherToken, amountTokenOther);
         amountTokenIn = amountIn.sub(swapInAmount);
 
         // no need to check that we transferred everything because minimums == total balance of this contract
@@ -136,7 +144,7 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         address pair = UniswapV2Library.pairFor(address(factory), undesiredToken, desiredToken);
         // take possession of liquidity and give access to the router
         TransferHelper.safeTransferFrom(pair, from, address(this), liquidity);
-        TransferHelper.safeApprove(pair, address(router), liquidity);
+        approveRouter(pair, liquidity);
 
         (uint amountInToSwap, uint amountOutToTransfer) = router.removeLiquidity(
             undesiredToken,
@@ -151,7 +159,7 @@ contract ExampleCombinedSwapAddRemoveLiquidity {
         );
 
         // send the amount in that we received in the burn
-        TransferHelper.safeApprove(undesiredToken, address(router), amountInToSwap);
+        approveRouter(undesiredToken, amountInToSwap);
 
         address[] memory path = new address[](2);
         path[0] = undesiredToken;
