@@ -53,7 +53,7 @@ describe('ExampleCombinedSwapAddRemoveLiquidity', () => {
     await wethPair.mint(wallet.address, overrides)
   }
 
-  beforeEach(async function () {
+  beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
     token0 = fixture.token0
