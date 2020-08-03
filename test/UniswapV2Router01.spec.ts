@@ -22,7 +22,7 @@ enum RouterVersion {
 describe('UniswapV2Router{01,02}', () => {
   for (const routerVersion of Object.keys(RouterVersion)) {
     const provider = new MockProvider({
-      hardfork: 'istanbul',
+      hardfork: 'petersburg',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999
     })

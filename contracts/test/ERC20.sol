@@ -23,7 +23,7 @@ contract ERC20 {
     constructor(uint _totalSupply) public {
         uint chainId;
         assembly {
-            chainId := chainid()
+            chainId := 60
         }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(

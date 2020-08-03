@@ -15,7 +15,7 @@
         "": ["ast"]
       }
     },
-    "evmVersion": "istanbul",
+    "evmVersion": "petersburg",
     "optimizer": {
       "enabled": true,
       "runs": 999999

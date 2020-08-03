@@ -19,7 +19,7 @@ const overrides = {
 
 describe('UniswapV2Router02', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'petersburg',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -123,7 +123,7 @@ describe('UniswapV2Router02', () => {
 
 describe('fee-on-transfer tokens', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'petersburg',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -310,7 +310,7 @@ describe('fee-on-transfer tokens', () => {
 
 describe('fee-on-transfer tokens: reloaded', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'petersburg',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
