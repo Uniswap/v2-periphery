@@ -3,21 +3,21 @@
   "contractName": "FixedPoint",
   "source": "pragma solidity >=0.4.0;\n\n// a library for handling binary fixed point numbers (https://en.wikipedia.org/wiki/Q_(number_format))\nlibrary FixedPoint {\n    // range: [0, 2**112 - 1]\n    // resolution: 1 / 2**112\n    struct uq112x112 {\n        uint224 _x;\n    }\n\n    // range: [0, 2**144 - 1]\n    // resolution: 1 / 2**112\n    struct uq144x112 {\n        uint _x;\n    }\n\n    uint8 private constant RESOLUTION = 112;\n\n    // encode a uint112 as a UQ112x112\n    function encode(uint112 x) internal pure returns (uq112x112 memory) {\n        return uq112x112(uint224(x) << RESOLUTION);\n    }\n\n    // encodes a uint144 as a UQ144x112\n    function encode144(uint144 x) internal pure returns (uq144x112 memory) {\n        return uq144x112(uint256(x) << RESOLUTION);\n    }\n\n    // divide a UQ112x112 by a uint112, returning a UQ112x112\n    function div(uq112x112 memory self, uint112 x) internal pure returns (uq112x112 memory) {\n        require(x != 0, 'FixedPoint: DIV_BY_ZERO');\n        return uq112x112(self._x / uint224(x));\n    }\n\n    // multiply a UQ112x112 by a uint, returning a UQ144x112\n    // reverts on overflow\n    function mul(uq112x112 memory self, uint y) internal pure returns (uq144x112 memory) {\n        uint z;\n        require(y == 0 || (z = uint(self._x) * y) / y == uint(self._x), \"FixedPoint: MULTIPLICATION_OVERFLOW\");\n        return uq144x112(z);\n    }\n\n    // returns a UQ112x112 which represents the ratio of the numerator to the denominator\n    // equivalent to encode(numerator).div(denominator)\n    function fraction(uint112 numerator, uint112 denominator) internal pure returns (uq112x112 memory) {\n        require(denominator > 0, \"FixedPoint: DIV_BY_ZERO\");\n        return uq112x112((uint224(numerator) << RESOLUTION) / denominator);\n    }\n\n    // decode a UQ112x112 into a uint112 by truncating after the radix point\n    function decode(uq112x112 memory self) internal pure returns (uint112) {\n        return uint112(self._x >> RESOLUTION);\n    }\n\n    // decode a UQ144x112 into a uint144 by truncating after the radix point\n    function decode144(uq144x112 memory self) internal pure returns (uint144) {\n        return uint144(self._x >> RESOLUTION);\n    }\n}\n",
   "sourcePath": "contracts/libraries/FixedPoint.sol",
-  "sourceMap": "129:2052:16:-:0;;132:2:-1;166:7;155:9;146:7;137:37;255:7;249:14;246:1;241:23;235:4;232:33;222:2;;269:9;222:2;293:9;290:1;283:20;323:4;314:7;306:22;347:7;338;331:24",
-  "deployedSourceMap": "129:2052:16:-:0;;;;;;12:1:-1;9;2:12",
+  "sourceMap": "129:2052:12:-:0;;132:2:-1;166:7;155:9;146:7;137:37;255:7;249:14;246:1;241:23;235:4;232:33;222:2;;269:9;222:2;293:9;290:1;283:20;323:4;314:7;306:22;347:7;338;331:24",
+  "deployedSourceMap": "129:2052:12:-:0;;;;;;12:1:-1;9;2:12",
   "abi": [],
   "ast": {
     "absolutePath": "contracts/libraries/FixedPoint.sol",
     "exportedSymbols": {
       "FixedPoint": [
-        5071
+        4458
       ]
     },
-    "id": 5072,
+    "id": 4459,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 4896,
+        "id": 4283,
         "literals": [
           "solidity",
           ">=",
@@ -25,7 +25,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:16"
+        "src": "0:24:12"
       },
       {
         "abstract": false,
@@ -34,26 +34,26 @@
         "contractKind": "library",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5071,
+        "id": 4458,
         "linearizedBaseContracts": [
-          5071
+          4458
         ],
         "name": "FixedPoint",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "FixedPoint.uq112x112",
-            "id": 4899,
+            "id": 4286,
             "members": [
               {
                 "constant": false,
-                "id": 4898,
+                "id": 4285,
                 "mutability": "mutable",
                 "name": "_x",
                 "nodeType": "VariableDeclaration",
                 "overrides": null,
-                "scope": 4899,
-                "src": "241:10:16",
+                "scope": 4286,
+                "src": "241:10:12",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -61,10 +61,10 @@
                   "typeString": "uint224"
                 },
                 "typeName": {
-                  "id": 4897,
+                  "id": 4284,
                   "name": "uint224",
                   "nodeType": "ElementaryTypeName",
-                  "src": "241:7:16",
+                  "src": "241:7:12",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint224",
                     "typeString": "uint224"
@@ -76,23 +76,23 @@
             ],
             "name": "uq112x112",
             "nodeType": "StructDefinition",
-            "scope": 5071,
-            "src": "214:44:16",
+            "scope": 4458,
+            "src": "214:44:12",
             "visibility": "public"
           },
           {
             "canonicalName": "FixedPoint.uq144x112",
-            "id": 4902,
+            "id": 4289,
             "members": [
               {
                 "constant": false,
-                "id": 4901,
+                "id": 4288,
                 "mutability": "mutable",
                 "name": "_x",
                 "nodeType": "VariableDeclaration",
                 "overrides": null,
-                "scope": 4902,
-                "src": "351:7:16",
+                "scope": 4289,
+                "src": "351:7:12",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -100,10 +100,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4900,
+                  "id": 4287,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "351:4:16",
+                  "src": "351:4:12",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -115,19 +115,19 @@
             ],
             "name": "uq144x112",
             "nodeType": "StructDefinition",
-            "scope": 5071,
-            "src": "324:41:16",
+            "scope": 4458,
+            "src": "324:41:12",
             "visibility": "public"
           },
           {
             "constant": true,
-            "id": 4905,
+            "id": 4292,
             "mutability": "constant",
             "name": "RESOLUTION",
             "nodeType": "VariableDeclaration",
             "overrides": null,
-            "scope": 5071,
-            "src": "371:39:16",
+            "scope": 4458,
+            "src": "371:39:12",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -135,10 +135,10 @@
               "typeString": "uint8"
             },
             "typeName": {
-              "id": 4903,
+              "id": 4290,
               "name": "uint8",
               "nodeType": "ElementaryTypeName",
-              "src": "371:5:16",
+              "src": "371:5:12",
               "typeDescriptions": {
                 "typeIdentifier": "t_uint8",
                 "typeString": "uint8"
@@ -147,14 +147,14 @@
             "value": {
               "argumentTypes": null,
               "hexValue": "313132",
-              "id": 4904,
+              "id": 4291,
               "isConstant": false,
               "isLValue": false,
               "isPure": true,
               "kind": "number",
               "lValueRequested": false,
               "nodeType": "Literal",
-              "src": "407:3:16",
+              "src": "407:3:12",
               "subdenomination": null,
               "typeDescriptions": {
                 "typeIdentifier": "t_rational_112_by_1",
@@ -166,9 +166,9 @@
           },
           {
             "body": {
-              "id": 4921,
+              "id": 4308,
               "nodeType": "Block",
-              "src": "524:59:16",
+              "src": "524:59:12",
               "statements": [
                 {
                   "expression": {
@@ -180,7 +180,7 @@
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
                         },
-                        "id": 4918,
+                        "id": 4305,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -190,12 +190,12 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 4915,
+                              "id": 4302,
                               "name": "x",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4907,
-                              "src": "559:1:16",
+                              "referencedDeclaration": 4294,
+                              "src": "559:1:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint112",
                                 "typeString": "uint112"
@@ -209,29 +209,29 @@
                                 "typeString": "uint112"
                               }
                             ],
-                            "id": 4914,
+                            "id": 4301,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
                             "lValueRequested": false,
                             "nodeType": "ElementaryTypeNameExpression",
-                            "src": "551:7:16",
+                            "src": "551:7:12",
                             "typeDescriptions": {
                               "typeIdentifier": "t_type$_t_uint224_$",
                               "typeString": "type(uint224)"
                             },
                             "typeName": {
-                              "id": 4913,
+                              "id": 4300,
                               "name": "uint224",
                               "nodeType": "ElementaryTypeName",
-                              "src": "551:7:16",
+                              "src": "551:7:12",
                               "typeDescriptions": {
                                 "typeIdentifier": null,
                                 "typeString": null
                               }
                             }
                           },
-                          "id": 4916,
+                          "id": 4303,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -239,7 +239,7 @@
                           "lValueRequested": false,
                           "names": [],
                           "nodeType": "FunctionCall",
-                          "src": "551:10:16",
+                          "src": "551:10:12",
                           "tryCall": false,
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint224",
@@ -250,18 +250,18 @@
                         "operator": "<<",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 4917,
+                          "id": 4304,
                           "name": "RESOLUTION",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4905,
-                          "src": "565:10:16",
+                          "referencedDeclaration": 4292,
+                          "src": "565:10:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
                             "typeString": "uint8"
                           }
                         },
-                        "src": "551:24:16",
+                        "src": "551:24:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
@@ -275,18 +275,18 @@
                           "typeString": "uint224"
                         }
                       ],
-                      "id": 4912,
+                      "id": 4299,
                       "name": "uq112x112",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4899,
-                      "src": "541:9:16",
+                      "referencedDeclaration": 4286,
+                      "src": "541:9:12",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4899_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4286_storage_ptr_$",
                         "typeString": "type(struct FixedPoint.uq112x112 storage pointer)"
                       }
                     },
-                    "id": 4919,
+                    "id": 4306,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -294,22 +294,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "541:35:16",
+                    "src": "541:35:12",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                       "typeString": "struct FixedPoint.uq112x112 memory"
                     }
                   },
-                  "functionReturnParameters": 4911,
-                  "id": 4920,
+                  "functionReturnParameters": 4298,
+                  "id": 4307,
                   "nodeType": "Return",
-                  "src": "534:42:16"
+                  "src": "534:42:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 4922,
+            "id": 4309,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -317,18 +317,18 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 4908,
+              "id": 4295,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4907,
+                  "id": 4294,
                   "mutability": "mutable",
                   "name": "x",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4922,
-                  "src": "472:9:16",
+                  "scope": 4309,
+                  "src": "472:9:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -336,10 +336,10 @@
                     "typeString": "uint112"
                   },
                   "typeName": {
-                    "id": 4906,
+                    "id": 4293,
                     "name": "uint112",
                     "nodeType": "ElementaryTypeName",
-                    "src": "472:7:16",
+                    "src": "472:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint112",
                       "typeString": "uint112"
@@ -349,36 +349,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "471:11:16"
+              "src": "471:11:12"
             },
             "returnParameters": {
-              "id": 4911,
+              "id": 4298,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4910,
+                  "id": 4297,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4922,
-                  "src": "506:16:16",
+                  "scope": 4309,
+                  "src": "506:16:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                     "typeString": "struct FixedPoint.uq112x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 4909,
+                    "id": 4296,
                     "name": "uq112x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4899,
-                    "src": "506:9:16",
+                    "referencedDeclaration": 4286,
+                    "src": "506:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
                       "typeString": "struct FixedPoint.uq112x112"
                     }
                   },
@@ -386,19 +386,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "505:18:16"
+              "src": "505:18:12"
             },
-            "scope": 5071,
-            "src": "456:127:16",
+            "scope": 4458,
+            "src": "456:127:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 4938,
+              "id": 4325,
               "nodeType": "Block",
-              "src": "700:59:16",
+              "src": "700:59:12",
               "statements": [
                 {
                   "expression": {
@@ -410,7 +410,7 @@
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         },
-                        "id": 4935,
+                        "id": 4322,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -420,12 +420,12 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 4932,
+                              "id": 4319,
                               "name": "x",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4924,
-                              "src": "735:1:16",
+                              "referencedDeclaration": 4311,
+                              "src": "735:1:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint144",
                                 "typeString": "uint144"
@@ -439,29 +439,29 @@
                                 "typeString": "uint144"
                               }
                             ],
-                            "id": 4931,
+                            "id": 4318,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
                             "lValueRequested": false,
                             "nodeType": "ElementaryTypeNameExpression",
-                            "src": "727:7:16",
+                            "src": "727:7:12",
                             "typeDescriptions": {
                               "typeIdentifier": "t_type$_t_uint256_$",
                               "typeString": "type(uint256)"
                             },
                             "typeName": {
-                              "id": 4930,
+                              "id": 4317,
                               "name": "uint256",
                               "nodeType": "ElementaryTypeName",
-                              "src": "727:7:16",
+                              "src": "727:7:12",
                               "typeDescriptions": {
                                 "typeIdentifier": null,
                                 "typeString": null
                               }
                             }
                           },
-                          "id": 4933,
+                          "id": 4320,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -469,7 +469,7 @@
                           "lValueRequested": false,
                           "names": [],
                           "nodeType": "FunctionCall",
-                          "src": "727:10:16",
+                          "src": "727:10:12",
                           "tryCall": false,
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
@@ -480,18 +480,18 @@
                         "operator": "<<",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 4934,
+                          "id": 4321,
                           "name": "RESOLUTION",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4905,
-                          "src": "741:10:16",
+                          "referencedDeclaration": 4292,
+                          "src": "741:10:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
                             "typeString": "uint8"
                           }
                         },
-                        "src": "727:24:16",
+                        "src": "727:24:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -505,18 +505,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 4929,
+                      "id": 4316,
                       "name": "uq144x112",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4902,
-                      "src": "717:9:16",
+                      "referencedDeclaration": 4289,
+                      "src": "717:9:12",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_uq144x112_$4902_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_uq144x112_$4289_storage_ptr_$",
                         "typeString": "type(struct FixedPoint.uq144x112 storage pointer)"
                       }
                     },
-                    "id": 4936,
+                    "id": 4323,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -524,22 +524,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "717:35:16",
+                    "src": "717:35:12",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq144x112_$4902_memory_ptr",
+                      "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
                       "typeString": "struct FixedPoint.uq144x112 memory"
                     }
                   },
-                  "functionReturnParameters": 4928,
-                  "id": 4937,
+                  "functionReturnParameters": 4315,
+                  "id": 4324,
                   "nodeType": "Return",
-                  "src": "710:42:16"
+                  "src": "710:42:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 4939,
+            "id": 4326,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -547,18 +547,18 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 4925,
+              "id": 4312,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4924,
+                  "id": 4311,
                   "mutability": "mutable",
                   "name": "x",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4939,
-                  "src": "648:9:16",
+                  "scope": 4326,
+                  "src": "648:9:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -566,10 +566,10 @@
                     "typeString": "uint144"
                   },
                   "typeName": {
-                    "id": 4923,
+                    "id": 4310,
                     "name": "uint144",
                     "nodeType": "ElementaryTypeName",
-                    "src": "648:7:16",
+                    "src": "648:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint144",
                       "typeString": "uint144"
@@ -579,36 +579,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "647:11:16"
+              "src": "647:11:12"
             },
             "returnParameters": {
-              "id": 4928,
+              "id": 4315,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4927,
+                  "id": 4314,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4939,
-                  "src": "682:16:16",
+                  "scope": 4326,
+                  "src": "682:16:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq144x112_$4902_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
                     "typeString": "struct FixedPoint.uq144x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 4926,
+                    "id": 4313,
                     "name": "uq144x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4902,
-                    "src": "682:9:16",
+                    "referencedDeclaration": 4289,
+                    "src": "682:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq144x112_$4902_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq144x112_$4289_storage_ptr",
                       "typeString": "struct FixedPoint.uq144x112"
                     }
                   },
@@ -616,19 +616,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "681:18:16"
+              "src": "681:18:12"
             },
-            "scope": 5071,
-            "src": "629:130:16",
+            "scope": 4458,
+            "src": "629:130:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 4965,
+              "id": 4352,
               "nodeType": "Block",
-              "src": "915:107:16",
+              "src": "915:107:12",
               "statements": [
                 {
                   "expression": {
@@ -640,19 +640,19 @@
                           "typeIdentifier": "t_uint112",
                           "typeString": "uint112"
                         },
-                        "id": 4951,
+                        "id": 4338,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
                           "argumentTypes": null,
-                          "id": 4949,
+                          "id": 4336,
                           "name": "x",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4943,
-                          "src": "933:1:16",
+                          "referencedDeclaration": 4330,
+                          "src": "933:1:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint112",
                             "typeString": "uint112"
@@ -663,14 +663,14 @@
                         "rightExpression": {
                           "argumentTypes": null,
                           "hexValue": "30",
-                          "id": 4950,
+                          "id": 4337,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
                           "lValueRequested": false,
                           "nodeType": "Literal",
-                          "src": "938:1:16",
+                          "src": "938:1:12",
                           "subdenomination": null,
                           "typeDescriptions": {
                             "typeIdentifier": "t_rational_0_by_1",
@@ -678,7 +678,7 @@
                           },
                           "value": "0"
                         },
-                        "src": "933:6:16",
+                        "src": "933:6:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -687,14 +687,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "4669786564506f696e743a204449565f42595f5a45524f",
-                        "id": 4952,
+                        "id": 4339,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "941:25:16",
+                        "src": "941:25:12",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_fb797fc20bb06d860bbe348d99030bb226d980421b724f94accde8487e338e12",
@@ -714,7 +714,7 @@
                           "typeString": "literal_string \"FixedPoint: DIV_BY_ZERO\""
                         }
                       ],
-                      "id": 4948,
+                      "id": 4335,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -722,13 +722,13 @@
                         -18
                       ],
                       "referencedDeclaration": -18,
-                      "src": "925:7:16",
+                      "src": "925:7:12",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 4953,
+                    "id": 4340,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -736,16 +736,16 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "925:42:16",
+                    "src": "925:42:12",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 4954,
+                  "id": 4341,
                   "nodeType": "ExpressionStatement",
-                  "src": "925:42:16"
+                  "src": "925:42:12"
                 },
                 {
                   "expression": {
@@ -757,7 +757,7 @@
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
                         },
-                        "id": 4962,
+                        "id": 4349,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -766,26 +766,26 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 4956,
+                            "id": 4343,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4941,
-                            "src": "994:4:16",
+                            "referencedDeclaration": 4328,
+                            "src": "994:4:12",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                              "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                               "typeString": "struct FixedPoint.uq112x112 memory"
                             }
                           },
-                          "id": 4957,
+                          "id": 4344,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "_x",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 4898,
-                          "src": "994:7:16",
+                          "referencedDeclaration": 4285,
+                          "src": "994:7:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint224",
                             "typeString": "uint224"
@@ -798,12 +798,12 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 4960,
+                              "id": 4347,
                               "name": "x",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4943,
-                              "src": "1012:1:16",
+                              "referencedDeclaration": 4330,
+                              "src": "1012:1:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint112",
                                 "typeString": "uint112"
@@ -817,29 +817,29 @@
                                 "typeString": "uint112"
                               }
                             ],
-                            "id": 4959,
+                            "id": 4346,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
                             "lValueRequested": false,
                             "nodeType": "ElementaryTypeNameExpression",
-                            "src": "1004:7:16",
+                            "src": "1004:7:12",
                             "typeDescriptions": {
                               "typeIdentifier": "t_type$_t_uint224_$",
                               "typeString": "type(uint224)"
                             },
                             "typeName": {
-                              "id": 4958,
+                              "id": 4345,
                               "name": "uint224",
                               "nodeType": "ElementaryTypeName",
-                              "src": "1004:7:16",
+                              "src": "1004:7:12",
                               "typeDescriptions": {
                                 "typeIdentifier": null,
                                 "typeString": null
                               }
                             }
                           },
-                          "id": 4961,
+                          "id": 4348,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -847,14 +847,14 @@
                           "lValueRequested": false,
                           "names": [],
                           "nodeType": "FunctionCall",
-                          "src": "1004:10:16",
+                          "src": "1004:10:12",
                           "tryCall": false,
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint224",
                             "typeString": "uint224"
                           }
                         },
-                        "src": "994:20:16",
+                        "src": "994:20:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
@@ -868,18 +868,18 @@
                           "typeString": "uint224"
                         }
                       ],
-                      "id": 4955,
+                      "id": 4342,
                       "name": "uq112x112",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4899,
-                      "src": "984:9:16",
+                      "referencedDeclaration": 4286,
+                      "src": "984:9:12",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4899_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4286_storage_ptr_$",
                         "typeString": "type(struct FixedPoint.uq112x112 storage pointer)"
                       }
                     },
-                    "id": 4963,
+                    "id": 4350,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -887,22 +887,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "984:31:16",
+                    "src": "984:31:12",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                       "typeString": "struct FixedPoint.uq112x112 memory"
                     }
                   },
-                  "functionReturnParameters": 4947,
-                  "id": 4964,
+                  "functionReturnParameters": 4334,
+                  "id": 4351,
                   "nodeType": "Return",
-                  "src": "977:38:16"
+                  "src": "977:38:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 4966,
+            "id": 4353,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -910,33 +910,33 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 4944,
+              "id": 4331,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4941,
+                  "id": 4328,
                   "mutability": "mutable",
                   "name": "self",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4966,
-                  "src": "840:21:16",
+                  "scope": 4353,
+                  "src": "840:21:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                     "typeString": "struct FixedPoint.uq112x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 4940,
+                    "id": 4327,
                     "name": "uq112x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4899,
-                    "src": "840:9:16",
+                    "referencedDeclaration": 4286,
+                    "src": "840:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
                       "typeString": "struct FixedPoint.uq112x112"
                     }
                   },
@@ -945,13 +945,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 4943,
+                  "id": 4330,
                   "mutability": "mutable",
                   "name": "x",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4966,
-                  "src": "863:9:16",
+                  "scope": 4353,
+                  "src": "863:9:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -959,10 +959,10 @@
                     "typeString": "uint112"
                   },
                   "typeName": {
-                    "id": 4942,
+                    "id": 4329,
                     "name": "uint112",
                     "nodeType": "ElementaryTypeName",
-                    "src": "863:7:16",
+                    "src": "863:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint112",
                       "typeString": "uint112"
@@ -972,36 +972,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "839:34:16"
+              "src": "839:34:12"
             },
             "returnParameters": {
-              "id": 4947,
+              "id": 4334,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4946,
+                  "id": 4333,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 4966,
-                  "src": "897:16:16",
+                  "scope": 4353,
+                  "src": "897:16:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                     "typeString": "struct FixedPoint.uq112x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 4945,
+                    "id": 4332,
                     "name": "uq112x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4899,
-                    "src": "897:9:16",
+                    "referencedDeclaration": 4286,
+                    "src": "897:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
                       "typeString": "struct FixedPoint.uq112x112"
                     }
                   },
@@ -1009,34 +1009,34 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "896:18:16"
+              "src": "896:18:12"
             },
-            "scope": 5071,
-            "src": "827:195:16",
+            "scope": 4458,
+            "src": "827:195:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 5008,
+              "id": 4395,
               "nodeType": "Block",
-              "src": "1201:164:16",
+              "src": "1201:164:12",
               "statements": [
                 {
                   "assignments": [
-                    4976
+                    4363
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4976,
+                      "id": 4363,
                       "mutability": "mutable",
                       "name": "z",
                       "nodeType": "VariableDeclaration",
                       "overrides": null,
-                      "scope": 5008,
-                      "src": "1211:6:16",
+                      "scope": 4395,
+                      "src": "1211:6:12",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -1044,10 +1044,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 4975,
+                        "id": 4362,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "1211:4:16",
+                        "src": "1211:4:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1057,10 +1057,10 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4977,
+                  "id": 4364,
                   "initialValue": null,
                   "nodeType": "VariableDeclarationStatement",
-                  "src": "1211:6:16"
+                  "src": "1211:6:12"
                 },
                 {
                   "expression": {
@@ -1072,7 +1072,7 @@
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
                         },
-                        "id": 5000,
+                        "id": 4387,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1083,19 +1083,19 @@
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           },
-                          "id": 4981,
+                          "id": 4368,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftExpression": {
                             "argumentTypes": null,
-                            "id": 4979,
+                            "id": 4366,
                             "name": "y",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4970,
-                            "src": "1235:1:16",
+                            "referencedDeclaration": 4357,
+                            "src": "1235:1:12",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
                               "typeString": "uint256"
@@ -1106,14 +1106,14 @@
                           "rightExpression": {
                             "argumentTypes": null,
                             "hexValue": "30",
-                            "id": 4980,
+                            "id": 4367,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
                             "kind": "number",
                             "lValueRequested": false,
                             "nodeType": "Literal",
-                            "src": "1240:1:16",
+                            "src": "1240:1:12",
                             "subdenomination": null,
                             "typeDescriptions": {
                               "typeIdentifier": "t_rational_0_by_1",
@@ -1121,7 +1121,7 @@
                             },
                             "value": "0"
                           },
-                          "src": "1235:6:16",
+                          "src": "1235:6:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_bool",
                             "typeString": "bool"
@@ -1135,7 +1135,7 @@
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           },
-                          "id": 4999,
+                          "id": 4386,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1146,7 +1146,7 @@
                               "typeIdentifier": "t_uint256",
                               "typeString": "uint256"
                             },
-                            "id": 4993,
+                            "id": 4380,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -1156,19 +1156,19 @@
                               "components": [
                                 {
                                   "argumentTypes": null,
-                                  "id": 4990,
+                                  "id": 4377,
                                   "isConstant": false,
                                   "isLValue": false,
                                   "isPure": false,
                                   "lValueRequested": false,
                                   "leftHandSide": {
                                     "argumentTypes": null,
-                                    "id": 4982,
+                                    "id": 4369,
                                     "name": "z",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 4976,
-                                    "src": "1246:1:16",
+                                    "referencedDeclaration": 4363,
+                                    "src": "1246:1:12",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_uint256",
                                       "typeString": "uint256"
@@ -1182,7 +1182,7 @@
                                       "typeIdentifier": "t_uint256",
                                       "typeString": "uint256"
                                     },
-                                    "id": 4989,
+                                    "id": 4376,
                                     "isConstant": false,
                                     "isLValue": false,
                                     "isPure": false,
@@ -1194,26 +1194,26 @@
                                           "argumentTypes": null,
                                           "expression": {
                                             "argumentTypes": null,
-                                            "id": 4985,
+                                            "id": 4372,
                                             "name": "self",
                                             "nodeType": "Identifier",
                                             "overloadedDeclarations": [],
-                                            "referencedDeclaration": 4968,
-                                            "src": "1255:4:16",
+                                            "referencedDeclaration": 4355,
+                                            "src": "1255:4:12",
                                             "typeDescriptions": {
-                                              "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                                              "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                                               "typeString": "struct FixedPoint.uq112x112 memory"
                                             }
                                           },
-                                          "id": 4986,
+                                          "id": 4373,
                                           "isConstant": false,
                                           "isLValue": true,
                                           "isPure": false,
                                           "lValueRequested": false,
                                           "memberName": "_x",
                                           "nodeType": "MemberAccess",
-                                          "referencedDeclaration": 4898,
-                                          "src": "1255:7:16",
+                                          "referencedDeclaration": 4285,
+                                          "src": "1255:7:12",
                                           "typeDescriptions": {
                                             "typeIdentifier": "t_uint224",
                                             "typeString": "uint224"
@@ -1227,29 +1227,29 @@
                                             "typeString": "uint224"
                                           }
                                         ],
-                                        "id": 4984,
+                                        "id": 4371,
                                         "isConstant": false,
                                         "isLValue": false,
                                         "isPure": true,
                                         "lValueRequested": false,
                                         "nodeType": "ElementaryTypeNameExpression",
-                                        "src": "1250:4:16",
+                                        "src": "1250:4:12",
                                         "typeDescriptions": {
                                           "typeIdentifier": "t_type$_t_uint256_$",
                                           "typeString": "type(uint256)"
                                         },
                                         "typeName": {
-                                          "id": 4983,
+                                          "id": 4370,
                                           "name": "uint",
                                           "nodeType": "ElementaryTypeName",
-                                          "src": "1250:4:16",
+                                          "src": "1250:4:12",
                                           "typeDescriptions": {
                                             "typeIdentifier": null,
                                             "typeString": null
                                           }
                                         }
                                       },
-                                      "id": 4987,
+                                      "id": 4374,
                                       "isConstant": false,
                                       "isLValue": false,
                                       "isPure": false,
@@ -1257,7 +1257,7 @@
                                       "lValueRequested": false,
                                       "names": [],
                                       "nodeType": "FunctionCall",
-                                      "src": "1250:13:16",
+                                      "src": "1250:13:12",
                                       "tryCall": false,
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
@@ -1268,38 +1268,38 @@
                                     "operator": "*",
                                     "rightExpression": {
                                       "argumentTypes": null,
-                                      "id": 4988,
+                                      "id": 4375,
                                       "name": "y",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 4970,
-                                      "src": "1266:1:16",
+                                      "referencedDeclaration": 4357,
+                                      "src": "1266:1:12",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
                                         "typeString": "uint256"
                                       }
                                     },
-                                    "src": "1250:17:16",
+                                    "src": "1250:17:12",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_uint256",
                                       "typeString": "uint256"
                                     }
                                   },
-                                  "src": "1246:21:16",
+                                  "src": "1246:21:12",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_uint256",
                                     "typeString": "uint256"
                                   }
                                 }
                               ],
-                              "id": 4991,
+                              "id": 4378,
                               "isConstant": false,
                               "isInlineArray": false,
                               "isLValue": false,
                               "isPure": false,
                               "lValueRequested": false,
                               "nodeType": "TupleExpression",
-                              "src": "1245:23:16",
+                              "src": "1245:23:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
                                 "typeString": "uint256"
@@ -1309,18 +1309,18 @@
                             "operator": "/",
                             "rightExpression": {
                               "argumentTypes": null,
-                              "id": 4992,
+                              "id": 4379,
                               "name": "y",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4970,
-                              "src": "1271:1:16",
+                              "referencedDeclaration": 4357,
+                              "src": "1271:1:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
                                 "typeString": "uint256"
                               }
                             },
-                            "src": "1245:27:16",
+                            "src": "1245:27:12",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
                               "typeString": "uint256"
@@ -1335,26 +1335,26 @@
                                 "argumentTypes": null,
                                 "expression": {
                                   "argumentTypes": null,
-                                  "id": 4996,
+                                  "id": 4383,
                                   "name": "self",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 4968,
-                                  "src": "1281:4:16",
+                                  "referencedDeclaration": 4355,
+                                  "src": "1281:4:12",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                                     "typeString": "struct FixedPoint.uq112x112 memory"
                                   }
                                 },
-                                "id": 4997,
+                                "id": 4384,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
                                 "lValueRequested": false,
                                 "memberName": "_x",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 4898,
-                                "src": "1281:7:16",
+                                "referencedDeclaration": 4285,
+                                "src": "1281:7:12",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_uint224",
                                   "typeString": "uint224"
@@ -1368,29 +1368,29 @@
                                   "typeString": "uint224"
                                 }
                               ],
-                              "id": 4995,
+                              "id": 4382,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
                               "lValueRequested": false,
                               "nodeType": "ElementaryTypeNameExpression",
-                              "src": "1276:4:16",
+                              "src": "1276:4:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_type$_t_uint256_$",
                                 "typeString": "type(uint256)"
                               },
                               "typeName": {
-                                "id": 4994,
+                                "id": 4381,
                                 "name": "uint",
                                 "nodeType": "ElementaryTypeName",
-                                "src": "1276:4:16",
+                                "src": "1276:4:12",
                                 "typeDescriptions": {
                                   "typeIdentifier": null,
                                   "typeString": null
                                 }
                               }
                             },
-                            "id": 4998,
+                            "id": 4385,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -1398,20 +1398,20 @@
                             "lValueRequested": false,
                             "names": [],
                             "nodeType": "FunctionCall",
-                            "src": "1276:13:16",
+                            "src": "1276:13:12",
                             "tryCall": false,
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
                               "typeString": "uint256"
                             }
                           },
-                          "src": "1245:44:16",
+                          "src": "1245:44:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_bool",
                             "typeString": "bool"
                           }
                         },
-                        "src": "1235:54:16",
+                        "src": "1235:54:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -1420,14 +1420,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "4669786564506f696e743a204d554c5449504c49434154494f4e5f4f564552464c4f57",
-                        "id": 5001,
+                        "id": 4388,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "1291:37:16",
+                        "src": "1291:37:12",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_c49d28a1a0a9590848dc8e15e2ce94a0e18d974f72b2d7169c2f9169e1ee31e8",
@@ -1447,7 +1447,7 @@
                           "typeString": "literal_string \"FixedPoint: MULTIPLICATION_OVERFLOW\""
                         }
                       ],
-                      "id": 4978,
+                      "id": 4365,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1455,13 +1455,13 @@
                         -18
                       ],
                       "referencedDeclaration": -18,
-                      "src": "1227:7:16",
+                      "src": "1227:7:12",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 5002,
+                    "id": 4389,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1469,16 +1469,16 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1227:102:16",
+                    "src": "1227:102:12",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 5003,
+                  "id": 4390,
                   "nodeType": "ExpressionStatement",
-                  "src": "1227:102:16"
+                  "src": "1227:102:12"
                 },
                 {
                   "expression": {
@@ -1486,12 +1486,12 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 5005,
+                        "id": 4392,
                         "name": "z",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4976,
-                        "src": "1356:1:16",
+                        "referencedDeclaration": 4363,
+                        "src": "1356:1:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1505,18 +1505,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 5004,
+                      "id": 4391,
                       "name": "uq144x112",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4902,
-                      "src": "1346:9:16",
+                      "referencedDeclaration": 4289,
+                      "src": "1346:9:12",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_uq144x112_$4902_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_uq144x112_$4289_storage_ptr_$",
                         "typeString": "type(struct FixedPoint.uq144x112 storage pointer)"
                       }
                     },
-                    "id": 5006,
+                    "id": 4393,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1524,22 +1524,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1346:12:16",
+                    "src": "1346:12:12",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq144x112_$4902_memory_ptr",
+                      "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
                       "typeString": "struct FixedPoint.uq144x112 memory"
                     }
                   },
-                  "functionReturnParameters": 4974,
-                  "id": 5007,
+                  "functionReturnParameters": 4361,
+                  "id": 4394,
                   "nodeType": "Return",
-                  "src": "1339:19:16"
+                  "src": "1339:19:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 5009,
+            "id": 4396,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -1547,33 +1547,33 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 4971,
+              "id": 4358,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4968,
+                  "id": 4355,
                   "mutability": "mutable",
                   "name": "self",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5009,
-                  "src": "1129:21:16",
+                  "scope": 4396,
+                  "src": "1129:21:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                     "typeString": "struct FixedPoint.uq112x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 4967,
+                    "id": 4354,
                     "name": "uq112x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4899,
-                    "src": "1129:9:16",
+                    "referencedDeclaration": 4286,
+                    "src": "1129:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
                       "typeString": "struct FixedPoint.uq112x112"
                     }
                   },
@@ -1582,13 +1582,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 4970,
+                  "id": 4357,
                   "mutability": "mutable",
                   "name": "y",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5009,
-                  "src": "1152:6:16",
+                  "scope": 4396,
+                  "src": "1152:6:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1596,10 +1596,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 4969,
+                    "id": 4356,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1152:4:16",
+                    "src": "1152:4:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1609,36 +1609,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1128:31:16"
+              "src": "1128:31:12"
             },
             "returnParameters": {
-              "id": 4974,
+              "id": 4361,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4973,
+                  "id": 4360,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5009,
-                  "src": "1183:16:16",
+                  "scope": 4396,
+                  "src": "1183:16:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq144x112_$4902_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
                     "typeString": "struct FixedPoint.uq144x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 4972,
+                    "id": 4359,
                     "name": "uq144x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4902,
-                    "src": "1183:9:16",
+                    "referencedDeclaration": 4289,
+                    "src": "1183:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq144x112_$4902_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq144x112_$4289_storage_ptr",
                       "typeString": "struct FixedPoint.uq144x112"
                     }
                   },
@@ -1646,19 +1646,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1182:18:16"
+              "src": "1182:18:12"
             },
-            "scope": 5071,
-            "src": "1116:249:16",
+            "scope": 4458,
+            "src": "1116:249:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 5037,
+              "id": 4424,
               "nodeType": "Block",
-              "src": "1616:144:16",
+              "src": "1616:144:12",
               "statements": [
                 {
                   "expression": {
@@ -1670,19 +1670,19 @@
                           "typeIdentifier": "t_uint112",
                           "typeString": "uint112"
                         },
-                        "id": 5021,
+                        "id": 4408,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
                           "argumentTypes": null,
-                          "id": 5019,
+                          "id": 4406,
                           "name": "denominator",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 5013,
-                          "src": "1634:11:16",
+                          "referencedDeclaration": 4400,
+                          "src": "1634:11:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint112",
                             "typeString": "uint112"
@@ -1693,14 +1693,14 @@
                         "rightExpression": {
                           "argumentTypes": null,
                           "hexValue": "30",
-                          "id": 5020,
+                          "id": 4407,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
                           "lValueRequested": false,
                           "nodeType": "Literal",
-                          "src": "1648:1:16",
+                          "src": "1648:1:12",
                           "subdenomination": null,
                           "typeDescriptions": {
                             "typeIdentifier": "t_rational_0_by_1",
@@ -1708,7 +1708,7 @@
                           },
                           "value": "0"
                         },
-                        "src": "1634:15:16",
+                        "src": "1634:15:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -1717,14 +1717,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "4669786564506f696e743a204449565f42595f5a45524f",
-                        "id": 5022,
+                        "id": 4409,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "1651:25:16",
+                        "src": "1651:25:12",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_fb797fc20bb06d860bbe348d99030bb226d980421b724f94accde8487e338e12",
@@ -1744,7 +1744,7 @@
                           "typeString": "literal_string \"FixedPoint: DIV_BY_ZERO\""
                         }
                       ],
-                      "id": 5018,
+                      "id": 4405,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1752,13 +1752,13 @@
                         -18
                       ],
                       "referencedDeclaration": -18,
-                      "src": "1626:7:16",
+                      "src": "1626:7:12",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 5023,
+                    "id": 4410,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1766,16 +1766,16 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1626:51:16",
+                    "src": "1626:51:12",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 5024,
+                  "id": 4411,
                   "nodeType": "ExpressionStatement",
-                  "src": "1626:51:16"
+                  "src": "1626:51:12"
                 },
                 {
                   "expression": {
@@ -1787,7 +1787,7 @@
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
                         },
-                        "id": 5034,
+                        "id": 4421,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1801,7 +1801,7 @@
                                 "typeIdentifier": "t_uint224",
                                 "typeString": "uint224"
                               },
-                              "id": 5031,
+                              "id": 4418,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -1811,12 +1811,12 @@
                                 "arguments": [
                                   {
                                     "argumentTypes": null,
-                                    "id": 5028,
+                                    "id": 4415,
                                     "name": "numerator",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 5011,
-                                    "src": "1713:9:16",
+                                    "referencedDeclaration": 4398,
+                                    "src": "1713:9:12",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_uint112",
                                       "typeString": "uint112"
@@ -1830,29 +1830,29 @@
                                       "typeString": "uint112"
                                     }
                                   ],
-                                  "id": 5027,
+                                  "id": 4414,
                                   "isConstant": false,
                                   "isLValue": false,
                                   "isPure": true,
                                   "lValueRequested": false,
                                   "nodeType": "ElementaryTypeNameExpression",
-                                  "src": "1705:7:16",
+                                  "src": "1705:7:12",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_type$_t_uint224_$",
                                     "typeString": "type(uint224)"
                                   },
                                   "typeName": {
-                                    "id": 5026,
+                                    "id": 4413,
                                     "name": "uint224",
                                     "nodeType": "ElementaryTypeName",
-                                    "src": "1705:7:16",
+                                    "src": "1705:7:12",
                                     "typeDescriptions": {
                                       "typeIdentifier": null,
                                       "typeString": null
                                     }
                                   }
                                 },
-                                "id": 5029,
+                                "id": 4416,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": false,
@@ -1860,7 +1860,7 @@
                                 "lValueRequested": false,
                                 "names": [],
                                 "nodeType": "FunctionCall",
-                                "src": "1705:18:16",
+                                "src": "1705:18:12",
                                 "tryCall": false,
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_uint224",
@@ -1871,32 +1871,32 @@
                               "operator": "<<",
                               "rightExpression": {
                                 "argumentTypes": null,
-                                "id": 5030,
+                                "id": 4417,
                                 "name": "RESOLUTION",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4905,
-                                "src": "1727:10:16",
+                                "referencedDeclaration": 4292,
+                                "src": "1727:10:12",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_uint8",
                                   "typeString": "uint8"
                                 }
                               },
-                              "src": "1705:32:16",
+                              "src": "1705:32:12",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint224",
                                 "typeString": "uint224"
                               }
                             }
                           ],
-                          "id": 5032,
+                          "id": 4419,
                           "isConstant": false,
                           "isInlineArray": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "nodeType": "TupleExpression",
-                          "src": "1704:34:16",
+                          "src": "1704:34:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint224",
                             "typeString": "uint224"
@@ -1906,18 +1906,18 @@
                         "operator": "/",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 5033,
+                          "id": 4420,
                           "name": "denominator",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 5013,
-                          "src": "1741:11:16",
+                          "referencedDeclaration": 4400,
+                          "src": "1741:11:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint112",
                             "typeString": "uint112"
                           }
                         },
-                        "src": "1704:48:16",
+                        "src": "1704:48:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
@@ -1931,18 +1931,18 @@
                           "typeString": "uint224"
                         }
                       ],
-                      "id": 5025,
+                      "id": 4412,
                       "name": "uq112x112",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4899,
-                      "src": "1694:9:16",
+                      "referencedDeclaration": 4286,
+                      "src": "1694:9:12",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4899_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4286_storage_ptr_$",
                         "typeString": "type(struct FixedPoint.uq112x112 storage pointer)"
                       }
                     },
-                    "id": 5035,
+                    "id": 4422,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1950,22 +1950,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1694:59:16",
+                    "src": "1694:59:12",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                       "typeString": "struct FixedPoint.uq112x112 memory"
                     }
                   },
-                  "functionReturnParameters": 5017,
-                  "id": 5036,
+                  "functionReturnParameters": 4404,
+                  "id": 4423,
                   "nodeType": "Return",
-                  "src": "1687:66:16"
+                  "src": "1687:66:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 5038,
+            "id": 4425,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -1973,18 +1973,18 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 5014,
+              "id": 4401,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5011,
+                  "id": 4398,
                   "mutability": "mutable",
                   "name": "numerator",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5038,
-                  "src": "1535:17:16",
+                  "scope": 4425,
+                  "src": "1535:17:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1992,10 +1992,10 @@
                     "typeString": "uint112"
                   },
                   "typeName": {
-                    "id": 5010,
+                    "id": 4397,
                     "name": "uint112",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1535:7:16",
+                    "src": "1535:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint112",
                       "typeString": "uint112"
@@ -2006,13 +2006,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 5013,
+                  "id": 4400,
                   "mutability": "mutable",
                   "name": "denominator",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5038,
-                  "src": "1554:19:16",
+                  "scope": 4425,
+                  "src": "1554:19:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2020,10 +2020,10 @@
                     "typeString": "uint112"
                   },
                   "typeName": {
-                    "id": 5012,
+                    "id": 4399,
                     "name": "uint112",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1554:7:16",
+                    "src": "1554:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint112",
                       "typeString": "uint112"
@@ -2033,36 +2033,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1534:40:16"
+              "src": "1534:40:12"
             },
             "returnParameters": {
-              "id": 5017,
+              "id": 4404,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5016,
+                  "id": 4403,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5038,
-                  "src": "1598:16:16",
+                  "scope": 4425,
+                  "src": "1598:16:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                     "typeString": "struct FixedPoint.uq112x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 5015,
+                    "id": 4402,
                     "name": "uq112x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4899,
-                    "src": "1598:9:16",
+                    "referencedDeclaration": 4286,
+                    "src": "1598:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
                       "typeString": "struct FixedPoint.uq112x112"
                     }
                   },
@@ -2070,19 +2070,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1597:18:16"
+              "src": "1597:18:12"
             },
-            "scope": 5071,
-            "src": "1517:243:16",
+            "scope": 4458,
+            "src": "1517:243:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 5053,
+              "id": 4440,
               "nodeType": "Block",
-              "src": "1914:54:16",
+              "src": "1914:54:12",
               "statements": [
                 {
                   "expression": {
@@ -2094,7 +2094,7 @@
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
                         },
-                        "id": 5050,
+                        "id": 4437,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2103,26 +2103,26 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 5047,
+                            "id": 4434,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5040,
-                            "src": "1939:4:16",
+                            "referencedDeclaration": 4427,
+                            "src": "1939:4:12",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                              "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                               "typeString": "struct FixedPoint.uq112x112 memory"
                             }
                           },
-                          "id": 5048,
+                          "id": 4435,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "_x",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 4898,
-                          "src": "1939:7:16",
+                          "referencedDeclaration": 4285,
+                          "src": "1939:7:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint224",
                             "typeString": "uint224"
@@ -2132,18 +2132,18 @@
                         "operator": ">>",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 5049,
+                          "id": 4436,
                           "name": "RESOLUTION",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4905,
-                          "src": "1950:10:16",
+                          "referencedDeclaration": 4292,
+                          "src": "1950:10:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
                             "typeString": "uint8"
                           }
                         },
-                        "src": "1939:21:16",
+                        "src": "1939:21:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint224",
                           "typeString": "uint224"
@@ -2157,29 +2157,29 @@
                           "typeString": "uint224"
                         }
                       ],
-                      "id": 5046,
+                      "id": 4433,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "lValueRequested": false,
                       "nodeType": "ElementaryTypeNameExpression",
-                      "src": "1931:7:16",
+                      "src": "1931:7:12",
                       "typeDescriptions": {
                         "typeIdentifier": "t_type$_t_uint112_$",
                         "typeString": "type(uint112)"
                       },
                       "typeName": {
-                        "id": 5045,
+                        "id": 4432,
                         "name": "uint112",
                         "nodeType": "ElementaryTypeName",
-                        "src": "1931:7:16",
+                        "src": "1931:7:12",
                         "typeDescriptions": {
                           "typeIdentifier": null,
                           "typeString": null
                         }
                       }
                     },
-                    "id": 5051,
+                    "id": 4438,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2187,22 +2187,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1931:30:16",
+                    "src": "1931:30:12",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint112",
                       "typeString": "uint112"
                     }
                   },
-                  "functionReturnParameters": 5044,
-                  "id": 5052,
+                  "functionReturnParameters": 4431,
+                  "id": 4439,
                   "nodeType": "Return",
-                  "src": "1924:37:16"
+                  "src": "1924:37:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 5054,
+            "id": 4441,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -2210,33 +2210,33 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 5041,
+              "id": 4428,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5040,
+                  "id": 4427,
                   "mutability": "mutable",
                   "name": "self",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5054,
-                  "src": "1859:21:16",
+                  "scope": 4441,
+                  "src": "1859:21:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq112x112_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
                     "typeString": "struct FixedPoint.uq112x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 5039,
+                    "id": 4426,
                     "name": "uq112x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4899,
-                    "src": "1859:9:16",
+                    "referencedDeclaration": 4286,
+                    "src": "1859:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
                       "typeString": "struct FixedPoint.uq112x112"
                     }
                   },
@@ -2244,21 +2244,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1858:23:16"
+              "src": "1858:23:12"
             },
             "returnParameters": {
-              "id": 5044,
+              "id": 4431,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5043,
+                  "id": 4430,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5054,
-                  "src": "1905:7:16",
+                  "scope": 4441,
+                  "src": "1905:7:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2266,10 +2266,10 @@
                     "typeString": "uint112"
                   },
                   "typeName": {
-                    "id": 5042,
+                    "id": 4429,
                     "name": "uint112",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1905:7:16",
+                    "src": "1905:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint112",
                       "typeString": "uint112"
@@ -2279,19 +2279,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1904:9:16"
+              "src": "1904:9:12"
             },
-            "scope": 5071,
-            "src": "1843:125:16",
+            "scope": 4458,
+            "src": "1843:125:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 5069,
+              "id": 4456,
               "nodeType": "Block",
-              "src": "2125:54:16",
+              "src": "2125:54:12",
               "statements": [
                 {
                   "expression": {
@@ -2303,7 +2303,7 @@
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         },
-                        "id": 5066,
+                        "id": 4453,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2312,26 +2312,26 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 5063,
+                            "id": 4450,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5056,
-                            "src": "2150:4:16",
+                            "referencedDeclaration": 4443,
+                            "src": "2150:4:12",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_uq144x112_$4902_memory_ptr",
+                              "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
                               "typeString": "struct FixedPoint.uq144x112 memory"
                             }
                           },
-                          "id": 5064,
+                          "id": 4451,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "_x",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 4901,
-                          "src": "2150:7:16",
+                          "referencedDeclaration": 4288,
+                          "src": "2150:7:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
@@ -2341,18 +2341,18 @@
                         "operator": ">>",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 5065,
+                          "id": 4452,
                           "name": "RESOLUTION",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4905,
-                          "src": "2161:10:16",
+                          "referencedDeclaration": 4292,
+                          "src": "2161:10:12",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
                             "typeString": "uint8"
                           }
                         },
-                        "src": "2150:21:16",
+                        "src": "2150:21:12",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -2366,29 +2366,29 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 5062,
+                      "id": 4449,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "lValueRequested": false,
                       "nodeType": "ElementaryTypeNameExpression",
-                      "src": "2142:7:16",
+                      "src": "2142:7:12",
                       "typeDescriptions": {
                         "typeIdentifier": "t_type$_t_uint144_$",
                         "typeString": "type(uint144)"
                       },
                       "typeName": {
-                        "id": 5061,
+                        "id": 4448,
                         "name": "uint144",
                         "nodeType": "ElementaryTypeName",
-                        "src": "2142:7:16",
+                        "src": "2142:7:12",
                         "typeDescriptions": {
                           "typeIdentifier": null,
                           "typeString": null
                         }
                       }
                     },
-                    "id": 5067,
+                    "id": 4454,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2396,22 +2396,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2142:30:16",
+                    "src": "2142:30:12",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint144",
                       "typeString": "uint144"
                     }
                   },
-                  "functionReturnParameters": 5060,
-                  "id": 5068,
+                  "functionReturnParameters": 4447,
+                  "id": 4455,
                   "nodeType": "Return",
-                  "src": "2135:37:16"
+                  "src": "2135:37:12"
                 }
               ]
             },
             "documentation": null,
-            "id": 5070,
+            "id": 4457,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -2419,33 +2419,33 @@
             "nodeType": "FunctionDefinition",
             "overrides": null,
             "parameters": {
-              "id": 5057,
+              "id": 4444,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5056,
+                  "id": 4443,
                   "mutability": "mutable",
                   "name": "self",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5070,
-                  "src": "2070:21:16",
+                  "scope": 4457,
+                  "src": "2070:21:12",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_uq144x112_$4902_memory_ptr",
+                    "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
                     "typeString": "struct FixedPoint.uq144x112"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 5055,
+                    "id": 4442,
                     "name": "uq144x112",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4902,
-                    "src": "2070:9:16",
+                    "referencedDeclaration": 4289,
+                    "src": "2070:9:12",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq144x112_$4902_storage_ptr",
+                      "typeIdentifier": "t_struct$_uq144x112_$4289_storage_ptr",
                       "typeString": "struct FixedPoint.uq144x112"
                     }
                   },
@@ -2453,21 +2453,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2069:23:16"
+              "src": "2069:23:12"
             },
             "returnParameters": {
-              "id": 5060,
+              "id": 4447,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5059,
+                  "id": 4446,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
-                  "scope": 5070,
-                  "src": "2116:7:16",
+                  "scope": 4457,
+                  "src": "2116:7:12",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2475,10 +2475,10 @@
                     "typeString": "uint144"
                   },
                   "typeName": {
-                    "id": 5058,
+                    "id": 4445,
                     "name": "uint144",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2116:7:16",
+                    "src": "2116:7:12",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint144",
                       "typeString": "uint144"
@@ -2488,20 +2488,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2115:9:16"
+              "src": "2115:9:12"
             },
-            "scope": 5071,
-            "src": "2051:128:16",
+            "scope": 4458,
+            "src": "2051:128:12",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           }
         ],
-        "scope": 5072,
-        "src": "129:2052:16"
+        "scope": 4459,
+        "src": "129:2052:12"
       }
     ],
-    "src": "0:2182:16"
+    "src": "0:2182:12"
   },
   "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220f671b70cbf74b322b26ffe3d2cc6f89cfa12c42e6c4298a6fbcaaf256f97baa764736f6c63430006060033",
   "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220f671b70cbf74b322b26ffe3d2cc6f89cfa12c42e6c4298a6fbcaaf256f97baa764736f6c63430006060033",
