@@ -2484,7 +2484,7 @@ duplexer3@^0.1.4:
 
 "dxswap-core@git://github.com/levelkdev/dxswap-core.git#v0.1.0":
   version "0.1.0"
-  resolved "git://github.com/levelkdev/dxswap-core.git#46b8feda5e636829e9f4a9e1a0360d13fcaba2aa"
+  resolved "git://github.com/levelkdev/dxswap-core.git#ad6c3885ebbb8d8c9a1a12af09fcbc5f66b9d43d"
   dependencies:
     typescript "^3.9.5"
 
