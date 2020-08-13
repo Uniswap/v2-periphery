@@ -3,8 +3,8 @@
   "contractName": "ExampleOracleSimple",
   "source": "pragma solidity =0.6.6;\n\nimport 'dxswap-core/contracts/interfaces/IDXswapFactory.sol';\nimport 'dxswap-core/contracts/interfaces/IDXswapPair.sol';\n\nimport '../libraries/FixedPoint.sol';\nimport '../libraries/DXswapOracleLibrary.sol';\nimport '../libraries/DXswapLibrary.sol';\n\n// fixed window oracle that recomputes the average price for the entire period once every period\n// note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period\ncontract ExampleOracleSimple {\n    using FixedPoint for *;\n\n    uint public constant PERIOD = 24 hours;\n\n    IDXswapPair immutable pair;\n    address public immutable token0;\n    address public immutable token1;\n\n    uint    public price0CumulativeLast;\n    uint    public price1CumulativeLast;\n    uint32  public blockTimestampLast;\n    FixedPoint.uq112x112 public price0Average;\n    FixedPoint.uq112x112 public price1Average;\n\n    constructor(address factory, address tokenA, address tokenB) public {\n        IDXswapPair _pair = IDXswapPair(DXswapLibrary.pairFor(factory, tokenA, tokenB));\n        pair = _pair;\n        token0 = _pair.token0();\n        token1 = _pair.token1();\n        price0CumulativeLast = _pair.price0CumulativeLast(); // fetch the current accumulated price value (1 / 0)\n        price1CumulativeLast = _pair.price1CumulativeLast(); // fetch the current accumulated price value (0 / 1)\n        uint112 reserve0;\n        uint112 reserve1;\n        (reserve0, reserve1, blockTimestampLast) = _pair.getReserves();\n        require(reserve0 != 0 && reserve1 != 0, 'ExampleOracleSimple: NO_RESERVES'); // ensure that there's liquidity in the pair\n    }\n\n    function update() external {\n        (uint price0Cumulative, uint price1Cumulative, uint32 blockTimestamp) =\n            DXswapOracleLibrary.currentCumulativePrices(address(pair));\n        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired\n\n        // ensure that at least one full period has passed since the last update\n        require(timeElapsed >= PERIOD, 'ExampleOracleSimple: PERIOD_NOT_ELAPSED');\n\n        // overflow is desired, casting never truncates\n        // cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed\n        price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));\n        price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));\n\n        price0CumulativeLast = price0Cumulative;\n        price1CumulativeLast = price1Cumulative;\n        blockTimestampLast = blockTimestamp;\n    }\n\n    // note this will always return 0 before update has been called successfully for the first time.\n    function consult(address token, uint amountIn) external view returns (uint amountOut) {\n        if (token == token0) {\n            amountOut = price0Average.mul(amountIn).decode144();\n        } else {\n            require(token == token1, 'ExampleOracleSimple: INVALID_TOKEN');\n            amountOut = price1Average.mul(amountIn).decode144();\n        }\n    }\n}\n",
   "sourcePath": "contracts/examples/ExampleOracleSimple.sol",
-  "sourceMap": "483:2623:1:-:0;;;915:734;5:9:-1;2:2;;;27:1;24;17:12;2:2;915:734:1;;;;;;;;;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;915:734:1;;;;;;;;;;;;;;;;993:17;;1025:46;;915:734;;;;;;1025:21;;;;;:46;;:::i;:::-;993:79;;1089:5;-1:-1:-1;;;;;1082:12:1;;;-1:-1:-1;;;;;1082:12:1;;;;;;;1113:5;-1:-1:-1;;;;;1113:12:1;;:14;;;;;;;;;;;;;;;;;;;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;1113:14:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1113:14:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1113:14:1;1104:23;;-1:-1:-1;;;;;;1104:23:1;;;1146:14;;;-1:-1:-1;;;1146:14:1;;;;-1:-1:-1;;;;;1146:12:1;;;;;:14;;;;;1113;;1146;;;;;;;:12;:14;;;2:2:-1;;;;27:1;24;17:12;2:2;1146:14:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1146:14:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1146:14:1;1137:23;;-1:-1:-1;;;;;;1137:23:1;;;1193:28;;;-1:-1:-1;;;1193:28:1;;;;-1:-1:-1;;;;;1193:26:1;;;;;:28;;;;;1146:14;;1193:28;;;;;;;:26;:28;;;2:2:-1;;;;27:1;24;17:12;2:2;1193:28:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1193:28:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1193:28:1;1170:20;:51;1307:28;;;-1:-1:-1;;;1307:28:1;;;;-1:-1:-1;;;;;1307:26:1;;;;;:28;;;;;1193;;1307;;;;;;;:26;:28;;;2:2:-1;;;;27:1;24;17:12;2:2;1307:28:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1307:28:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1307:28:1;1284:20;:51;1493:19;;;-1:-1:-1;;;1493:19:1;;;;1398:16;;;;-1:-1:-1;;;;;1493:17:1;;;;;:19;;;;;;;;;;;;;;:17;:19;;;2:2:-1;;;;27:1;24;17:12;2:2;1493:19:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1493:19:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1493:19:1;;;;;;;;;;;1471:18;1450:62;;-1:-1:-1;;1450:62:1;;;;;;;;;;;1493:19;-1:-1:-1;1493:19:1;-1:-1:-1;;;;;;1530:13:1;;;;;;:30;;-1:-1:-1;;;;;;1547:13:1;;;;1530:30;1522:75;;;;;-1:-1:-1;;;1522:75:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;915:734;;;;;;483:2623;;698:470:10;787:12;;;846:26;857:6;865;-1:-1:-1;;;;;846:10:10;:26;:::i;:::-;1006:32;;;-1:-1:-1;;;;;;1006:32:10;;;;;;;;;;;;;;;;;;;;;;;;;22::-1;26:21;;;22:32;6:49;;1006:32:10;;;;;996:43;;;;;;912:246;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26:21:-1;;;22:32;;;6:49;;912:246:10;;;;;;;902:257;;;;;;;;;698:470;-1:-1:-1;;;;;698:470:10:o;270:339::-;345:14;361;405:6;-1:-1:-1;;;;;395:16:10;:6;-1:-1:-1;;;;;395:16:10;;;387:63;;;;-1:-1:-1;;;387:63:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;488:6;-1:-1:-1;;;;;479:15:10;:6;-1:-1:-1;;;;;479:15:10;;:53;;517:6;525;479:53;;;498:6;506;479:53;460:72;;-1:-1:-1;460:72:10;-1:-1:-1;;;;;;550:20:10;;542:60;;;;;-1:-1:-1;;;542:60:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;270:339;;;;;:::o;483:2623:1:-;;;;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "483:2623:1:-:0;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;483:2623:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;12:1:-1;9;2:12;624:31:1;;;:::i;:::-;;;;-1:-1:-1;;;;;624:31:1;;;;;;;;;;;;;;2747:357;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;2747:357:1;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;699:35;;;:::i;740:::-;;;:::i;867:41::-;;;:::i;:::-;;;;-1:-1:-1;;;;;867:41:1;;;;;;;;;;;;;;1655:985;;;:::i;:::-;;820:41;;;:::i;547:38::-;;;:::i;781:33::-;;;:::i;:::-;;;;;;;;;;;;;;;;;;;661:31;;;:::i;624:::-;;;:::o;2747:357::-;2817:14;2856:6;-1:-1:-1;;;;;2847:15:1;:5;-1:-1:-1;;;;;2847:15:1;;2843:255;;;2890:17;;;;;;;;;:13;:17;-1:-1:-1;;;;;2890:17:1;;;:39;;:27;;2908:8;2890:27;:17;:27;:::i;:::-;:37;:39::i;:::-;-1:-1:-1;;;;;2878:51:1;;;2843:255;;;2977:6;-1:-1:-1;;;;;2968:15:1;:5;-1:-1:-1;;;;;2968:15:1;;2960:62;;;;-1:-1:-1;;;2960:62:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;3048:17;;;;;;;;;:13;:17;-1:-1:-1;;;;;3048:17:1;;;:39;;:27;;3066:8;3048:27;:17;:27;:::i;:39::-;-1:-1:-1;;;;;3036:51:1;;;2843:255;2747:357;;;;:::o;699:35::-;;;;:::o;740:::-;;;;:::o;867:41::-;;;-1:-1:-1;;;;;867:41:1;;:::o;1655:985::-;1693:21;1716;1739;1776:58;1828:4;1776:43;:58::i;:::-;1882:18;;1692:142;;-1:-1:-1;1692:142:1;;-1:-1:-1;1692:142:1;-1:-1:-1;1882:18:1;;;;1865:35;;;577:8;2023:21;;;;;2015:73;;;;-1:-1:-1;;;2015:73:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2291:86;;;;;;;;2364:11;2320:55;;2340:20;;2321:16;:39;2320:55;;;;;;-1:-1:-1;;;;;2291:86:1;;;;;;2275:102;;:13;:102;;-1:-1:-1;;;;;;2275:102:1;;;;;;;;2403:86;;;;;;;;;-1:-1:-1;2452:20:1;2403:86;;2432:55;;;;2433:39;;2432:55;;;;;;-1:-1:-1;;;;;2403:86:1;;;;;;2387:102;;:13;:102;;-1:-1:-1;;;;;;2387:102:1;;;;;;;;-1:-1:-1;;2500:39:1;;;;-1:-1:-1;2549:39:1;2598:18;:35;;-1:-1:-1;;2598:35:1;;;;;;;;;;;1655:985::o;820:41::-;;;-1:-1:-1;;;;;820:41:1;;:::o;547:38::-;577:8;547:38;:::o;781:33::-;;;;;;:::o;661:31::-;;;:::o;1116:249:12:-;1183:16;;:::i;:::-;1211:6;1235;;;:54;;-1:-1:-1;;1281:7:12;;-1:-1:-1;;;;;1276:13:12;1250:17;;;;1271:1;1250:17;1271:1;1245:27;;;;;:44;1235:54;1227:102;;;;-1:-1:-1;;;1227:102:12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1346:12;;;;;;;;;;;;;1116:249;-1:-1:-1;;;1116:249:12:o;2051:128::-;2150:7;407:3;2150:21;;2051:128::o;605:1031:11:-;689:21;712;735;785:23;:21;:23::i;:::-;768:40;;849:4;-1:-1:-1;;;;;837:38:11;;:40;;;;;;;;;;;;;;;;;;;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;837:40:11;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;837:40:11;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;837:40:11;906;;;-1:-1:-1;;;906:40:11;;;;837;;-1:-1:-1;;;;;;906:38:11;;;;;:40;;;;;837;;906;;;;;;;;:38;:40;;;2:2:-1;;;;27:1;24;17:12;2:2;906:40:11;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;906:40:11;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;906:40:11;1123:31;;;-1:-1:-1;;;1123:31:11;;;;906:40;;-1:-1:-1;1058:16:11;;;;;;-1:-1:-1;;;;;1123:29:11;;;;;:31;;;;;;;;;;;;;;:29;:31;;;2:2:-1;;;;27:1;24;17:12;2:2;1123:31:11;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1123:31:11;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1123:31:11;;;;;;;;;;;;;-1:-1:-1;1123:31:11;;-1:-1:-1;1123:31:11;-1:-1:-1;1168:36:11;;;;;;;;1164:466;;1288:35;;;1431:62;;;1436:39;1456:8;1466;1436:19;:39::i;:::-;:42;-1:-1:-1;;;;;1431:48:11;:62;1411:82;;;;;1557:62;;;1562:39;1582:8;1592;1562:19;:39::i;:::-;:42;-1:-1:-1;;;;;1557:48:11;:62;1537:82;;;;;-1:-1:-1;1164:466:11;605:1031;;;;;;;;:::o;381:121::-;469:25;:15;:25;;381:121::o;1517:243:12:-;1598:16;;:::i;:::-;1648:1;1634:11;-1:-1:-1;;;;;1634:15:12;;1626:51;;;;;-1:-1:-1;;;1626:51:12;;;;;;;;;;;;;;;;;;;;;;;;;;;;1694:59;;;;;;;;;;-1:-1:-1;;;;;1704:48:12;;-1:-1:-1;;;407:3:12;1705:32;;;;1704:48;;;;;;-1:-1:-1;;;;;1694:59:12;;;;1687:66;;1517:243;;;;:::o;483:2623:1:-;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;-1:-1:-1;483:2623:1;;;:::o;698:470:10:-;787:12;812:14;828;846:26;857:6;865;846:10;:26::i;:::-;1006:32;;;-1:-1:-1;;1006:32:10;;;;;;;;;;;;;;;;;;;;;;;;;22::-1;26:21;;;22:32;6:49;;1006:32:10;;;;;996:43;;;;;;-1:-1:-1;;;;;;912:246:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26:21:-1;;;22:32;;;6:49;;912:246:10;;;;;;;902:257;;;;;;;;;698:470;-1:-1:-1;;;;;698:470:10:o;270:339::-;345:14;361;405:6;-1:-1:-1;;;;;395:16:10;:6;-1:-1:-1;;;;;395:16:10;;;387:63;;;;-1:-1:-1;;;387:63:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;488:6;-1:-1:-1;;;;;479:15:10;:6;-1:-1:-1;;;;;479:15:10;;:53;;517:6;525;479:53;;;498:6;506;479:53;460:72;;-1:-1:-1;460:72:10;-1:-1:-1;;;;;;550:20:10;;542:60;;;;;-1:-1:-1;;;542:60:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;270:339;;;;;:::o",
+  "sourceMap": "483:2623:1:-:0;;;915:734;5:9:-1;2:2;;;27:1;24;17:12;2:2;915:734:1;;;;;;;;;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;915:734:1;;;;;;;;;;;;;;;;993:17;;1025:46;;915:734;;;;;;1025:21;;;;;:46;;:::i;:::-;993:79;;1089:5;-1:-1:-1;;;;;1082:12:1;;;-1:-1:-1;;;;;1082:12:1;;;;;;;1113:5;-1:-1:-1;;;;;1113:12:1;;:14;;;;;;;;;;;;;;;;;;;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;1113:14:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1113:14:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1113:14:1;1104:23;;-1:-1:-1;;;;;;1104:23:1;;;1146:14;;;-1:-1:-1;;;1146:14:1;;;;-1:-1:-1;;;;;1146:12:1;;;;;:14;;;;;1113;;1146;;;;;;;:12;:14;;;2:2:-1;;;;27:1;24;17:12;2:2;1146:14:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1146:14:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1146:14:1;1137:23;;-1:-1:-1;;;;;;1137:23:1;;;1193:28;;;-1:-1:-1;;;1193:28:1;;;;-1:-1:-1;;;;;1193:26:1;;;;;:28;;;;;1146:14;;1193:28;;;;;;;:26;:28;;;2:2:-1;;;;27:1;24;17:12;2:2;1193:28:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1193:28:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1193:28:1;1170:20;:51;1307:28;;;-1:-1:-1;;;1307:28:1;;;;-1:-1:-1;;;;;1307:26:1;;;;;:28;;;;;1193;;1307;;;;;;;:26;:28;;;2:2:-1;;;;27:1;24;17:12;2:2;1307:28:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1307:28:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1307:28:1;1284:20;:51;1493:19;;;-1:-1:-1;;;1493:19:1;;;;1398:16;;;;-1:-1:-1;;;;;1493:17:1;;;;;:19;;;;;;;;;;;;;;:17;:19;;;2:2:-1;;;;27:1;24;17:12;2:2;1493:19:1;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1493:19:1;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1493:19:1;;;;;;;;;;;1471:18;1450:62;;-1:-1:-1;;1450:62:1;;;;;;;;;;;1493:19;-1:-1:-1;1493:19:1;-1:-1:-1;;;;;;1530:13:1;;;;;;:30;;-1:-1:-1;;;;;;1547:13:1;;;;1530:30;1522:75;;;;;-1:-1:-1;;;1522:75:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;915:734;;;;;;483:2623;;698:470:9;787:12;;;846:26;857:6;865;-1:-1:-1;;;;;846:10:9;:26;:::i;:::-;1006:32;;;-1:-1:-1;;;;;;1006:32:9;;;;;;;;;;;;;;;;;;;;;;;;;22::-1;26:21;;;22:32;6:49;;1006:32:9;;;;;996:43;;;;;;912:246;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26:21:-1;;;22:32;;;6:49;;912:246:9;;;;;;;902:257;;;;;;;;;698:470;-1:-1:-1;;;;;698:470:9:o;270:339::-;345:14;361;405:6;-1:-1:-1;;;;;395:16:9;:6;-1:-1:-1;;;;;395:16:9;;;387:63;;;;-1:-1:-1;;;387:63:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;488:6;-1:-1:-1;;;;;479:15:9;:6;-1:-1:-1;;;;;479:15:9;;:53;;517:6;525;479:53;;;498:6;506;479:53;460:72;;-1:-1:-1;460:72:9;-1:-1:-1;;;;;;550:20:9;;542:60;;;;;-1:-1:-1;;;542:60:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;270:339;;;;;:::o;483:2623:1:-;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "483:2623:1:-:0;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;483:2623:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;12:1:-1;9;2:12;624:31:1;;;:::i;:::-;;;;-1:-1:-1;;;;;624:31:1;;;;;;;;;;;;;;2747:357;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;2747:357:1;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;699:35;;;:::i;740:::-;;;:::i;867:41::-;;;:::i;:::-;;;;-1:-1:-1;;;;;867:41:1;;;;;;;;;;;;;;1655:985;;;:::i;:::-;;820:41;;;:::i;547:38::-;;;:::i;781:33::-;;;:::i;:::-;;;;;;;;;;;;;;;;;;;661:31;;;:::i;624:::-;;;:::o;2747:357::-;2817:14;2856:6;-1:-1:-1;;;;;2847:15:1;:5;-1:-1:-1;;;;;2847:15:1;;2843:255;;;2890:17;;;;;;;;;:13;:17;-1:-1:-1;;;;;2890:17:1;;;:39;;:27;;2908:8;2890:27;:17;:27;:::i;:::-;:37;:39::i;:::-;-1:-1:-1;;;;;2878:51:1;;;2843:255;;;2977:6;-1:-1:-1;;;;;2968:15:1;:5;-1:-1:-1;;;;;2968:15:1;;2960:62;;;;-1:-1:-1;;;2960:62:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;3048:17;;;;;;;;;:13;:17;-1:-1:-1;;;;;3048:17:1;;;:39;;:27;;3066:8;3048:27;:17;:27;:::i;:39::-;-1:-1:-1;;;;;3036:51:1;;;2843:255;2747:357;;;;:::o;699:35::-;;;;:::o;740:::-;;;;:::o;867:41::-;;;-1:-1:-1;;;;;867:41:1;;:::o;1655:985::-;1693:21;1716;1739;1776:58;1828:4;1776:43;:58::i;:::-;1882:18;;1692:142;;-1:-1:-1;1692:142:1;;-1:-1:-1;1692:142:1;-1:-1:-1;1882:18:1;;;;1865:35;;;577:8;2023:21;;;;;2015:73;;;;-1:-1:-1;;;2015:73:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2291:86;;;;;;;;2364:11;2320:55;;2340:20;;2321:16;:39;2320:55;;;;;;-1:-1:-1;;;;;2291:86:1;;;;;;2275:102;;:13;:102;;-1:-1:-1;;;;;;2275:102:1;;;;;;;;2403:86;;;;;;;;;-1:-1:-1;2452:20:1;2403:86;;2432:55;;;;2433:39;;2432:55;;;;;;-1:-1:-1;;;;;2403:86:1;;;;;;2387:102;;:13;:102;;-1:-1:-1;;;;;;2387:102:1;;;;;;;;-1:-1:-1;;2500:39:1;;;;-1:-1:-1;2549:39:1;2598:18;:35;;-1:-1:-1;;2598:35:1;;;;;;;;;;;1655:985::o;820:41::-;;;-1:-1:-1;;;;;820:41:1;;:::o;547:38::-;577:8;547:38;:::o;781:33::-;;;;;;:::o;661:31::-;;;:::o;1116:249:11:-;1183:16;;:::i;:::-;1211:6;1235;;;:54;;-1:-1:-1;;1281:7:11;;-1:-1:-1;;;;;1276:13:11;1250:17;;;;1271:1;1250:17;1271:1;1245:27;;;;;:44;1235:54;1227:102;;;;-1:-1:-1;;;1227:102:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1346:12;;;;;;;;;;;;;1116:249;-1:-1:-1;;;1116:249:11:o;2051:128::-;2150:7;407:3;2150:21;;2051:128::o;605:1031:10:-;689:21;712;735;785:23;:21;:23::i;:::-;768:40;;849:4;-1:-1:-1;;;;;837:38:10;;:40;;;;;;;;;;;;;;;;;;;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;837:40:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;837:40:10;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;837:40:10;906;;;-1:-1:-1;;;906:40:10;;;;837;;-1:-1:-1;;;;;;906:38:10;;;;;:40;;;;;837;;906;;;;;;;;:38;:40;;;2:2:-1;;;;27:1;24;17:12;2:2;906:40:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;906:40:10;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;906:40:10;1123:31;;;-1:-1:-1;;;1123:31:10;;;;906:40;;-1:-1:-1;1058:16:10;;;;;;-1:-1:-1;;;;;1123:29:10;;;;;:31;;;;;;;;;;;;;;:29;:31;;;2:2:-1;;;;27:1;24;17:12;2:2;1123:31:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1123:31:10;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1123:31:10;;;;;;;;;;;;;-1:-1:-1;1123:31:10;;-1:-1:-1;1123:31:10;-1:-1:-1;1168:36:10;;;;;;;;1164:466;;1288:35;;;1431:62;;;1436:39;1456:8;1466;1436:19;:39::i;:::-;:42;-1:-1:-1;;;;;1431:48:10;:62;1411:82;;;;;1557:62;;;1562:39;1582:8;1592;1562:19;:39::i;:::-;:42;-1:-1:-1;;;;;1557:48:10;:62;1537:82;;;;;-1:-1:-1;1164:466:10;605:1031;;;;;;;;:::o;381:121::-;469:25;:15;:25;;381:121::o;1517:243:11:-;1598:16;;:::i;:::-;1648:1;1634:11;-1:-1:-1;;;;;1634:15:11;;1626:51;;;;;-1:-1:-1;;;1626:51:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;1694:59;;;;;;;;;;-1:-1:-1;;;;;1704:48:11;;-1:-1:-1;;;407:3:11;1705:32;;;;1704:48;;;;;;-1:-1:-1;;;;;1694:59:11;;;;1687:66;;1517:243;;;;:::o;483:2623:1:-;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;-1:-1:-1;483:2623:1;;;:::o;698:470:9:-;787:12;812:14;828;846:26;857:6;865;846:10;:26::i;:::-;1006:32;;;-1:-1:-1;;1006:32:9;;;;;;;;;;;;;;;;;;;;;;;;;22::-1;26:21;;;22:32;6:49;;1006:32:9;;;;;996:43;;;;;;-1:-1:-1;;;;;;912:246:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26:21:-1;;;22:32;;;6:49;;912:246:9;;;;;;;902:257;;;;;;;;;698:470;-1:-1:-1;;;;;698:470:9:o;270:339::-;345:14;361;405:6;-1:-1:-1;;;;;395:16:9;:6;-1:-1:-1;;;;;395:16:9;;;387:63;;;;-1:-1:-1;;;387:63:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;488:6;-1:-1:-1;;;;;479:15:9;:6;-1:-1:-1;;;;;479:15:9;;:53;;517:6;525;479:53;;;498:6;506;479:53;460:72;;-1:-1:-1;460:72:9;-1:-1:-1;;;;;;550:20:9;;542:60;;;;;-1:-1:-1;;;542:60:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;270:339;;;;;:::o",
   "abi": [
     {
       "inputs": [
@@ -190,7 +190,7 @@
         "id": 2049,
         "nodeType": "ImportDirective",
         "scope": 2265,
-        "sourceUnit": 6548,
+        "sourceUnit": 6532,
         "src": "25:61:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -201,7 +201,7 @@
         "id": 2050,
         "nodeType": "ImportDirective",
         "scope": 2265,
-        "sourceUnit": 6800,
+        "sourceUnit": 6784,
         "src": "87:58:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -212,7 +212,7 @@
         "id": 2051,
         "nodeType": "ImportDirective",
         "scope": 2265,
-        "sourceUnit": 4459,
+        "sourceUnit": 4443,
         "src": "147:37:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -223,7 +223,7 @@
         "id": 2052,
         "nodeType": "ImportDirective",
         "scope": 2265,
-        "sourceUnit": 4282,
+        "sourceUnit": 4266,
         "src": "185:46:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -234,7 +234,7 @@
         "id": 2053,
         "nodeType": "ImportDirective",
         "scope": 2265,
-        "sourceUnit": 4175,
+        "sourceUnit": 4159,
         "src": "232:40:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -260,10 +260,10 @@
               "id": 2054,
               "name": "FixedPoint",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 4458,
+              "referencedDeclaration": 4442,
               "src": "524:10:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_FixedPoint_$4458",
+                "typeIdentifier": "t_contract$_FixedPoint_$4442",
                 "typeString": "library FixedPoint"
               }
             },
@@ -329,7 +329,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+              "typeIdentifier": "t_contract$_IDXswapPair_$6783",
               "typeString": "contract IDXswapPair"
             },
             "typeName": {
@@ -337,10 +337,10 @@
               "id": 2059,
               "name": "IDXswapPair",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 6799,
+              "referencedDeclaration": 6783,
               "src": "592:11:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                 "typeString": "contract IDXswapPair"
               }
             },
@@ -507,7 +507,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+              "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
               "typeString": "struct FixedPoint.uq112x112"
             },
             "typeName": {
@@ -515,10 +515,10 @@
               "id": 2071,
               "name": "FixedPoint.uq112x112",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 4286,
+              "referencedDeclaration": 4270,
               "src": "820:20:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
+                "typeIdentifier": "t_struct$_uq112x112_$4270_storage_ptr",
                 "typeString": "struct FixedPoint.uq112x112"
               }
             },
@@ -538,7 +538,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+              "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
               "typeString": "struct FixedPoint.uq112x112"
             },
             "typeName": {
@@ -546,10 +546,10 @@
               "id": 2073,
               "name": "FixedPoint.uq112x112",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 4286,
+              "referencedDeclaration": 4270,
               "src": "867:20:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
+                "typeIdentifier": "t_struct$_uq112x112_$4270_storage_ptr",
                 "typeString": "struct FixedPoint.uq112x112"
               }
             },
@@ -579,7 +579,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                        "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                         "typeString": "contract IDXswapPair"
                       },
                       "typeName": {
@@ -587,10 +587,10 @@
                         "id": 2083,
                         "name": "IDXswapPair",
                         "nodeType": "UserDefinedTypeName",
-                        "referencedDeclaration": 6799,
+                        "referencedDeclaration": 6783,
                         "src": "993:11:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                          "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                           "typeString": "contract IDXswapPair"
                         }
                       },
@@ -666,10 +666,10 @@
                             "name": "DXswapLibrary",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4174,
+                            "referencedDeclaration": 4158,
                             "src": "1025:13:1",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4174_$",
+                              "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4158_$",
                               "typeString": "type(library DXswapLibrary)"
                             }
                           },
@@ -680,7 +680,7 @@
                           "lValueRequested": false,
                           "memberName": "pairFor",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 3729,
+                          "referencedDeclaration": 3713,
                           "src": "1025:21:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_address_$_t_address_$_t_address_$returns$_t_address_$",
@@ -714,10 +714,10 @@
                       "name": "IDXswapPair",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6799,
+                      "referencedDeclaration": 6783,
                       "src": "1013:11:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_contract$_IDXswapPair_$6799_$",
+                        "typeIdentifier": "t_type$_t_contract$_IDXswapPair_$6783_$",
                         "typeString": "type(contract IDXswapPair)"
                       }
                     },
@@ -732,7 +732,7 @@
                     "src": "1013:59:1",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                      "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                       "typeString": "contract IDXswapPair"
                     }
                   },
@@ -756,7 +756,7 @@
                       "referencedDeclaration": 2060,
                       "src": "1082:4:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                        "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                         "typeString": "contract IDXswapPair"
                       }
                     },
@@ -771,13 +771,13 @@
                       "referencedDeclaration": 2084,
                       "src": "1089:5:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                        "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                         "typeString": "contract IDXswapPair"
                       }
                     },
                     "src": "1082:12:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                      "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                       "typeString": "contract IDXswapPair"
                     }
                   },
@@ -822,7 +822,7 @@
                           "referencedDeclaration": 2084,
                           "src": "1113:5:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                            "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                             "typeString": "contract IDXswapPair"
                           }
                         },
@@ -833,7 +833,7 @@
                         "lValueRequested": false,
                         "memberName": "token0",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 6717,
+                        "referencedDeclaration": 6701,
                         "src": "1113:12:1",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
@@ -902,7 +902,7 @@
                           "referencedDeclaration": 2084,
                           "src": "1146:5:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                            "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                             "typeString": "contract IDXswapPair"
                           }
                         },
@@ -913,7 +913,7 @@
                         "lValueRequested": false,
                         "memberName": "token1",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 6722,
+                        "referencedDeclaration": 6706,
                         "src": "1146:12:1",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
@@ -982,7 +982,7 @@
                           "referencedDeclaration": 2084,
                           "src": "1193:5:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                            "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                             "typeString": "contract IDXswapPair"
                           }
                         },
@@ -993,7 +993,7 @@
                         "lValueRequested": false,
                         "memberName": "price0CumulativeLast",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 6736,
+                        "referencedDeclaration": 6720,
                         "src": "1193:26:1",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$__$returns$_t_uint256_$",
@@ -1062,7 +1062,7 @@
                           "referencedDeclaration": 2084,
                           "src": "1307:5:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                            "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                             "typeString": "contract IDXswapPair"
                           }
                         },
@@ -1073,7 +1073,7 @@
                         "lValueRequested": false,
                         "memberName": "price1CumulativeLast",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 6741,
+                        "referencedDeclaration": 6725,
                         "src": "1307:26:1",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$__$returns$_t_uint256_$",
@@ -1263,7 +1263,7 @@
                           "referencedDeclaration": 2084,
                           "src": "1493:5:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                            "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                             "typeString": "contract IDXswapPair"
                           }
                         },
@@ -1274,7 +1274,7 @@
                         "lValueRequested": false,
                         "memberName": "getReserves",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 6731,
+                        "referencedDeclaration": 6715,
                         "src": "1493:17:1",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$__$returns$_t_uint112_$_t_uint112_$_t_uint32_$",
@@ -1722,7 +1722,7 @@
                             "referencedDeclaration": 2060,
                             "src": "1828:4:1",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                              "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                               "typeString": "contract IDXswapPair"
                             }
                           }
@@ -1730,7 +1730,7 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_contract$_IDXswapPair_$6799",
+                              "typeIdentifier": "t_contract$_IDXswapPair_$6783",
                               "typeString": "contract IDXswapPair"
                             }
                           ],
@@ -1785,10 +1785,10 @@
                         "name": "DXswapOracleLibrary",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4281,
+                        "referencedDeclaration": 4265,
                         "src": "1776:19:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_DXswapOracleLibrary_$4281_$",
+                          "typeIdentifier": "t_type$_t_contract$_DXswapOracleLibrary_$4265_$",
                           "typeString": "type(library DXswapOracleLibrary)"
                         }
                       },
@@ -1799,7 +1799,7 @@
                       "lValueRequested": false,
                       "memberName": "currentCumulativePrices",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 4280,
+                      "referencedDeclaration": 4264,
                       "src": "1776:43:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_view$_t_address_$returns$_t_uint256_$_t_uint256_$_t_uint32_$",
@@ -2036,7 +2036,7 @@
                       "referencedDeclaration": 2072,
                       "src": "2275:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+                        "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
                         "typeString": "struct FixedPoint.uq112x112 storage ref"
                       }
                     },
@@ -2201,10 +2201,10 @@
                           "name": "FixedPoint",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4458,
+                          "referencedDeclaration": 4442,
                           "src": "2291:10:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_FixedPoint_$4458_$",
+                            "typeIdentifier": "t_type$_t_contract$_FixedPoint_$4442_$",
                             "typeString": "type(library FixedPoint)"
                           }
                         },
@@ -2215,10 +2215,10 @@
                         "lValueRequested": false,
                         "memberName": "uq112x112",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 4286,
+                        "referencedDeclaration": 4270,
                         "src": "2291:20:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_struct$_uq112x112_$4286_storage_ptr_$",
+                          "typeIdentifier": "t_type$_t_struct$_uq112x112_$4270_storage_ptr_$",
                           "typeString": "type(struct FixedPoint.uq112x112 storage pointer)"
                         }
                       },
@@ -2233,13 +2233,13 @@
                       "src": "2291:86:1",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
+                        "typeIdentifier": "t_struct$_uq112x112_$4270_memory_ptr",
                         "typeString": "struct FixedPoint.uq112x112 memory"
                       }
                     },
                     "src": "2275:102:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+                      "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
                       "typeString": "struct FixedPoint.uq112x112 storage ref"
                     }
                   },
@@ -2264,7 +2264,7 @@
                       "referencedDeclaration": 2074,
                       "src": "2387:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+                        "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
                         "typeString": "struct FixedPoint.uq112x112 storage ref"
                       }
                     },
@@ -2429,10 +2429,10 @@
                           "name": "FixedPoint",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4458,
+                          "referencedDeclaration": 4442,
                           "src": "2403:10:1",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_FixedPoint_$4458_$",
+                            "typeIdentifier": "t_type$_t_contract$_FixedPoint_$4442_$",
                             "typeString": "type(library FixedPoint)"
                           }
                         },
@@ -2443,10 +2443,10 @@
                         "lValueRequested": false,
                         "memberName": "uq112x112",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 4286,
+                        "referencedDeclaration": 4270,
                         "src": "2403:20:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_struct$_uq112x112_$4286_storage_ptr_$",
+                          "typeIdentifier": "t_type$_t_struct$_uq112x112_$4270_storage_ptr_$",
                           "typeString": "type(struct FixedPoint.uq112x112 storage pointer)"
                         }
                       },
@@ -2461,13 +2461,13 @@
                       "src": "2403:86:1",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
+                        "typeIdentifier": "t_struct$_uq112x112_$4270_memory_ptr",
                         "typeString": "struct FixedPoint.uq112x112 memory"
                       }
                     },
                     "src": "2387:102:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+                      "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
                       "typeString": "struct FixedPoint.uq112x112 storage ref"
                     }
                   },
@@ -2872,7 +2872,7 @@
                                     "referencedDeclaration": 2074,
                                     "src": "3048:13:1",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+                                      "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
                                       "typeString": "struct FixedPoint.uq112x112 storage ref"
                                     }
                                   },
@@ -2883,10 +2883,10 @@
                                   "lValueRequested": false,
                                   "memberName": "mul",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 4396,
+                                  "referencedDeclaration": 4380,
                                   "src": "3048:17:1",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_function_internal_pure$_t_struct$_uq112x112_$4286_memory_ptr_$_t_uint256_$returns$_t_struct$_uq144x112_$4289_memory_ptr_$bound_to$_t_struct$_uq112x112_$4286_memory_ptr_$",
+                                    "typeIdentifier": "t_function_internal_pure$_t_struct$_uq112x112_$4270_memory_ptr_$_t_uint256_$returns$_t_struct$_uq144x112_$4273_memory_ptr_$bound_to$_t_struct$_uq112x112_$4270_memory_ptr_$",
                                     "typeString": "function (struct FixedPoint.uq112x112 memory,uint256) pure returns (struct FixedPoint.uq144x112 memory)"
                                   }
                                 },
@@ -2901,7 +2901,7 @@
                                 "src": "3048:27:1",
                                 "tryCall": false,
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
+                                  "typeIdentifier": "t_struct$_uq144x112_$4273_memory_ptr",
                                   "typeString": "struct FixedPoint.uq144x112 memory"
                                 }
                               },
@@ -2912,10 +2912,10 @@
                               "lValueRequested": false,
                               "memberName": "decode144",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4457,
+                              "referencedDeclaration": 4441,
                               "src": "3048:37:1",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_function_internal_pure$_t_struct$_uq144x112_$4289_memory_ptr_$returns$_t_uint144_$bound_to$_t_struct$_uq144x112_$4289_memory_ptr_$",
+                                "typeIdentifier": "t_function_internal_pure$_t_struct$_uq144x112_$4273_memory_ptr_$returns$_t_uint144_$bound_to$_t_struct$_uq144x112_$4273_memory_ptr_$",
                                 "typeString": "function (struct FixedPoint.uq144x112 memory) pure returns (uint144)"
                               }
                             },
@@ -3015,7 +3015,7 @@
                                     "referencedDeclaration": 2072,
                                     "src": "2890:13:1",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_struct$_uq112x112_$4286_storage",
+                                      "typeIdentifier": "t_struct$_uq112x112_$4270_storage",
                                       "typeString": "struct FixedPoint.uq112x112 storage ref"
                                     }
                                   },
@@ -3026,10 +3026,10 @@
                                   "lValueRequested": false,
                                   "memberName": "mul",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 4396,
+                                  "referencedDeclaration": 4380,
                                   "src": "2890:17:1",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_function_internal_pure$_t_struct$_uq112x112_$4286_memory_ptr_$_t_uint256_$returns$_t_struct$_uq144x112_$4289_memory_ptr_$bound_to$_t_struct$_uq112x112_$4286_memory_ptr_$",
+                                    "typeIdentifier": "t_function_internal_pure$_t_struct$_uq112x112_$4270_memory_ptr_$_t_uint256_$returns$_t_struct$_uq144x112_$4273_memory_ptr_$bound_to$_t_struct$_uq112x112_$4270_memory_ptr_$",
                                     "typeString": "function (struct FixedPoint.uq112x112 memory,uint256) pure returns (struct FixedPoint.uq144x112 memory)"
                                   }
                                 },
@@ -3044,7 +3044,7 @@
                                 "src": "2890:27:1",
                                 "tryCall": false,
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
+                                  "typeIdentifier": "t_struct$_uq144x112_$4273_memory_ptr",
                                   "typeString": "struct FixedPoint.uq144x112 memory"
                                 }
                               },
@@ -3055,10 +3055,10 @@
                               "lValueRequested": false,
                               "memberName": "decode144",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4457,
+                              "referencedDeclaration": 4441,
                               "src": "2890:37:1",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_function_internal_pure$_t_struct$_uq144x112_$4289_memory_ptr_$returns$_t_uint144_$bound_to$_t_struct$_uq144x112_$4289_memory_ptr_$",
+                                "typeIdentifier": "t_function_internal_pure$_t_struct$_uq144x112_$4273_memory_ptr_$returns$_t_uint144_$bound_to$_t_struct$_uq144x112_$4273_memory_ptr_$",
                                 "typeString": "function (struct FixedPoint.uq144x112 memory) pure returns (uint144)"
                               }
                             },

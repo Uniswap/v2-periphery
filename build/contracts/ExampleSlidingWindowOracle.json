@@ -4,7 +4,7 @@
   "source": "pragma solidity =0.6.6;\n\nimport 'dxswap-core/contracts/interfaces/IDXswapFactory.sol';\nimport 'dxswap-core/contracts/interfaces/IDXswapPair.sol';\n\nimport '../libraries/FixedPoint.sol';\nimport '../libraries/SafeMath.sol';\nimport '../libraries/DXswapLibrary.sol';\nimport '../libraries/DXswapOracleLibrary.sol';\n\n// sliding window oracle that uses observations collected over a window to provide moving price averages in the past\n// `windowSize` with a precision of `windowSize / granularity`\n// note this is a singleton oracle and only needs to be deployed once per desired parameters, which\n// differs from the simple oracle which must be deployed once per pair.\ncontract ExampleSlidingWindowOracle {\n    using FixedPoint for *;\n    using SafeMath for uint;\n\n    struct Observation {\n        uint timestamp;\n        uint price0Cumulative;\n        uint price1Cumulative;\n    }\n\n    address public immutable factory;\n    // the desired amount of time over which the moving average should be computed, e.g. 24 hours\n    uint public immutable windowSize;\n    // the number of observations stored for each pair, i.e. how many price observations are stored for the window.\n    // as granularity increases from 1, more frequent updates are needed, but moving averages become more precise.\n    // averages are computed over intervals with sizes in the range:\n    //   [windowSize - (windowSize / granularity) * 2, windowSize]\n    // e.g. if the window size is 24 hours, and the granularity is 24, the oracle will return the average price for\n    //   the period:\n    //   [now - [22 hours, 24 hours], now]\n    uint8 public immutable granularity;\n    // this is redundant with granularity and windowSize, but stored for gas savings & informational purposes.\n    uint public immutable periodSize;\n\n    // mapping from pair address to a list of price observations of that pair\n    mapping(address => Observation[]) public pairObservations;\n\n    constructor(address factory_, uint windowSize_, uint8 granularity_) public {\n        require(granularity_ > 1, 'SlidingWindowOracle: GRANULARITY');\n        require(\n            (periodSize = windowSize_ / granularity_) * granularity_ == windowSize_,\n            'SlidingWindowOracle: WINDOW_NOT_EVENLY_DIVISIBLE'\n        );\n        factory = factory_;\n        windowSize = windowSize_;\n        granularity = granularity_;\n    }\n\n    // returns the index of the observation corresponding to the given timestamp\n    function observationIndexOf(uint timestamp) public view returns (uint8 index) {\n        uint epochPeriod = timestamp / periodSize;\n        return uint8(epochPeriod % granularity);\n    }\n\n    // returns the observation from the oldest epoch (at the beginning of the window) relative to the current time\n    function getFirstObservationInWindow(address pair) private view returns (Observation storage firstObservation) {\n        uint8 observationIndex = observationIndexOf(block.timestamp);\n        // no overflow issue. if observationIndex + 1 overflows, result is still zero.\n        uint8 firstObservationIndex = (observationIndex + 1) % granularity;\n        firstObservation = pairObservations[pair][firstObservationIndex];\n    }\n\n    // update the cumulative price for the observation at the current timestamp. each observation is updated at most\n    // once per epoch period.\n    function update(address tokenA, address tokenB) external {\n        address pair = DXswapLibrary.pairFor(factory, tokenA, tokenB);\n\n        // populate the array with empty observations (first call only)\n        for (uint i = pairObservations[pair].length; i < granularity; i++) {\n            pairObservations[pair].push();\n        }\n\n        // get the observation for the current period\n        uint8 observationIndex = observationIndexOf(block.timestamp);\n        Observation storage observation = pairObservations[pair][observationIndex];\n\n        // we only want to commit updates once per period (i.e. windowSize / granularity)\n        uint timeElapsed = block.timestamp - observation.timestamp;\n        if (timeElapsed > periodSize) {\n            (uint price0Cumulative, uint price1Cumulative,) = DXswapOracleLibrary.currentCumulativePrices(pair);\n            observation.timestamp = block.timestamp;\n            observation.price0Cumulative = price0Cumulative;\n            observation.price1Cumulative = price1Cumulative;\n        }\n    }\n\n    // given the cumulative prices of the start and end of a period, and the length of the period, compute the average\n    // price in terms of how much amount out is received for the amount in\n    function computeAmountOut(\n        uint priceCumulativeStart, uint priceCumulativeEnd,\n        uint timeElapsed, uint amountIn\n    ) private pure returns (uint amountOut) {\n        // overflow is desired.\n        FixedPoint.uq112x112 memory priceAverage = FixedPoint.uq112x112(\n            uint224((priceCumulativeEnd - priceCumulativeStart) / timeElapsed)\n        );\n        amountOut = priceAverage.mul(amountIn).decode144();\n    }\n\n    // returns the amount out corresponding to the amount in for a given token using the moving average over the time\n    // range [now - [windowSize, windowSize - periodSize * 2], now]\n    // update must have been called for the bucket corresponding to timestamp `now - windowSize`\n    function consult(address tokenIn, uint amountIn, address tokenOut) external view returns (uint amountOut) {\n        address pair = DXswapLibrary.pairFor(factory, tokenIn, tokenOut);\n        Observation storage firstObservation = getFirstObservationInWindow(pair);\n\n        uint timeElapsed = block.timestamp - firstObservation.timestamp;\n        require(timeElapsed <= windowSize, 'SlidingWindowOracle: MISSING_HISTORICAL_OBSERVATION');\n        // should never happen.\n        require(timeElapsed >= windowSize - periodSize * 2, 'SlidingWindowOracle: UNEXPECTED_TIME_ELAPSED');\n\n        (uint price0Cumulative, uint price1Cumulative,) = DXswapOracleLibrary.currentCumulativePrices(pair);\n        (address token0,) = DXswapLibrary.sortTokens(tokenIn, tokenOut);\n\n        if (token0 == tokenIn) {\n            return computeAmountOut(firstObservation.price0Cumulative, price0Cumulative, timeElapsed, amountIn);\n        } else {\n            return computeAmountOut(firstObservation.price1Cumulative, price1Cumulative, timeElapsed, amountIn);\n        }\n    }\n}\n",
   "sourcePath": "contracts/examples/ExampleSlidingWindowOracle.sol",
   "sourceMap": "662:5690:2:-:0;;;1933:427;5:9:-1;2:2;;;27:1;24;17:12;2:2;1933:427:2;;;;;;;;;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1933:427:2;;;;;;;;;;;;;;2041:1;2026:16;;;;2018:61;;;;;-1:-1:-1;;;2018:61:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2170:11;2110:56;;;;2170:11;2110:56;2124:26;;;;;2111:39;;;;2110:56;:71;2089:166;;;;-1:-1:-1;;;2089:166:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2265:18;;;;-1:-1:-1;;;;;;2265:18:2;;;2293:24;;;;2327:26;;;;;;;;662:5690;;-1:-1:-1;;;;;662:5690:2;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "662:5690:2:-:0;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;662:5690:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;12:1:-1;9;2:12;1601:34:2;;;:::i;:::-;;;;;;;;;;;;;;;;;;;1016:32;;;:::i;:::-;;;;;;;;;;;;;;;;5297:1053;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;5297:1053:2;;;;;;;;;;;;;;;;;:::i;1869:57::-;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;1869:57:2;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;880:32;;;:::i;:::-;;;;-1:-1:-1;;;;;880:32:2;;;;;;;;;;;;;;3331:1044;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;3331:1044:2;;;;;;;;;;:::i;:::-;;2447:185;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;2447:185:2;;:::i;1752:32::-;;;:::i;1601:34::-;;;:::o;1016:32::-;;;:::o;5297:1053::-;5387:14;5413:12;5428:49;5450:7;5459;5468:8;5428:21;:49::i;:::-;5413:64;;5487:36;5526:33;5554:4;5526:27;:33::i;:::-;5607:26;;5487:72;;-1:-1:-1;5589:15:2;:44;5666:10;5651:25;;;5643:89;;;;-1:-1:-1;;;5643:89:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;5810:10;5823:1;5810:14;5797:10;:27;5782:11;:42;;5774:99;;;;-1:-1:-1;;;5774:99:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;5885:21;5908;5934:49;5978:4;5934:43;:49::i;:::-;5884:99;;;;;5994:14;6013:43;6038:7;6047:8;6013:24;:43::i;:::-;5993:63;;;6081:7;-1:-1:-1;;;;;6071:17:2;:6;-1:-1:-1;;;;;6071:17:2;;6067:277;;;6111:92;6128:16;:33;;;6163:16;6181:11;6194:8;6111:16;:92::i;:::-;6104:99;;;;;;;;;;6067:277;6241:92;6258:16;:33;;;6293:16;6311:11;6324:8;6241:16;:92::i;5297:1053::-;;;;;;:::o;1869:57::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;1869:57:2;;-1:-1:-1;1869:57:2;:::o;880:32::-;;;:::o;3331:1044::-;3398:12;3413:46;3435:7;3444:6;3452;3413:21;:46::i;:::-;-1:-1:-1;;;;;3556:22:2;;3547:6;3556:22;;;;;;;;;;:29;3398:61;;-1:-1:-1;3542:121:2;3591:11;3587:15;;:1;:15;3542:121;;;-1:-1:-1;;;;;3623:22:2;;:16;:22;;;;;;;;;;27:10:-1;;3623:29:2;23:18:-1;;;45:23;;3623:29:2;;3604:3;3542:121;;;;3727:22;3752:35;3771:15;3752:18;:35::i;:::-;-1:-1:-1;;;;;3831:22:2;;3797:31;3831:22;;;;;;;;;;:40;;3727:60;;-1:-1:-1;3797:31:2;;3831:40;;;;;;;;;;;;;;;;;;;;;;;4009:21;;3831:40;;-1:-1:-1;3991:15:2;:39;4058:10;4044:24;;4040:329;;;4085:21;4108;4134:49;4178:4;4134:43;:49::i;:::-;-1:-1:-1;4221:15:2;4197:39;;4250:28;;;:47;;;;4311:28;;;:47;-1:-1:-1;;4040:329:2;3331:1044;;;;;;:::o;2447:185::-;2512:11;2535:16;2566:10;2554:9;:22;;;;;;2535:41;;2613:11;2599:25;;:11;:25;;;;;;;2447:185;-1:-1:-1;;;2447:185:2:o;1752:32::-;;;:::o;698:470:10:-;787:12;812:14;828;846:26;857:6;865;846:10;:26::i;:::-;1006:32;;;-1:-1:-1;;1006:32:10;;;;;;;;;;;;;;;;;;;;;;;;;22::-1;26:21;;;22:32;6:49;;1006:32:10;;;;;996:43;;;;;;-1:-1:-1;;;;;;912:246:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26:21:-1;;;22:32;;;6:49;;912:246:10;;;;;;;902:257;;;;;;;;;698:470;-1:-1:-1;;;;;698:470:10:o;2753:425:2:-;2826:36;2874:22;2899:35;2918:15;2899:18;:35::i;:::-;2874:60;;3031:27;3086:11;3061:36;;3062:16;3081:1;3062:20;3061:36;;;;;;;;3031:66;;3126:16;:22;3143:4;-1:-1:-1;;;;;3126:22:2;-1:-1:-1;;;;;3126:22:2;;;;;;;;;;;;3149:21;3126:45;;;;;;;;;;;;;;;;;;;;3107:64;;2753:425;;;;;:::o;605:1031:11:-;689:21;712;735;785:23;:21;:23::i;:::-;768:40;;849:4;-1:-1:-1;;;;;837:38:11;;:40;;;;;;;;;;;;;;;;;;;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;837:40:11;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;837:40:11;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;837:40:11;906;;;-1:-1:-1;;;906:40:11;;;;837;;-1:-1:-1;;;;;;906:38:11;;;;;:40;;;;;837;;906;;;;;;;;:38;:40;;;2:2:-1;;;;27:1;24;17:12;2:2;906:40:11;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;906:40:11;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;906:40:11;1123:31;;;-1:-1:-1;;;1123:31:11;;;;906:40;;-1:-1:-1;1058:16:11;;;;;;-1:-1:-1;;;;;1123:29:11;;;;;:31;;;;;;;;;;;;;;:29;:31;;;2:2:-1;;;;27:1;24;17:12;2:2;1123:31:11;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1123:31:11;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1123:31:11;;;;;;;;;;;;;-1:-1:-1;1123:31:11;;-1:-1:-1;1123:31:11;-1:-1:-1;1168:36:11;;;;;;;;1164:466;;1288:35;;;1431:62;;;1436:39;1456:8;1466;1436:19;:39::i;:::-;:42;-1:-1:-1;;;;;1431:48:11;:62;1411:82;;;;;1557:62;;;1562:39;1582:8;1592;1562:19;:39::i;:::-;:42;-1:-1:-1;;;;;1557:48:11;:62;1537:82;;;;;-1:-1:-1;1164:466:11;605:1031;;;;;;;;:::o;270:339:10:-;345:14;361;405:6;-1:-1:-1;;;;;395:16:10;:6;-1:-1:-1;;;;;395:16:10;;;387:63;;;;-1:-1:-1;;;387:63:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;488:6;-1:-1:-1;;;;;479:15:10;:6;-1:-1:-1;;;;;479:15:10;;:53;;517:6;525;479:53;;;498:6;506;479:53;460:72;;-1:-1:-1;460:72:10;-1:-1:-1;;;;;;550:20:10;;542:60;;;;;-1:-1:-1;;;542:60:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;270:339;;;;;:::o;4575:433:2:-;4730:14;4788:40;;:::i;:::-;4831:110;;;;;;;;4919:11;4895:20;4874:18;:41;4873:57;;;;;;-1:-1:-1;;;;;4831:110:2;;;4788:153;-1:-1:-1;4963:38:2;:26;4788:153;4980:8;4963:16;:26::i;:::-;:36;:38::i;:::-;4951:50;;;4575:433;-1:-1:-1;;;;;;4575:433:2:o;381:121:11:-;469:25;:15;:25;;381:121::o;1517:243:12:-;1598:16;;:::i;:::-;1648:1;1634:11;-1:-1:-1;;;;;1634:15:12;;1626:51;;;;;-1:-1:-1;;;1626:51:12;;;;;;;;;;;;;;;;;;;;;;;;;;;;1694:59;;;;;;;;;;-1:-1:-1;;;;;1704:48:12;;-1:-1:-1;;;407:3:12;1705:32;;;;1704:48;;;;;;-1:-1:-1;;;;;1694:59:12;;;;1687:66;;1517:243;;;;:::o;1116:249::-;1183:16;;:::i;:::-;1211:6;1235;;;:54;;-1:-1:-1;;1281:7:12;;-1:-1:-1;;;;;1276:13:12;1250:17;;;;1271:1;1250:17;1271:1;1245:27;;;;;:44;1235:54;1227:102;;;;-1:-1:-1;;;1227:102:12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1346:12;;;;;;;;;;;;;1116:249;-1:-1:-1;;;1116:249:12:o;2051:128::-;2150:7;407:3;2150:21;;2051:128::o;662:5690:2:-;;;;;;;;;;-1:-1:-1;662:5690:2;;;:::o;:::-;;;;;;;;;;;;;;:::o",
+  "deployedSourceMap": "662:5690:2:-:0;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;662:5690:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;12:1:-1;9;2:12;1601:34:2;;;:::i;:::-;;;;;;;;;;;;;;;;;;;1016:32;;;:::i;:::-;;;;;;;;;;;;;;;;5297:1053;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;5297:1053:2;;;;;;;;;;;;;;;;;:::i;1869:57::-;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;1869:57:2;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;880:32;;;:::i;:::-;;;;-1:-1:-1;;;;;880:32:2;;;;;;;;;;;;;;3331:1044;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;;;;;;3331:1044:2;;;;;;;;;;:::i;:::-;;2447:185;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;2447:185:2;;:::i;1752:32::-;;;:::i;1601:34::-;;;:::o;1016:32::-;;;:::o;5297:1053::-;5387:14;5413:12;5428:49;5450:7;5459;5468:8;5428:21;:49::i;:::-;5413:64;;5487:36;5526:33;5554:4;5526:27;:33::i;:::-;5607:26;;5487:72;;-1:-1:-1;5589:15:2;:44;5666:10;5651:25;;;5643:89;;;;-1:-1:-1;;;5643:89:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;5810:10;5823:1;5810:14;5797:10;:27;5782:11;:42;;5774:99;;;;-1:-1:-1;;;5774:99:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;5885:21;5908;5934:49;5978:4;5934:43;:49::i;:::-;5884:99;;;;;5994:14;6013:43;6038:7;6047:8;6013:24;:43::i;:::-;5993:63;;;6081:7;-1:-1:-1;;;;;6071:17:2;:6;-1:-1:-1;;;;;6071:17:2;;6067:277;;;6111:92;6128:16;:33;;;6163:16;6181:11;6194:8;6111:16;:92::i;:::-;6104:99;;;;;;;;;;6067:277;6241:92;6258:16;:33;;;6293:16;6311:11;6324:8;6241:16;:92::i;5297:1053::-;;;;;;:::o;1869:57::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;1869:57:2;;-1:-1:-1;1869:57:2;:::o;880:32::-;;;:::o;3331:1044::-;3398:12;3413:46;3435:7;3444:6;3452;3413:21;:46::i;:::-;-1:-1:-1;;;;;3556:22:2;;3547:6;3556:22;;;;;;;;;;:29;3398:61;;-1:-1:-1;3542:121:2;3591:11;3587:15;;:1;:15;3542:121;;;-1:-1:-1;;;;;3623:22:2;;:16;:22;;;;;;;;;;27:10:-1;;3623:29:2;23:18:-1;;;45:23;;3623:29:2;;3604:3;3542:121;;;;3727:22;3752:35;3771:15;3752:18;:35::i;:::-;-1:-1:-1;;;;;3831:22:2;;3797:31;3831:22;;;;;;;;;;:40;;3727:60;;-1:-1:-1;3797:31:2;;3831:40;;;;;;;;;;;;;;;;;;;;;;;4009:21;;3831:40;;-1:-1:-1;3991:15:2;:39;4058:10;4044:24;;4040:329;;;4085:21;4108;4134:49;4178:4;4134:43;:49::i;:::-;-1:-1:-1;4221:15:2;4197:39;;4250:28;;;:47;;;;4311:28;;;:47;-1:-1:-1;;4040:329:2;3331:1044;;;;;;:::o;2447:185::-;2512:11;2535:16;2566:10;2554:9;:22;;;;;;2535:41;;2613:11;2599:25;;:11;:25;;;;;;;2447:185;-1:-1:-1;;;2447:185:2:o;1752:32::-;;;:::o;698:470:9:-;787:12;812:14;828;846:26;857:6;865;846:10;:26::i;:::-;1006:32;;;-1:-1:-1;;1006:32:9;;;;;;;;;;;;;;;;;;;;;;;;;22::-1;26:21;;;22:32;6:49;;1006:32:9;;;;;996:43;;;;;;-1:-1:-1;;;;;;912:246:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;26:21:-1;;;22:32;;;6:49;;912:246:9;;;;;;;902:257;;;;;;;;;698:470;-1:-1:-1;;;;;698:470:9:o;2753:425:2:-;2826:36;2874:22;2899:35;2918:15;2899:18;:35::i;:::-;2874:60;;3031:27;3086:11;3061:36;;3062:16;3081:1;3062:20;3061:36;;;;;;;;3031:66;;3126:16;:22;3143:4;-1:-1:-1;;;;;3126:22:2;-1:-1:-1;;;;;3126:22:2;;;;;;;;;;;;3149:21;3126:45;;;;;;;;;;;;;;;;;;;;3107:64;;2753:425;;;;;:::o;605:1031:10:-;689:21;712;735;785:23;:21;:23::i;:::-;768:40;;849:4;-1:-1:-1;;;;;837:38:10;;:40;;;;;;;;;;;;;;;;;;;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;837:40:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;837:40:10;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;837:40:10;906;;;-1:-1:-1;;;906:40:10;;;;837;;-1:-1:-1;;;;;;906:38:10;;;;;:40;;;;;837;;906;;;;;;;;:38;:40;;;2:2:-1;;;;27:1;24;17:12;2:2;906:40:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;906:40:10;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;906:40:10;1123:31;;;-1:-1:-1;;;1123:31:10;;;;906:40;;-1:-1:-1;1058:16:10;;;;;;-1:-1:-1;;;;;1123:29:10;;;;;:31;;;;;;;;;;;;;;:29;:31;;;2:2:-1;;;;27:1;24;17:12;2:2;1123:31:10;;;;8:9:-1;5:2;;;45:16;42:1;39;24:38;77:16;74:1;67:27;5:2;1123:31:10;;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;-1:-1;1123:31:10;;;;;;;;;;;;;-1:-1:-1;1123:31:10;;-1:-1:-1;1123:31:10;-1:-1:-1;1168:36:10;;;;;;;;1164:466;;1288:35;;;1431:62;;;1436:39;1456:8;1466;1436:19;:39::i;:::-;:42;-1:-1:-1;;;;;1431:48:10;:62;1411:82;;;;;1557:62;;;1562:39;1582:8;1592;1562:19;:39::i;:::-;:42;-1:-1:-1;;;;;1557:48:10;:62;1537:82;;;;;-1:-1:-1;1164:466:10;605:1031;;;;;;;;:::o;270:339:9:-;345:14;361;405:6;-1:-1:-1;;;;;395:16:9;:6;-1:-1:-1;;;;;395:16:9;;;387:63;;;;-1:-1:-1;;;387:63:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;488:6;-1:-1:-1;;;;;479:15:9;:6;-1:-1:-1;;;;;479:15:9;;:53;;517:6;525;479:53;;;498:6;506;479:53;460:72;;-1:-1:-1;460:72:9;-1:-1:-1;;;;;;550:20:9;;542:60;;;;;-1:-1:-1;;;542:60:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;270:339;;;;;:::o;4575:433:2:-;4730:14;4788:40;;:::i;:::-;4831:110;;;;;;;;4919:11;4895:20;4874:18;:41;4873:57;;;;;;-1:-1:-1;;;;;4831:110:2;;;4788:153;-1:-1:-1;4963:38:2;:26;4788:153;4980:8;4963:16;:26::i;:::-;:36;:38::i;:::-;4951:50;;;4575:433;-1:-1:-1;;;;;;4575:433:2:o;381:121:10:-;469:25;:15;:25;;381:121::o;1517:243:11:-;1598:16;;:::i;:::-;1648:1;1634:11;-1:-1:-1;;;;;1634:15:11;;1626:51;;;;;-1:-1:-1;;;1626:51:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;1694:59;;;;;;;;;;-1:-1:-1;;;;;1704:48:11;;-1:-1:-1;;;407:3:11;1705:32;;;;1704:48;;;;;;-1:-1:-1;;;;;1694:59:11;;;;1687:66;;1517:243;;;;:::o;1116:249::-;1183:16;;:::i;:::-;1211:6;1235;;;:54;;-1:-1:-1;;1281:7:11;;-1:-1:-1;;;;;1276:13:11;1250:17;;;;1271:1;1250:17;1271:1;1245:27;;;;;:44;1235:54;1227:102;;;;-1:-1:-1;;;1227:102:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1346:12;;;;;;;;;;;;;1116:249;-1:-1:-1;;;1116:249:11:o;2051:128::-;2150:7;407:3;2150:21;;2051:128::o;662:5690:2:-;;;;;;;;;;-1:-1:-1;662:5690:2;;;:::o;:::-;;;;;;;;;;;;;;:::o",
   "abi": [
     {
       "inputs": [
@@ -207,7 +207,7 @@
         "id": 2267,
         "nodeType": "ImportDirective",
         "scope": 2621,
-        "sourceUnit": 6548,
+        "sourceUnit": 6532,
         "src": "25:61:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -218,7 +218,7 @@
         "id": 2268,
         "nodeType": "ImportDirective",
         "scope": 2621,
-        "sourceUnit": 6800,
+        "sourceUnit": 6784,
         "src": "87:58:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -229,7 +229,7 @@
         "id": 2269,
         "nodeType": "ImportDirective",
         "scope": 2621,
-        "sourceUnit": 4459,
+        "sourceUnit": 4443,
         "src": "147:37:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -240,7 +240,7 @@
         "id": 2270,
         "nodeType": "ImportDirective",
         "scope": 2621,
-        "sourceUnit": 4922,
+        "sourceUnit": 4906,
         "src": "185:35:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -251,7 +251,7 @@
         "id": 2271,
         "nodeType": "ImportDirective",
         "scope": 2621,
-        "sourceUnit": 4175,
+        "sourceUnit": 4159,
         "src": "221:40:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -262,7 +262,7 @@
         "id": 2272,
         "nodeType": "ImportDirective",
         "scope": 2621,
-        "sourceUnit": 4282,
+        "sourceUnit": 4266,
         "src": "262:46:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -288,10 +288,10 @@
               "id": 2273,
               "name": "FixedPoint",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 4458,
+              "referencedDeclaration": 4442,
               "src": "710:10:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_FixedPoint_$4458",
+                "typeIdentifier": "t_contract$_FixedPoint_$4442",
                 "typeString": "library FixedPoint"
               }
             },
@@ -306,10 +306,10 @@
               "id": 2275,
               "name": "SafeMath",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 4921,
+              "referencedDeclaration": 4905,
               "src": "738:8:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_SafeMath_$4921",
+                "typeIdentifier": "t_contract$_SafeMath_$4905",
                 "typeString": "library SafeMath"
               }
             },
@@ -2011,10 +2011,10 @@
                         "name": "DXswapLibrary",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4174,
+                        "referencedDeclaration": 4158,
                         "src": "3413:13:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4174_$",
+                          "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4158_$",
                           "typeString": "type(library DXswapLibrary)"
                         }
                       },
@@ -2025,7 +2025,7 @@
                       "lValueRequested": false,
                       "memberName": "pairFor",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 3729,
+                      "referencedDeclaration": 3713,
                       "src": "3413:21:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_address_$_t_address_$_t_address_$returns$_t_address_$",
@@ -2791,10 +2791,10 @@
                               "name": "DXswapOracleLibrary",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4281,
+                              "referencedDeclaration": 4265,
                               "src": "4134:19:2",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_type$_t_contract$_DXswapOracleLibrary_$4281_$",
+                                "typeIdentifier": "t_type$_t_contract$_DXswapOracleLibrary_$4265_$",
                                 "typeString": "type(library DXswapOracleLibrary)"
                               }
                             },
@@ -2805,7 +2805,7 @@
                             "lValueRequested": false,
                             "memberName": "currentCumulativePrices",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4280,
+                            "referencedDeclaration": 4264,
                             "src": "4134:43:2",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_view$_t_address_$returns$_t_uint256_$_t_uint256_$_t_uint32_$",
@@ -3146,7 +3146,7 @@
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
+                        "typeIdentifier": "t_struct$_uq112x112_$4270_memory_ptr",
                         "typeString": "struct FixedPoint.uq112x112"
                       },
                       "typeName": {
@@ -3154,10 +3154,10 @@
                         "id": 2502,
                         "name": "FixedPoint.uq112x112",
                         "nodeType": "UserDefinedTypeName",
-                        "referencedDeclaration": 4286,
+                        "referencedDeclaration": 4270,
                         "src": "4788:20:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_uq112x112_$4286_storage_ptr",
+                          "typeIdentifier": "t_struct$_uq112x112_$4270_storage_ptr",
                           "typeString": "struct FixedPoint.uq112x112"
                         }
                       },
@@ -3325,10 +3325,10 @@
                         "name": "FixedPoint",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4458,
+                        "referencedDeclaration": 4442,
                         "src": "4831:10:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_FixedPoint_$4458_$",
+                          "typeIdentifier": "t_type$_t_contract$_FixedPoint_$4442_$",
                           "typeString": "type(library FixedPoint)"
                         }
                       },
@@ -3339,10 +3339,10 @@
                       "lValueRequested": false,
                       "memberName": "uq112x112",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 4286,
+                      "referencedDeclaration": 4270,
                       "src": "4831:20:2",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4286_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_uq112x112_$4270_storage_ptr_$",
                         "typeString": "type(struct FixedPoint.uq112x112 storage pointer)"
                       }
                     },
@@ -3357,7 +3357,7 @@
                     "src": "4831:110:2",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
+                      "typeIdentifier": "t_struct$_uq112x112_$4270_memory_ptr",
                       "typeString": "struct FixedPoint.uq112x112 memory"
                     }
                   },
@@ -3425,7 +3425,7 @@
                               "referencedDeclaration": 2503,
                               "src": "4963:12:2",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_uq112x112_$4286_memory_ptr",
+                                "typeIdentifier": "t_struct$_uq112x112_$4270_memory_ptr",
                                 "typeString": "struct FixedPoint.uq112x112 memory"
                               }
                             },
@@ -3436,10 +3436,10 @@
                             "lValueRequested": false,
                             "memberName": "mul",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4396,
+                            "referencedDeclaration": 4380,
                             "src": "4963:16:2",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_pure$_t_struct$_uq112x112_$4286_memory_ptr_$_t_uint256_$returns$_t_struct$_uq144x112_$4289_memory_ptr_$bound_to$_t_struct$_uq112x112_$4286_memory_ptr_$",
+                              "typeIdentifier": "t_function_internal_pure$_t_struct$_uq112x112_$4270_memory_ptr_$_t_uint256_$returns$_t_struct$_uq144x112_$4273_memory_ptr_$bound_to$_t_struct$_uq112x112_$4270_memory_ptr_$",
                               "typeString": "function (struct FixedPoint.uq112x112 memory,uint256) pure returns (struct FixedPoint.uq144x112 memory)"
                             }
                           },
@@ -3454,7 +3454,7 @@
                           "src": "4963:26:2",
                           "tryCall": false,
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_uq144x112_$4289_memory_ptr",
+                            "typeIdentifier": "t_struct$_uq144x112_$4273_memory_ptr",
                             "typeString": "struct FixedPoint.uq144x112 memory"
                           }
                         },
@@ -3465,10 +3465,10 @@
                         "lValueRequested": false,
                         "memberName": "decode144",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 4457,
+                        "referencedDeclaration": 4441,
                         "src": "4963:36:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_function_internal_pure$_t_struct$_uq144x112_$4289_memory_ptr_$returns$_t_uint144_$bound_to$_t_struct$_uq144x112_$4289_memory_ptr_$",
+                          "typeIdentifier": "t_function_internal_pure$_t_struct$_uq144x112_$4273_memory_ptr_$returns$_t_uint144_$bound_to$_t_struct$_uq144x112_$4273_memory_ptr_$",
                           "typeString": "function (struct FixedPoint.uq144x112 memory) pure returns (uint144)"
                         }
                       },
@@ -3773,10 +3773,10 @@
                         "name": "DXswapLibrary",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4174,
+                        "referencedDeclaration": 4158,
                         "src": "5428:13:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4174_$",
+                          "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4158_$",
                           "typeString": "type(library DXswapLibrary)"
                         }
                       },
@@ -3787,7 +3787,7 @@
                       "lValueRequested": false,
                       "memberName": "pairFor",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 3729,
+                      "referencedDeclaration": 3713,
                       "src": "5428:21:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_address_$_t_address_$_t_address_$returns$_t_address_$",
@@ -4406,10 +4406,10 @@
                         "name": "DXswapOracleLibrary",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4281,
+                        "referencedDeclaration": 4265,
                         "src": "5934:19:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_DXswapOracleLibrary_$4281_$",
+                          "typeIdentifier": "t_type$_t_contract$_DXswapOracleLibrary_$4265_$",
                           "typeString": "type(library DXswapOracleLibrary)"
                         }
                       },
@@ -4420,7 +4420,7 @@
                       "lValueRequested": false,
                       "memberName": "currentCumulativePrices",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 4280,
+                      "referencedDeclaration": 4264,
                       "src": "5934:43:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_view$_t_address_$returns$_t_uint256_$_t_uint256_$_t_uint32_$",
@@ -4530,10 +4530,10 @@
                         "name": "DXswapLibrary",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4174,
+                        "referencedDeclaration": 4158,
                         "src": "6013:13:2",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4174_$",
+                          "typeIdentifier": "t_type$_t_contract$_DXswapLibrary_$4158_$",
                           "typeString": "type(library DXswapLibrary)"
                         }
                       },
@@ -4544,7 +4544,7 @@
                       "lValueRequested": false,
                       "memberName": "sortTokens",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 3684,
+                      "referencedDeclaration": 3668,
                       "src": "6013:24:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_address_$_t_address_$returns$_t_address_$_t_address_$",
