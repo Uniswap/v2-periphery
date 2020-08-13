@@ -6,7 +6,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { ecsign } from 'ethereumjs-util'
 
 import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY } from './shared/utilities'
-import { v2Fixture } from './shared/fixtures'
+import { dxswapFixture } from './shared/fixtures'
 
 import IDXswapPair from 'dxswap-core/build/contracts/IDXswapPair.json'
 import DeflatingERC20 from '../build/contracts/DeflatingERC20.json'
@@ -36,12 +36,12 @@ describe('DXswapRouter', () => {
   let WETHPair: Contract
   let routerEventEmitter: Contract
   beforeEach(async function() {
-    const fixture = await loadFixture(v2Fixture)
+    const fixture = await loadFixture(dxswapFixture)
     token0 = fixture.token0
     token1 = fixture.token1
     WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
-    factory = fixture.factoryV2
+    factory = fixture.dxswapFeactory
     router = fixture.router
     pair = fixture.pair
     WETHPair = fixture.WETHPair
@@ -503,7 +503,7 @@ describe('DXswapRouter', () => {
         }
       )
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq(146440)
+      expect(receipt.gasUsed).to.eq(116440)
     }).retries(3)
   })
 
@@ -812,7 +812,7 @@ describe('fee-on-transfer tokens', () => {
   let router: Contract
   let pair: Contract
   beforeEach(async function() {
-    const fixture = await loadFixture(v2Fixture)
+    const fixture = await loadFixture(dxswapFixture)
 
     WETH = fixture.WETH
     router = fixture.router
@@ -820,8 +820,8 @@ describe('fee-on-transfer tokens', () => {
     DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
 
     // make a DTT<>WETH pair
-    await fixture.factoryV2.createPair(DTT.address, WETH.address)
-    const pairAddress = await fixture.factoryV2.getPair(DTT.address, WETH.address)
+    await fixture.dxswapFeactory.createPair(DTT.address, WETH.address)
+    const pairAddress = await fixture.dxswapFeactory.getPair(DTT.address, WETH.address)
     pair = new Contract(pairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
   })
 
@@ -998,7 +998,7 @@ describe('fee-on-transfer tokens: reloaded', () => {
   let DTT2: Contract
   let router: Contract
   beforeEach(async function() {
-    const fixture = await loadFixture(v2Fixture)
+    const fixture = await loadFixture(dxswapFixture)
 
     router = fixture.router
 
@@ -1006,8 +1006,8 @@ describe('fee-on-transfer tokens: reloaded', () => {
     DTT2 = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
 
     // make a DTT<>WETH pair
-    await fixture.factoryV2.createPair(DTT.address, DTT2.address)
-    const pairAddress = await fixture.factoryV2.getPair(DTT.address, DTT2.address)
+    await fixture.dxswapFeactory.createPair(DTT.address, DTT2.address)
+    const pairAddress = await fixture.dxswapFeactory.getPair(DTT.address, DTT2.address)
   })
 
   afterEach(async function() {

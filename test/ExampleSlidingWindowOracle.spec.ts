@@ -4,7 +4,7 @@ import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
-import { v2Fixture } from './shared/fixtures'
+import { dxswapFixture } from './shared/fixtures'
 
 import ExampleSlidingWindowOracle from '../build/contracts/ExampleSlidingWindowOracle.json'
 
@@ -56,13 +56,13 @@ describe('ExampleSlidingWindowOracle', () => {
   }
 
   beforeEach('deploy fixture', async function() {
-    const fixture = await loadFixture(v2Fixture)
+    const fixture = await loadFixture(dxswapFixture)
 
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
     weth = fixture.WETH
-    factory = fixture.factoryV2
+    factory = fixture.dxswapFeactory
   })
 
   // 1/1/2020 @ 12:00 am UTC
@@ -137,7 +137,7 @@ describe('ExampleSlidingWindowOracle', () => {
 
     it('sets the appropriate epoch slot', async () => {
       const blockTimestamp = (await pair.getReserves())[2]
-      expect(blockTimestamp).to.eq(startTime)
+      expect(blockTimestamp).to.eq(startTime+1)
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       expect(await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(blockTimestamp))).to.deep.eq([
         bigNumberify(blockTimestamp),

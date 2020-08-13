@@ -16,45 +16,45 @@ const overrides = {
   gasLimit: 9999999
 }
 
-interface V2Fixture {
+interface DXswapFixture {
   token0: Contract
   token1: Contract
   WETH: Contract
   WETHPartner: Contract
-  factoryV2: Contract
+  dxswapFeactory: Contract
   routerEventEmitter: Contract
   router: Contract
   pair: Contract
   WETHPair: Contract
 }
 
-export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<V2Fixture> {
+export async function dxswapFixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<DXswapFixture> {
   // deploy tokens
   const tokenA = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
   const tokenB = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
   const WETH = await deployContract(wallet, WETH9)
   const WETHPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
 
-  // deploy V2
-  const factoryV2 = await deployContract(wallet, DXswapFactory, [wallet.address])
+  // deploy DXswapFactory
+  const dxswapFeactory = await deployContract(wallet, DXswapFactory, [wallet.address])
 
   // deploy router
-  const router = await deployContract(wallet, DXswapRouter, [factoryV2.address, WETH.address], overrides)
+  const router = await deployContract(wallet, DXswapRouter, [dxswapFeactory.address, WETH.address], overrides)
 
   // event emitter for testing
   const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
 
-  // initialize V2
-  await factoryV2.createPair(tokenA.address, tokenB.address)
-  const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
+  // initialize DXswapFactory
+  await dxswapFeactory.createPair(tokenA.address, tokenB.address)
+  const pairAddress = await dxswapFeactory.getPair(tokenA.address, tokenB.address)
   const pair = new Contract(pairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  await factoryV2.createPair(WETH.address, WETHPartner.address)
-  const WETHPairAddress = await factoryV2.getPair(WETH.address, WETHPartner.address)
+  await dxswapFeactory.createPair(WETH.address, WETHPartner.address)
+  const WETHPairAddress = await dxswapFeactory.getPair(WETH.address, WETHPartner.address)
   const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
 
   return {
@@ -62,7 +62,7 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
     token1,
     WETH,
     WETHPartner,
-    factoryV2,
+    dxswapFeactory,
     router,
     routerEventEmitter,
     pair,
