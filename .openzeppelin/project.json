@@ -3,12 +3,11 @@
   "contracts": {
     "DXswapLibrary": "DXswapLibrary",
     "DXswapOracleLibrary": "DXswapOracleLibrary",
-    "DXswapMigrator": "DXswapMigrator",
     "DXswapRouter": "DXswapRouter"
   },
   "dependencies": {},
   "name": "dxswap-periphery",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "compiler": {
     "compilerSettings": {
       "evmVersion": "istanbul",
