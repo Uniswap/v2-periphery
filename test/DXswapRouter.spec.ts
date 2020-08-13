@@ -503,7 +503,7 @@ describe('DXswapRouter', () => {
         }
       )
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq(116440)
+      expect(receipt.gasUsed).to.eq(146440)
     }).retries(3)
   })
 
