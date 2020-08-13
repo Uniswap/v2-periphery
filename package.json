@@ -1,6 +1,6 @@
 {
   "name": "dxswap-periphery",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Peripheral smart contracts for interacting with DXswap core contracts",
   "engines": {
     "node": ">=10"
@@ -39,10 +39,8 @@
     "lint": "yarn prettier ./test/*.ts --check",
     "lint:fix": "yarn prettier ./test/*.ts --write",
     "clean": "rimraf ./build/",
-    "copy-v1-artifacts": "ncp ./buildV1 ./build/contracts",
     "precompile": "yarn clean",
     "compile": "npx oz compile",
-    "postcompile": "yarn copy-v1-artifacts",
     "pretest": "yarn compile",
     "test": "mocha",
     "prepublishOnly": "yarn test",

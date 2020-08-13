@@ -37,19 +37,12 @@
   "proxies": {
     "dxswap-periphery/DXswapRouter": [
       {
-        "address": "0x8D70406B983ec7CA89d7ca413815CF3675770888",
+        "address": "0xf8Ecb734b74209E651E1A67Df0E9F9866E51B169",
         "kind": "NonProxy",
-        "bytecodeHash": "0d147281b3e4b621e1b8635352e627ee7653e218be3e1ef4d47bfda61c44c082"
-      }
-    ],
-    "dxswap-periphery/DXswapMigrator": [
-      {
-        "address": "0x164Faef5f12D1624724d4d90581FCA79c38b9151",
-        "kind": "NonProxy",
-        "bytecodeHash": "6d100da7bb579b03aaea64cad15fca503ed39c61f78828397706c9e3571bb9c2"
+        "bytecodeHash": "dbdf8f09e50181b54b655f7890d7d43f3594c1b8b3527b55b413063677b205fd"
       }
     ]
   },
   "manifestVersion": "2.2",
-  "version": "1.0.0"
+  "version": "0.2.0"
 }
