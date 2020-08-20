@@ -1,6 +1,6 @@
 {
   "name": "@uniswap/v2-periphery",
-  "version": "1.0.0-beta.0",
+  "version": "1.1.0-beta.0",
   "description": "🎚 Peripheral smart contracts for interacting with Uniswap V2",
   "engines": {
     "node": ">=10"

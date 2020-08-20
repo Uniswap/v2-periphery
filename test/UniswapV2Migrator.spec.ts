@@ -5,11 +5,9 @@ import { bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 
 import { v2Fixture } from './shared/fixtures'
-import { expandTo18Decimals } from './shared/utilities'
+import { expandTo18Decimals, MINIMUM_LIQUIDITY } from './shared/utilities'
 
 chai.use(solidity)
-
-const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
 
 const overrides = {
   gasLimit: 9999999
@@ -33,7 +31,7 @@ describe('UniswapV2Migrator', () => {
     const fixture = await loadFixture(v2Fixture)
     WETHPartner = fixture.WETHPartner
     WETHPair = fixture.WETHPair
-    router = fixture.router
+    router = fixture.router01 // we used router01 for this contract
     migrator = fixture.migrator
     WETHExchangeV1 = fixture.WETHExchangeV1
   })
