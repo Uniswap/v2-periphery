@@ -135,10 +135,10 @@ describe('ExampleFlashArbitrage', () => {
           })
         })
 
-        it('gas check', async () => {
+        it.only('gas check', async () => {
           const tx = await flashArbitrage.arbitrage(WETH.address, WETHPartner.address, wallet.address, overrides)
           const receipt = await tx.wait()
-          expect(receipt.gasUsed).to.eq('204394')
+          expect(receipt.gasUsed).to.eq('204371')
         }).retries(3) // gas test inconsistent
       })
 
