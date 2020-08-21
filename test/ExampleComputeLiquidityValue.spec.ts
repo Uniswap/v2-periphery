@@ -74,6 +74,58 @@ describe('ExampleComputeLiquidityValue', () => {
       expect(token0Amount).to.eq('700000000000000000')
       expect(token1Amount).to.eq('70000000000000000000')
     })
+
+    it('correct after swap', async () => {
+      await token0.approve(router.address, MaxUint256, overrides)
+      await router.swapExactTokensForTokens(
+        expandTo18Decimals(10),
+        0,
+        [token0.address, token1.address],
+        wallet.address,
+        MaxUint256,
+        overrides
+      )
+      const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValue(
+        token0.address,
+        token1.address,
+        expandTo18Decimals(7)
+      )
+      expect(token0Amount).to.eq('1400000000000000000')
+      expect(token1Amount).to.eq('35052578868302453680')
+    })
+
+    describe('fee on', () => {
+      beforeEach('turn on fee', async () => {
+        await factory.setFeeTo(wallet.address)
+      })
+
+      // this is necessary to cause kLast to be set
+      beforeEach('mint more liquidity to address zero', async () => {
+        await token0.transfer(pair.address, expandTo18Decimals(10))
+        await token1.transfer(pair.address, expandTo18Decimals(1000))
+        await pair.mint(AddressZero, overrides)
+        expect(await pair.totalSupply()).to.eq(expandTo18Decimals(200))
+      })
+
+      it('correct after swap', async () => {
+        await token0.approve(router.address, MaxUint256, overrides)
+        await router.swapExactTokensForTokens(
+          expandTo18Decimals(20),
+          0,
+          [token0.address, token1.address],
+          wallet.address,
+          MaxUint256,
+          overrides
+        )
+        const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValue(
+          token0.address,
+          token1.address,
+          expandTo18Decimals(7)
+        )
+        expect(token0Amount).to.eq('1399824934325735058')
+        expect(token1Amount).to.eq('35048195651620807684')
+      })
+    })
   })
 
   describe('#getReservesAfterArbitrage', () => {
