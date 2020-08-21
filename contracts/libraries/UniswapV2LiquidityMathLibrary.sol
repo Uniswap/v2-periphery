@@ -89,6 +89,23 @@ library UniswapV2LiquidityMathLibrary {
         return (reservesA.mul(liquidityAmount) / totalSupply, reservesB.mul(liquidityAmount) / totalSupply);
     }
 
+    // get all current parameters from the pair and compute value of a liquidity amount
+    // **note this is subject to manipulation, e.g. sandwich attacks**. prefer passing a manipulation resistant price to
+    // #getLiquidityValueAfterArbitrageToPrice
+    function getLiquidityValue(
+        address factory,
+        address tokenA,
+        address tokenB,
+        uint256 liquidityAmount
+    ) internal view returns (uint256 tokenAAmount, uint256 tokenBAmount) {
+        (uint256 reservesA, uint256 reservesB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
+        IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
+        bool feeOn = IUniswapV2Factory(factory).feeTo() != address(0);
+        uint kLast = feeOn ? pair.kLast() : 0;
+        uint totalSupply = pair.totalSupply();
+        return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, feeOn, kLast);
+    }
+
     // given two tokens, tokenA and tokenB, and their "true price", i.e. the observed ratio of value of token A to token B,
     // and a liquidity amount, returns the value of the liquidity in terms of tokenA and tokenB
     function getLiquidityValueAfterArbitrageToPrice(

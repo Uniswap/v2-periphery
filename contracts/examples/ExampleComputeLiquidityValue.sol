@@ -27,6 +27,23 @@ contract ExampleComputeLiquidityValue {
         );
     }
 
+    // see UniswapV2LiquidityMathLibrary#getLiquidityValue
+    function getLiquidityValue(
+        address tokenA,
+        address tokenB,
+        uint256 liquidityAmount
+    ) external view returns (
+        uint256 tokenAAmount,
+        uint256 tokenBAmount
+    ) {
+        return UniswapV2LiquidityMathLibrary.getLiquidityValue(
+            factory,
+            tokenA,
+            tokenB,
+            liquidityAmount
+        );
+    }
+
     // see UniswapV2LiquidityMathLibrary#getLiquidityValueAfterArbitrageToPrice
     function getLiquidityValueAfterArbitrageToPrice(
         address tokenA,
@@ -48,6 +65,7 @@ contract ExampleComputeLiquidityValue {
         );
     }
 
+    // test function to measure the gas cost of the above function
     function getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
         address tokenA,
         address tokenB,

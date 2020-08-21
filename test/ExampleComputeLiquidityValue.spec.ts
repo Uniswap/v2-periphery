@@ -55,6 +55,27 @@ describe('ExampleComputeLiquidityValue', () => {
     expect(await computeLiquidityValue.factory()).to.eq(factory.address)
   })
 
+  describe('#getLiquidityValue', () => {
+    it('correct for 5 shares', async () => {
+      const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValue(
+        token0.address,
+        token1.address,
+        expandTo18Decimals(5)
+      )
+      expect(token0Amount).to.eq('500000000000000000')
+      expect(token1Amount).to.eq('50000000000000000000')
+    })
+    it('correct for 7 shares', async () => {
+      const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValue(
+        token0.address,
+        token1.address,
+        expandTo18Decimals(7)
+      )
+      expect(token0Amount).to.eq('700000000000000000')
+      expect(token1Amount).to.eq('70000000000000000000')
+    })
+  })
+
   describe('#getReservesAfterArbitrage', () => {
     it('1/400', async () => {
       const [reserveA, reserveB] = await computeLiquidityValue.getReservesAfterArbitrage(
@@ -152,8 +173,8 @@ describe('ExampleComputeLiquidityValue', () => {
           100,
           expandTo18Decimals(5)
         )
-        expect(token0Amount).to.eq('500000000000000000') // slightly more than 5% of 10, or 0.5
-        expect(token1Amount).to.eq('50000000000000000000') // slightly less than 5% of 100, or 5
+        expect(token0Amount).to.eq('500000000000000000')
+        expect(token1Amount).to.eq('50000000000000000000')
       })
 
       it('gas', async () => {
@@ -279,8 +300,8 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-          expect(token0Amount).to.eq('500000000000000000') // slightly more than 5% of 10, or 0.5
-          expect(token1Amount).to.eq('50000000000000000000') // slightly less than 5% of 100, or 5
+          expect(token0Amount).to.eq('500000000000000000')
+          expect(token1Amount).to.eq('50000000000000000000')
         })
       })
 
