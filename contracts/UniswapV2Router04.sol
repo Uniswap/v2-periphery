@@ -1,7 +1,6 @@
 pragma solidity =0.6.6;
 pragma experimental ABIEncoderV2;
 
-import './interfaces/IUniswapV2Router04.sol';
 import './UniswapV2Router03.sol';
 import './libraries/SafeMath.sol';
 import './GasMetered.sol';
