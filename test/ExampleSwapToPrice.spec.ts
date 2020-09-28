@@ -118,15 +118,15 @@ describe('ExampleSwapToPrice', () => {
           overrides
         )
       )
-        // (1e19 + 526682316179835569) : (1e21 - 49890467170695440744) ~= 1:90
+        // (1e19 + 533817599282230583) : (1e21 - 50604388022536152921) ~= 1:90
         .to.emit(token0, 'Transfer')
-        .withArgs(wallet.address, swapToPriceExample.address, '526682316179835569')
+        .withArgs(wallet.address, swapToPriceExample.address, '533817599282230583')
         .to.emit(token0, 'Approval')
-        .withArgs(swapToPriceExample.address, router.address, '526682316179835569')
+        .withArgs(swapToPriceExample.address, router.address, '533817599282230583')
         .to.emit(token0, 'Transfer')
-        .withArgs(swapToPriceExample.address, pair.address, '526682316179835569')
+        .withArgs(swapToPriceExample.address, pair.address, '533817599282230583')
         .to.emit(token1, 'Transfer')
-        .withArgs(pair.address, wallet.address, '49890467170695440744')
+        .withArgs(pair.address, wallet.address, '50604388022536152921')
     })
 
     it('moves the price to 1:110', async () => {
@@ -143,15 +143,15 @@ describe('ExampleSwapToPrice', () => {
           overrides
         )
       )
-        // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
+        // (1e21 + 48094087466294086126) : (1e19 - 458215083214870988) ~= 1:110
         .to.emit(token1, 'Transfer')
-        .withArgs(wallet.address, swapToPriceExample.address, '47376582963642643588')
+        .withArgs(wallet.address, swapToPriceExample.address, '48094087466294086126')
         .to.emit(token1, 'Approval')
-        .withArgs(swapToPriceExample.address, router.address, '47376582963642643588')
+        .withArgs(swapToPriceExample.address, router.address, '48094087466294086126')
         .to.emit(token1, 'Transfer')
-        .withArgs(swapToPriceExample.address, pair.address, '47376582963642643588')
+        .withArgs(swapToPriceExample.address, pair.address, '48094087466294086126')
         .to.emit(token0, 'Transfer')
-        .withArgs(pair.address, wallet.address, '451039908682851138')
+        .withArgs(pair.address, wallet.address, '458215083214870988')
     })
 
     it('reverse token order', async () => {
@@ -168,15 +168,15 @@ describe('ExampleSwapToPrice', () => {
           overrides
         )
       )
-        // (1e21 + 47376582963642643588) : (1e19 - 451039908682851138) ~= 1:110
+        // (1e21 + 48094087466294086126) : (1e19 - 458215083214870988) ~= 1:110
         .to.emit(token1, 'Transfer')
-        .withArgs(wallet.address, swapToPriceExample.address, '47376582963642643588')
+        .withArgs(wallet.address, swapToPriceExample.address, '48094087466294086126')
         .to.emit(token1, 'Approval')
-        .withArgs(swapToPriceExample.address, router.address, '47376582963642643588')
+        .withArgs(swapToPriceExample.address, router.address, '48094087466294086126')
         .to.emit(token1, 'Transfer')
-        .withArgs(swapToPriceExample.address, pair.address, '47376582963642643588')
+        .withArgs(swapToPriceExample.address, pair.address, '48094087466294086126')
         .to.emit(token0, 'Transfer')
-        .withArgs(pair.address, wallet.address, '451039908682851138')
+        .withArgs(pair.address, wallet.address, '458215083214870988')
     })
 
     it('swap gas cost', async () => {
@@ -192,7 +192,7 @@ describe('ExampleSwapToPrice', () => {
         overrides
       )
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq('134124')
+      expect(receipt.gasUsed).to.eq('133310')
     }).retries(2) // gas test is inconsistent
   })
 })
