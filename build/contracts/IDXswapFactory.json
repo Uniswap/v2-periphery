@@ -1,7 +1,7 @@
 {
   "fileName": "IDXswapFactory.sol",
   "contractName": "IDXswapFactory",
-  "source": "pragma solidity >=0.5.0;\n\ninterface IDXswapFactory {\n    event PairCreated(address indexed token0, address indexed token1, address pair, uint);\n\n    function INIT_CODE_PAIR_HASH() external pure returns (bytes32);\n    function feeTo() external view returns (address);\n    function protocolFeeDenominator() external view returns (uint8);\n    function feeToSetter() external view returns (address);\n\n    function getPair(address tokenA, address tokenB) external view returns (address pair);\n    function allPairs(uint) external view returns (address pair);\n    function allPairsLength() external view returns (uint);\n\n    function createPair(address tokenA, address tokenB) external returns (address pair);\n\n    function setFeeTo(address) external;\n    function setFeeToSetter(address) external;\n    function setProtocolFee(uint8 _protocolFee) external;\n    function setSwapFee(address pair, uint8 swapFee) external;\n}\n",
+  "source": "pragma solidity >=0.5.0;\n\ninterface IDXswapFactory {\n    event PairCreated(address indexed token0, address indexed token1, address pair, uint);\n\n    function INIT_CODE_PAIR_HASH() external pure returns (bytes32);\n    function feeTo() external view returns (address);\n    function protocolFeeDenominator() external view returns (uint8);\n    function feeToSetter() external view returns (address);\n\n    function getPair(address tokenA, address tokenB) external view returns (address pair);\n    function allPairs(uint) external view returns (address pair);\n    function allPairsLength() external view returns (uint);\n\n    function createPair(address tokenA, address tokenB) external returns (address pair);\n\n    function setFeeTo(address) external;\n    function setFeeToSetter(address) external;\n    function setProtocolFee(uint8 _protocolFee) external;\n    function setSwapFee(address pair, uint32 swapFee) external;\n}\n",
   "sourcePath": "dxswap-core/contracts/interfaces/IDXswapFactory.sol",
   "sourceMap": "",
   "deployedSourceMap": "",
@@ -216,9 +216,9 @@
           "type": "address"
         },
         {
-          "internalType": "uint8",
+          "internalType": "uint32",
           "name": "swapFee",
-          "type": "uint8"
+          "type": "uint32"
         }
       ],
       "name": "setSwapFee",
@@ -1191,7 +1191,7 @@
           {
             "body": null,
             "documentation": null,
-            "functionSelector": "1519c024",
+            "functionSelector": "9e68ceb8",
             "id": 6530,
             "implemented": false,
             "kind": "function",
@@ -1240,47 +1240,47 @@
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
                   "scope": 6530,
-                  "src": "889:13:20",
+                  "src": "889:14:20",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_uint8",
-                    "typeString": "uint8"
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
                   },
                   "typeName": {
                     "id": 6526,
-                    "name": "uint8",
+                    "name": "uint32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "889:5:20",
+                    "src": "889:6:20",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_uint8",
-                      "typeString": "uint8"
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
                     }
                   },
                   "value": null,
                   "visibility": "internal"
                 }
               ],
-              "src": "874:29:20"
+              "src": "874:30:20"
             },
             "returnParameters": {
               "id": 6529,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "912:0:20"
+              "src": "913:0:20"
             },
             "scope": 6531,
-            "src": "855:58:20",
+            "src": "855:59:20",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
         "scope": 6532,
-        "src": "26:889:20"
+        "src": "26:890:20"
       }
     ],
-    "src": "0:916:20"
+    "src": "0:917:20"
   },
   "bytecode": "0x",
   "deployedBytecode": "0x",
