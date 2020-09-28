@@ -2482,9 +2482,9 @@ duplexer3@^0.1.4:
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
   integrity sha1-7gHdHKwO08vH/b6jfcCo8c4ALOI=
 
-"dxswap-core@git://github.com/levelkdev/dxswap-core.git#v0.1.0":
+"dxswap-core@git://github.com/levelkdev/dxswap-core.git#ca021f47415d3f35360e136946fb97cdafb5163e":
   version "0.1.0"
-  resolved "git://github.com/levelkdev/dxswap-core.git#ad6c3885ebbb8d8c9a1a12af09fcbc5f66b9d43d"
+  resolved "git://github.com/levelkdev/dxswap-core.git#ca021f47415d3f35360e136946fb97cdafb5163e"
   dependencies:
     typescript "^3.9.5"
 

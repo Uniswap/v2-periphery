@@ -14,7 +14,7 @@
     "contracts"
   ],
   "dependencies": {
-    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#v0.1.0"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#ca021f47415d3f35360e136946fb97cdafb5163e"
   },
   "devDependencies": {
     "@openzeppelin/cli": "^2.8.2",
