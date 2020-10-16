@@ -4,13 +4,13 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import DXswapFactory from 'dxswap-core/build/contracts/DXswapFactory.json'
-import IDXswapPair from 'dxswap-core/build/contracts/IDXswapPair.json'
+import DXswapFactory from 'dxswap-core/build/DXswapFactory.json'
+import IDXswapPair from 'dxswap-core/build/IDXswapPair.json'
 
-import ERC20 from '../../build/contracts/ERC20.json'
-import WETH9 from '../../build/contracts/WETH9.json'
-import DXswapRouter from '../../build/contracts/DXswapRouter.json'
-import RouterEventEmitter from '../../build/contracts/RouterEventEmitter.json'
+import ERC20 from '../../build/ERC20.json'
+import WETH9 from '../../build/WETH9.json'
+import DXswapRouter from '../../build/DXswapRouter.json'
+import RouterEventEmitter from '../../build/RouterEventEmitter.json'
 
 const overrides = {
   gasLimit: 9999999

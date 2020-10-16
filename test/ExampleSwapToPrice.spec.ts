@@ -7,7 +7,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals } from './shared/utilities'
 import { dxswapFixture } from './shared/fixtures'
 
-import ExampleSwapToPrice from '../build/contracts/ExampleSwapToPrice.json'
+import ExampleSwapToPrice from '../build/ExampleSwapToPrice.json'
 
 chai.use(solidity)
 
