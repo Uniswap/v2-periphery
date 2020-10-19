@@ -14,7 +14,7 @@
     "contracts"
   ],
   "dependencies": {
-    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#3598b8b97fed373bb69db3344b7853adeefb0f9a"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#v0.2.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
