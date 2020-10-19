@@ -1,6 +1,6 @@
 {
   "name": "dxswap-periphery",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Peripheral smart contracts for interacting with DXswap core contracts",
   "engines": {
     "node": ">=10"
@@ -14,10 +14,9 @@
     "contracts"
   ],
   "dependencies": {
-    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#v0.1.0"
+    "dxswap-core": "git://github.com/levelkdev/dxswap-core.git#v0.2.0"
   },
   "devDependencies": {
-    "@openzeppelin/cli": "^2.8.2",
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
@@ -40,7 +39,7 @@
     "lint:fix": "yarn prettier ./test/*.ts --write",
     "clean": "rimraf ./build/",
     "precompile": "yarn clean",
-    "compile": "npx oz compile",
+    "compile": "waffle .waffle.json",
     "pretest": "yarn compile",
     "test": "mocha",
     "prepublishOnly": "yarn test",

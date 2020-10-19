@@ -6,7 +6,7 @@ import { solidity, MockProvider, createFixtureLoader, deployContract } from 'eth
 import { expandTo18Decimals, mineBlock, encodePrice } from './shared/utilities'
 import { dxswapFixture } from './shared/fixtures'
 
-import ExampleSlidingWindowOracle from '../build/contracts/ExampleSlidingWindowOracle.json'
+import ExampleSlidingWindowOracle from '../build/ExampleSlidingWindowOracle.json'
 
 chai.use(solidity)
 
