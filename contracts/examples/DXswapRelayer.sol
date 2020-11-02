@@ -54,6 +54,7 @@ contract DXswapRelayer {
     address public immutable dxSwapRouter;
     address public immutable uniswapFactory;
     address public immutable uniswapRouter;
+    address public immutable weth;
 
     OracleCreator oracleCreator;
     uint256 public orderCount;
@@ -65,6 +66,7 @@ contract DXswapRelayer {
         address _dxSwapRouter,
         address _uniswapFactory,
         address _uniswapRouter,
+        address _weth,
         OracleCreator _oracleCreater
     ) public {
         owner = _owner;
@@ -72,6 +74,7 @@ contract DXswapRelayer {
         dxSwapRouter = _dxSwapRouter;
         uniswapFactory = _uniswapFactory;
         uniswapRouter = _uniswapRouter;
+        weth = _weth;
         oracleCreator = _oracleCreater;
     }
 
@@ -97,11 +100,10 @@ contract DXswapRelayer {
 
         if (tokenA == address(0)) {
             require(msg.value >= amountA, 'DXswapRelayer: INSUFFIENT_ETH');
-            TransferHelper.safeTransferFrom(tokenB, owner, address(this), amountB);
         } else {
             TransferHelper.safeTransferFrom(tokenA, owner, address(this), amountA);
-            TransferHelper.safeTransferFrom(tokenB, owner, address(this), amountB);
         }
+        TransferHelper.safeTransferFrom(tokenB, owner, address(this), amountB);
 
         address pair = _pair(tokenA, tokenB, factory);
         orderIndex = _OrderIndex();
@@ -188,29 +190,21 @@ contract DXswapRelayer {
     function executeOrder(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
         require(orderIndex <= orderCount && orderIndex != 0, 'DXswapRelayer: INVALID_ORDER');
-        require(order.executed == false, 'DXswapRelayer: ORDER_EXECUTED');
+        require(!order.executed, 'DXswapRelayer: ORDER_EXECUTED');
         require(oracleCreator.isOracleFinalized(order.oracleId) , 'DXswapRelayer: OBSERVATION_RUNNING');
         require(block.timestamp <= order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
 
         address tokenA = order.tokenA;
         address tokenB = order.tokenB;
         uint256 amountB;
-        if(tokenA == address(0)){
-            amountB = oracleCreator.consult(
-              order.oracleId,
-              IDXswapRouter(dxSwapRouter).WETH(),
-              order.amountA
-            );
-        } else {
-            amountB = oracleCreator.consult(
-              order.oracleId,
-              tokenA,
-              order.amountA
-            );
-        }
+        amountB = oracleCreator.consult(
+          order.oracleId,
+          tokenA == address(0) ? IDXswapRouter(dxSwapRouter).WETH() : tokenA,
+          order.amountA 
+        );
         uint256 amountA = oracleCreator.consult(order.oracleId, tokenB, order.amountB);
 
-        require(amountA <= order.amountA || order.amountB <= order.amountB, 'DXswapRelayer: INVALID PRICES');
+        require(amountA <= order.amountA || amountB <= order.amountB, 'DXswapRelayer: INVALID PRICES');
         uint256 minA = amountA.sub(amountA.mul(order.priceTolerance) / PARTS_PER_MILLION);
         uint256 minB = amountB.sub(amountB.mul(order.priceTolerance) / PARTS_PER_MILLION);
         minA = minA <= order.amountA ? minA : 0;
@@ -250,7 +244,7 @@ contract DXswapRelayer {
 
     function withdrawExpiredOrder(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
-        require(block.timestamp < order.deadline, 'DXswapRelayer: DEADLINE_NOT_REACHED');
+        require(block.timestamp > order.deadline, 'DXswapRelayer: DEADLINE_NOT_REACHED');
         require(order.executed == false, 'DXswapRelayer: ORDER_EXECUTED');
         address tokenA = order.tokenA;
         address tokenB = order.tokenB;
@@ -260,11 +254,10 @@ contract DXswapRelayer {
 
         if (tokenA == address(0)) {
             TransferHelper.safeTransferETH(owner, amountA);
-            TransferHelper.safeTransfer(tokenB, owner, amountB);
         } else {
             TransferHelper.safeTransfer(tokenA, owner, amountA);
-            TransferHelper.safeTransfer(tokenB, owner, amountB);
         }
+        TransferHelper.safeTransfer(tokenB, owner, amountB);
         emit WithdrawnExpiredOrder(orderIndex);
     }
     
@@ -344,15 +337,15 @@ contract DXswapRelayer {
         uint256 maxWindowTime
     ) internal view returns (uint256 windowTime) {
         if(reserveA > 0 && reserveB > 0){
-            uint256 poolStake = (amountA.add(amountB) / reserveA.add(reserveB)).mul(PARTS_PER_MILLION);
+            uint256 poolStake = (amountA.add(amountB)).mul(PARTS_PER_MILLION) / reserveA.add(reserveB);
             // poolStake: 0.1% = 1000; 1=10000; 10% = 100000;
             if(poolStake < 1000) {
               windowTime = 30;
-            } else if (poolStake >= 1000 && poolStake < 2500){
+            } else if (poolStake < 2500){
               windowTime = 60;
-            } else if (poolStake >= 2500 && poolStake < 5000){
+            } else if (poolStake < 5000){
               windowTime = 90;
-            } else if (poolStake >= 5000 && poolStake < 10000){
+            } else if (poolStake < 10000){
               windowTime = 120;
             } else {
               windowTime = 150;
@@ -364,19 +357,14 @@ contract DXswapRelayer {
     }
 
     function _pair(address tokenA, address tokenB, address factory) internal view returns (address pair) {
-        if(factory == dxSwapFactory){
-            tokenA = tokenA == address(0) ? IDXswapRouter(dxSwapRouter).WETH() : tokenA;
-            tokenB = tokenB == address(0) ? IDXswapRouter(dxSwapRouter).WETH() : tokenB;
-        } else if(factory == uniswapFactory) {
-            tokenA = tokenA == address(0) ? IDXswapRouter(uniswapRouter).WETH() : tokenA;
-            tokenB = tokenB == address(0) ? IDXswapRouter(uniswapRouter).WETH() : tokenB;
-        }
-        pair = IDXswapFactory(factory).getPair(tokenA, tokenB);
+      require(factory == dxSwapRouter || factory == uniswapRouter);
+      if (tokenA == address(0)) tokenA = weth;
+      pair = IDXswapFactory(factory).getPair(tokenA, tokenB);
     }
 
     function _OrderIndex() internal returns(uint256 orderIndex){
-        orderCount++;
         orderIndex = orderCount;
+        orderCount++;
     }
 
     function ERC20Withdraw(address token, uint256 amount) external {

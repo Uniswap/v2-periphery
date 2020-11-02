@@ -89,16 +89,18 @@ contract OracleCreator {
     // note this will always return 0 before update has been called successfully for the first time.
     function consult(uint256 oracleIndex, address token, uint256 amountIn) external view returns (uint256 amountOut) {
         Oracle storage oracle = oracles[oracleIndex];
-        if (token == oracle.token0) {
-            amountOut = oracle.price0Average.mul(amountIn).decode144();
+        FixedPoint.uq112x112 memory avg;
+        if (token == oracle.token0) { 
+          avg = oracle.price0Average;
         } else {
-            require(token == oracle.token1, 'OracleCreator: INVALID_TOKEN');
-            amountOut = oracle.price1Average.mul(amountIn).decode144();
+          require(token == oracle.token1, 'OracleCreator: INVALID_TOKEN'); 
+          avg = oracle.price1Average;
         }
+        amountOut = avg.mul(amountIn).decode144();
     }
 
     function isOracleFinalized(uint256 oracleIndex) external view returns (bool){
-        return oracles[oracleIndex].observationsCount == 2 ? true : false; 
+        return oracles[oracleIndex].observationsCount == 2;
     }
 
 }
