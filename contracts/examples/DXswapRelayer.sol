@@ -43,15 +43,9 @@ contract DXswapRelayer {
         bool executed;
     }
 
-<<<<<<< HEAD
     uint256 public immutable GAS_ORACLE_UPDATE = 168364;
     uint256 public immutable PARTS_PER_MILLION = 1000000;
     uint256 public immutable BOUNTY = 0.01 ether; // To be decided
-=======
-    uint256 public immutable GAS_ORACLE_UPDATE = 70000;
-    uint256 public immutable PARTS_PER_MILLION = 1000000;
-    uint256 public immutable BOUNTY = 0.01 ether;
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     uint8 public immutable PROVISION = 1;
     uint8 public immutable REMOVAL = 2;
 
@@ -60,11 +54,7 @@ contract DXswapRelayer {
     address public immutable dxSwapRouter;
     address public immutable uniswapFactory;
     address public immutable uniswapRouter;
-<<<<<<< HEAD
     address public immutable WETH;
-=======
-    address public immutable weth;
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
 
     OracleCreator oracleCreator;
     uint256 public orderCount;
@@ -76,11 +66,7 @@ contract DXswapRelayer {
         address _dxSwapRouter,
         address _uniswapFactory,
         address _uniswapRouter,
-<<<<<<< HEAD
         address _WETH,
-=======
-        address _weth,
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         OracleCreator _oracleCreater
     ) public {
         owner = _owner;
@@ -88,11 +74,7 @@ contract DXswapRelayer {
         dxSwapRouter = _dxSwapRouter;
         uniswapFactory = _uniswapFactory;
         uniswapRouter = _uniswapRouter;
-<<<<<<< HEAD
         WETH = _WETH;
-=======
-        weth = _weth;
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         oracleCreator = _oracleCreater;
     }
 
@@ -117,19 +99,11 @@ contract DXswapRelayer {
         require(block.timestamp <= deadline, 'DXswapRelayer: DEADLINE_REACHED');
 
         if (tokenA == address(0)) {
-<<<<<<< HEAD
             require(address(this).balance >= amountA, 'DXswapRelayer: INSUFFIENT_ETH');
         } else {
             require(IERC20(tokenA).balanceOf(address(this)) >= amountA, 'DXswapRelayer: INSUFFIENT_TOKEN_A');
         }
         require(IERC20(tokenB).balanceOf(address(this)) >= amountA, 'DXswapRelayer: INSUFFIENT_TOKEN_B');
-=======
-            require(msg.value >= amountA, 'DXswapRelayer: INSUFFIENT_ETH');
-        } else {
-            TransferHelper.safeTransferFrom(tokenA, owner, address(this), amountA);
-        }
-        TransferHelper.safeTransferFrom(tokenB, owner, address(this), amountB);
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
 
         address pair = _pair(tokenA, tokenB, factory);
         orderIndex = _OrderIndex();
@@ -186,11 +160,7 @@ contract DXswapRelayer {
         require(priceTolerance <= PARTS_PER_MILLION, 'DXswapRelayer: INVALID_TOLERANCE');
         require(block.timestamp <= deadline, 'DXswapRelayer: DEADLINE_REACHED');
 
-<<<<<<< HEAD
         address pair = _pair(tokenA, tokenB, factory);
-=======
-        address pair = _pair(factory, tokenA, tokenB);
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         orderIndex = _OrderIndex();
         orders[orderIndex] = Order({
             action: REMOVAL,
@@ -210,27 +180,17 @@ contract DXswapRelayer {
             executed: false
         });
 
-<<<<<<< HEAD
         tokenA = tokenA == address(0) ? WETH : tokenA;
-=======
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         address dxSwapPair = DXswapLibrary.pairFor(address(dxSwapFactory), tokenA, tokenB);
         (uint reserveA, uint reserveB,) = IDXswapPair(dxSwapPair).getReserves();
         uint256 windowTime = _consultOracleParameters(amountA, amountB, reserveA, reserveB, maxWindowTime);
         orders[orderIndex].oracleId = oracleCreator.createOracle(windowTime, pair);
         emit NewOrder(orderIndex, REMOVAL);
     }
-<<<<<<< HEAD
 
     function executeOrder(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
         require(orderIndex <= orderCount, 'DXswapRelayer: INVALID_ORDER');
-=======
-    
-    function executeOrder(uint256 orderIndex) external {
-        Order storage order = orders[orderIndex];
-        require(orderIndex <= orderCount && orderIndex != 0, 'DXswapRelayer: INVALID_ORDER');
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         require(!order.executed, 'DXswapRelayer: ORDER_EXECUTED');
         require(oracleCreator.isOracleFinalized(order.oracleId) , 'DXswapRelayer: OBSERVATION_RUNNING');
         require(block.timestamp <= order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
@@ -244,7 +204,6 @@ contract DXswapRelayer {
           order.amountA 
         );
         uint256 amountA = oracleCreator.consult(order.oracleId, tokenB, order.amountB);
-<<<<<<< HEAD
         
         /* Maximize token inputs */ 
         if(amountA <= order.amountA){
@@ -260,18 +219,6 @@ contract DXswapRelayer {
         order.executed = true;
         if(order.action == PROVISION){
             _pool(tokenA, tokenB, amountA, amountB, minA, minB);
-=======
-
-        require(amountA <= order.amountA || amountB <= order.amountB, 'DXswapRelayer: INVALID PRICES');
-        uint256 minA = amountA.sub(amountA.mul(order.priceTolerance) / PARTS_PER_MILLION);
-        uint256 minB = amountB.sub(amountB.mul(order.priceTolerance) / PARTS_PER_MILLION);
-        minA = minA <= order.amountA ? minA : 0;
-        minB = minB <= order.amountB ? minB : 0;
-
-        order.executed = true;
-        if(order.action == PROVISION){
-            _pool(tokenA, tokenB,  order.amountA, order.amountB, minA, minB);
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         } else if (order.action == REMOVAL){
             address pair = _pair(tokenA, tokenB, dxSwapFactory);
             _unpool(
@@ -286,16 +233,10 @@ contract DXswapRelayer {
         emit ExecutedOrder(orderIndex);
     }
 
-<<<<<<< HEAD
     // Updates a price oracle and sends a bounty to msg.sender
     function updateOracle(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
         require(block.timestamp <= order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
-=======
-    function updateOracle(uint256 orderIndex) external {
-        Order storage order = orders[orderIndex];
-        require(block.timestamp < order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         require(!oracleCreator.isOracleFinalized(order.oracleId) , 'DXswapRelayer: OBSERVATION_ENDED');
         uint256 amountBounty = GAS_ORACLE_UPDATE.mul(tx.gasprice).add(BOUNTY);
         require(address(this).balance >= amountBounty, 'DXswapRelayer: INSUFFICIENT_BALANCE');
@@ -310,12 +251,8 @@ contract DXswapRelayer {
 
     function withdrawExpiredOrder(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
-<<<<<<< HEAD
         require(msg.sender == owner, 'DXswapRelayer: CALLER_NOT_OWNER');
         require(block.timestamp > order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
-=======
-        require(block.timestamp > order.deadline, 'DXswapRelayer: DEADLINE_NOT_REACHED');
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         require(order.executed == false, 'DXswapRelayer: ORDER_EXECUTED');
         address tokenA = order.tokenA;
         address tokenB = order.tokenB;
@@ -354,22 +291,14 @@ contract DXswapRelayer {
                 _amountB,
                 _minA,
                 _minB,
-<<<<<<< HEAD
                 address(this),
-=======
-                owner,
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
                 block.timestamp
             );
         } else {
             TransferHelper.safeApprove(_tokenB, dxSwapRouter, _amountB);
             (amountB, amountA, liquidity) = IDXswapRouter(dxSwapRouter).addLiquidityETH{
                 value: _amountA
-<<<<<<< HEAD
             }(_tokenB, _amountB, _minB, _minA, address(this), block.timestamp);
-=======
-            }(_tokenB, _amountB, _minB, _minA, owner, block.timestamp);
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         }
     }
 
@@ -381,24 +310,14 @@ contract DXswapRelayer {
         uint256 _minA,
         uint256 _minB
     ) internal {
-<<<<<<< HEAD
         if (_tokenA != address(0) && _tokenB != address(0)) {
             TransferHelper.safeApprove(_pair, dxSwapRouter, _liquidity);
             IDXswapRouter(dxSwapRouter).removeLiquidity(
-=======
-        uint amountA;
-        uint amountB;
-
-        if (_tokenA != address(0) && _tokenB != address(0)) {
-            TransferHelper.safeApprove(_pair, dxSwapRouter, _liquidity);
-            (amountA, amountB) = IDXswapRouter(dxSwapRouter).removeLiquidity(
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
                 _tokenA,
                 _tokenB,
                 _liquidity,
                 _minA,
                 _minB,
-<<<<<<< HEAD
                 address(this),
                 block.timestamp
             );
@@ -410,28 +329,12 @@ contract DXswapRelayer {
                 _minA,
                 _minB,
                 address(this),
-=======
-                owner,
-                block.timestamp
-            );
-        } else {
-            TransferHelper.safeApprove(_tokenB, dxSwapRouter, _liquidity);
-            (amountB, amountA) = IDXswapRouter(dxSwapRouter).removeLiquidityETH(
-                _tokenB,
-                _liquidity,
-                _minB,
-                _minA,
-                owner,
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
                 block.timestamp
             );
         }
     }
 
-<<<<<<< HEAD
     // Internal function to calculate the optimal time window for price observation
-=======
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     function _consultOracleParameters(
         uint256 amountA,
         uint256 amountB,
@@ -459,7 +362,6 @@ contract DXswapRelayer {
         }
     }
 
-<<<<<<< HEAD
     // Internal function to return the correct pair address on either DXswap or Uniswap
     function _pair(address tokenA, address tokenB, address factory) internal view returns (address pair) {
       require(factory == dxSwapFactory || factory == uniswapFactory, 'DXswapRelayer: INVALID_FACTORY');
@@ -468,42 +370,24 @@ contract DXswapRelayer {
     }
 
     // Returns an OrderIndex that is used to reference liquidity orders
-=======
-    function _pair(address tokenA, address tokenB, address factory) internal view returns (address pair) {
-      require(factory == dxSwapRouter || factory == uniswapRouter);
-      if (tokenA == address(0)) tokenA = weth;
-      pair = IDXswapFactory(factory).getPair(tokenA, tokenB);
-    }
-
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     function _OrderIndex() internal returns(uint256 orderIndex){
         orderIndex = orderCount;
         orderCount++;
     }
-<<<<<<< HEAD
     
     // Allows the owner to withdraw any ERC20 from the relayer
-=======
-
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     function ERC20Withdraw(address token, uint256 amount) external {
         require(msg.sender == owner, 'DXswapRelayer: CALLER_NOT_OWNER');
         TransferHelper.safeTransfer(token, owner, amount);
     }
 
-<<<<<<< HEAD
     // Allows the owner to withdraw any ETH amount from the relayer
-=======
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     function ETHWithdraw(uint256 amount) external {
         require(msg.sender == owner, 'DXswapRelayer: CALLER_NOT_OWNER');
         TransferHelper.safeTransferETH(owner, amount);
     }
 
-<<<<<<< HEAD
     // Returns the data of one specific order
-=======
->>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     function GetOrderDetails(uint256 orderIndex) external view returns (Order memory) {
       return orders[orderIndex];
     }
