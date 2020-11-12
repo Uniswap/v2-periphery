@@ -41,7 +41,7 @@ describe('DXswapRouter', () => {
     token1 = fixture.token1
     WETH = fixture.WETH
     WETHPartner = fixture.WETHPartner
-    factory = fixture.dxswapFeactory
+    factory = fixture.dxswapFactory
     router = fixture.router
     pair = fixture.pair
     WETHPair = fixture.WETHPair
@@ -659,16 +659,10 @@ describe('DXswapRouter', () => {
     it('happy path', async () => {
       const WETHPairToken0 = await WETHPair.token0()
       await expect(
-        router.swapETHForExactTokens(
-          outputAmount,
-          [WETH.address, WETHPartner.address],
-          wallet.address,
-          MaxUint256,
-          {
-            ...overrides,
-            value: expectedSwapAmount
-          }
-        )
+        router.swapETHForExactTokens(outputAmount, [WETH.address, WETHPartner.address], wallet.address, MaxUint256, {
+          ...overrides,
+          value: expectedSwapAmount
+        })
       )
         .to.emit(WETH, 'Transfer')
         .withArgs(router.address, WETHPair.address, expectedSwapAmount)
@@ -712,7 +706,7 @@ describe('DXswapRouter', () => {
         .withArgs([expectedSwapAmount, outputAmount])
     })
   })
-  
+
   it('quote', async () => {
     expect(await router.quote(bigNumberify(1), bigNumberify(100), bigNumberify(200))).to.eq(bigNumberify(2))
     expect(await router.quote(bigNumberify(2), bigNumberify(200), bigNumberify(100))).to.eq(bigNumberify(1))
@@ -728,29 +722,33 @@ describe('DXswapRouter', () => {
   })
 
   it('getAmountOut', async () => {
-    expect(await router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.eq(bigNumberify(1))
-    await expect(router.getAmountOut(bigNumberify(0), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
-      'DXswapLibrary: INSUFFICIENT_INPUT_AMOUNT'
+    expect(await router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.eq(
+      bigNumberify(1)
     )
-    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(0), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
-      'DXswapLibrary: INSUFFICIENT_LIQUIDITY'
-    )
-    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(0), bigNumberify(30))).to.be.revertedWith(
-      'DXswapLibrary: INSUFFICIENT_LIQUIDITY'
-    )
+    await expect(
+      router.getAmountOut(bigNumberify(0), bigNumberify(100), bigNumberify(100), bigNumberify(30))
+    ).to.be.revertedWith('DXswapLibrary: INSUFFICIENT_INPUT_AMOUNT')
+    await expect(
+      router.getAmountOut(bigNumberify(2), bigNumberify(0), bigNumberify(100), bigNumberify(30))
+    ).to.be.revertedWith('DXswapLibrary: INSUFFICIENT_LIQUIDITY')
+    await expect(
+      router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(0), bigNumberify(30))
+    ).to.be.revertedWith('DXswapLibrary: INSUFFICIENT_LIQUIDITY')
   })
 
   it('getAmountIn', async () => {
-    expect(await router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.eq(bigNumberify(2))
-    await expect(router.getAmountIn(bigNumberify(0), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
-      'DXswapLibrary: INSUFFICIENT_OUTPUT_AMOUNT'
+    expect(await router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.eq(
+      bigNumberify(2)
     )
-    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(0), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
-      'DXswapLibrary: INSUFFICIENT_LIQUIDITY'
-    )
-    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(0), bigNumberify(30))).to.be.revertedWith(
-      'DXswapLibrary: INSUFFICIENT_LIQUIDITY'
-    )
+    await expect(
+      router.getAmountIn(bigNumberify(0), bigNumberify(100), bigNumberify(100), bigNumberify(30))
+    ).to.be.revertedWith('DXswapLibrary: INSUFFICIENT_OUTPUT_AMOUNT')
+    await expect(
+      router.getAmountIn(bigNumberify(1), bigNumberify(0), bigNumberify(100), bigNumberify(30))
+    ).to.be.revertedWith('DXswapLibrary: INSUFFICIENT_LIQUIDITY')
+    await expect(
+      router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(0), bigNumberify(30))
+    ).to.be.revertedWith('DXswapLibrary: INSUFFICIENT_LIQUIDITY')
   })
 
   it('getAmountsOut', async () => {
@@ -820,8 +818,8 @@ describe('fee-on-transfer tokens', () => {
     DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
 
     // make a DTT<>WETH pair
-    await fixture.dxswapFeactory.createPair(DTT.address, WETH.address)
-    const pairAddress = await fixture.dxswapFeactory.getPair(DTT.address, WETH.address)
+    await fixture.dxswapFactory.createPair(DTT.address, WETH.address)
+    const pairAddress = await fixture.dxswapFactory.getPair(DTT.address, WETH.address)
     pair = new Contract(pairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
   })
 
@@ -1006,8 +1004,8 @@ describe('fee-on-transfer tokens: reloaded', () => {
     DTT2 = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
 
     // make a DTT<>WETH pair
-    await fixture.dxswapFeactory.createPair(DTT.address, DTT2.address)
-    const pairAddress = await fixture.dxswapFeactory.getPair(DTT.address, DTT2.address)
+    await fixture.dxswapFactory.createPair(DTT.address, DTT2.address)
+    const pairAddress = await fixture.dxswapFactory.getPair(DTT.address, DTT2.address)
   })
 
   afterEach(async function() {
@@ -1054,5 +1052,4 @@ describe('fee-on-transfer tokens: reloaded', () => {
       )
     })
   })
-  
 })

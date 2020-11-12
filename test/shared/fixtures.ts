@@ -11,6 +11,9 @@ import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
 import DXswapRouter from '../../build/DXswapRouter.json'
 import RouterEventEmitter from '../../build/RouterEventEmitter.json'
+import DXswapRelayer from '../../build/DXswapRelayer.json'
+import OracleCreator from '../../build/OracleCreator.json'
+
 
 const overrides = {
   gasLimit: 9999999
@@ -21,11 +24,18 @@ interface DXswapFixture {
   token1: Contract
   WETH: Contract
   WETHPartner: Contract
-  dxswapFeactory: Contract
+  dxswapFactory: Contract
   routerEventEmitter: Contract
   router: Contract
   pair: Contract
   WETHPair: Contract
+  dxswapPair: Contract
+  dxswapRouter: Contract
+  uniFactory: Contract
+  uniRouter: Contract
+  uniPair: Contract
+  oracleCreator: Contract
+  dxRelayer: Contract
 }
 
 export async function dxswapFixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<DXswapFixture> {
@@ -36,36 +46,64 @@ export async function dxswapFixture(provider: Web3Provider, [wallet]: Wallet[]):
   const WETHPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
 
   // deploy DXswapFactory
-  const dxswapFeactory = await deployContract(wallet, DXswapFactory, [wallet.address])
+  const dxswapFactory = await deployContract(wallet, DXswapFactory, [wallet.address])
 
   // deploy router
-  const router = await deployContract(wallet, DXswapRouter, [dxswapFeactory.address, WETH.address], overrides)
+  const router = await deployContract(wallet, DXswapRouter, [dxswapFactory.address, WETH.address], overrides)
+  const dxswapRouter = await deployContract(wallet, DXswapRouter, [dxswapFactory.address, WETH.address], overrides)
+  const uniRouter = await deployContract(wallet, DXswapRouter, [dxswapFactory.address, WETH.address], overrides)
 
   // event emitter for testing
   const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
 
   // initialize DXswapFactory
-  await dxswapFeactory.createPair(tokenA.address, tokenB.address)
-  const pairAddress = await dxswapFeactory.getPair(tokenA.address, tokenB.address)
+  await dxswapFactory.createPair(tokenA.address, tokenB.address)
+  const pairAddress = await dxswapFactory.getPair(tokenA.address, tokenB.address)
   const pair = new Contract(pairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
+  const dxswapPair = new Contract(pairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  await dxswapFeactory.createPair(WETH.address, WETHPartner.address)
-  const WETHPairAddress = await dxswapFeactory.getPair(WETH.address, WETHPartner.address)
+  await dxswapFactory.createPair(WETH.address, WETHPartner.address)
+  const WETHPairAddress = await dxswapFactory.getPair(WETH.address, WETHPartner.address)
   const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
+
+  // deploy UniswapFactory
+  const uniFactory = await deployContract(wallet, DXswapFactory, [wallet.address])
+
+  // initialize DXswapFactory
+  await uniFactory.createPair(tokenA.address, tokenB.address)
+  const uniPairAddress = await uniFactory.getPair(tokenA.address, tokenB.address)
+  const uniPair = new Contract(uniPairAddress, JSON.stringify(IDXswapPair.abi), provider).connect(wallet)
+
+  // deploy oracleCreator
+  const oracleCreator = await deployContract(wallet, OracleCreator)
+
+  const dxRelayer = await deployContract(
+    wallet,
+    DXswapRelayer,
+    [wallet.address, dxswapFactory.address, dxswapRouter.address, uniFactory.address, uniRouter.address, WETH.address, oracleCreator.address],
+    overrides
+  )
 
   return {
     token0,
     token1,
     WETH,
     WETHPartner,
-    dxswapFeactory,
-    router,
+    dxswapFactory,
     routerEventEmitter,
+    router,
     pair,
-    WETHPair
+    WETHPair,
+    dxswapPair,
+    dxswapRouter,
+    uniFactory,
+    uniRouter,
+    uniPair,
+    oracleCreator,
+    dxRelayer
   }
 }
