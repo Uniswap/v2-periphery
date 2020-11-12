@@ -37,19 +37,31 @@ contract OracleCreator {
         uint256 windowTime,
         address pair
     ) public returns (uint256 oracleId) {
+<<<<<<< HEAD
         IDXswapPair sourcePair = IDXswapPair(pair);
         address token0 = sourcePair.token0();
         address token1 = sourcePair.token1();
         (,, uint32 blockTimestampLast) =  sourcePair.getReserves();
 
+=======
+        address token0 = IDXswapPair(pair).token0();
+        address token1 = IDXswapPair(pair).token1();
+>>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
         oracles[oraclesIndex] = Oracle({
             windowTime: windowTime,
             token0: token0,
             token1: token1,
+<<<<<<< HEAD
             pair: sourcePair,
             blockTimestampLast: blockTimestampLast,
             price0CumulativeLast: sourcePair.price0CumulativeLast(),
             price1CumulativeLast: sourcePair.price1CumulativeLast(),
+=======
+            pair: IDXswapPair(pair),
+            blockTimestampLast: 0,
+            price0CumulativeLast: 0,
+            price1CumulativeLast: 0,
+>>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
             price0Average: FixedPoint.uq112x112(0),
             price1Average: FixedPoint.uq112x112(0),
             observationsCount: 0,
@@ -57,7 +69,11 @@ contract OracleCreator {
         });
         oracleId = oraclesIndex;
         oraclesIndex++;
+<<<<<<< HEAD
         emit OracleCreated(oracleId, address(sourcePair), windowTime);
+=======
+        emit OracleCreated(oracleId, pair, windowTime);
+>>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
     }
 
     function update(uint256 oracleIndex) public {
@@ -106,8 +122,11 @@ contract OracleCreator {
         return oracles[oracleIndex].observationsCount == 2;
     }
 
+<<<<<<< HEAD
     function getOracleDetails(uint256 oracleIndex) external view returns (Oracle memory) {
       return oracles[oracleIndex];
     }
 
+=======
+>>>>>>> cb047d64870090487710e9795b6ab712d9b3bd1f
 }
