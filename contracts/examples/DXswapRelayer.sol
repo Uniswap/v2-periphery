@@ -6,6 +6,7 @@ import './../interfaces/IDXswapFactory.sol';
 import './../interfaces/IDXswapRouter.sol';
 import './../libraries/TransferHelper.sol';
 import './../interfaces/IERC20.sol';
+import './../interfaces/IWETH.sol';
 import './../libraries/SafeMath.sol';
 import './../libraries/DXswapLibrary.sol';
 
@@ -97,13 +98,13 @@ contract DXswapRelayer {
         require(amountA > 0 && amountB > 0, 'DXswapRelayer: INVALID_TOKEN_AMOUNT');
         require(priceTolerance <= PARTS_PER_MILLION, 'DXswapRelayer: INVALID_TOLERANCE');
         require(block.timestamp <= deadline, 'DXswapRelayer: DEADLINE_REACHED');
-
+        
         if (tokenA == address(0)) {
             require(address(this).balance >= amountA, 'DXswapRelayer: INSUFFIENT_ETH');
         } else {
             require(IERC20(tokenA).balanceOf(address(this)) >= amountA, 'DXswapRelayer: INSUFFIENT_TOKEN_A');
         }
-        require(IERC20(tokenB).balanceOf(address(this)) >= amountA, 'DXswapRelayer: INSUFFIENT_TOKEN_B');
+        require(IERC20(tokenB).balanceOf(address(this)) >= amountB, 'DXswapRelayer: INSUFFIENT_TOKEN_B');
 
         address pair = _pair(tokenA, tokenB, factory);
         orderIndex = _OrderIndex();
@@ -252,7 +253,7 @@ contract DXswapRelayer {
     function withdrawExpiredOrder(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
         require(msg.sender == owner, 'DXswapRelayer: CALLER_NOT_OWNER');
-        require(block.timestamp > order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
+        require(block.timestamp > order.deadline, 'DXswapRelayer: DEADLINE_NOT_REACHED');
         require(order.executed == false, 'DXswapRelayer: ORDER_EXECUTED');
         address tokenA = order.tokenA;
         address tokenB = order.tokenB;
@@ -280,26 +281,22 @@ contract DXswapRelayer {
         uint256 amountA;
         uint256 amountB;
         uint256 liquidity;
-
-        if (_tokenA != address(0) && _tokenB != address(0)) {
-            TransferHelper.safeApprove(_tokenA, dxSwapRouter, _amountA);
-            TransferHelper.safeApprove(_tokenB, dxSwapRouter, _amountB);
-            (amountA, amountB, liquidity) = IDXswapRouter(dxSwapRouter).addLiquidity(
-                _tokenA,
-                _tokenB,
-                _amountA,
-                _amountB,
-                _minA,
-                _minB,
-                address(this),
-                block.timestamp
-            );
-        } else {
-            TransferHelper.safeApprove(_tokenB, dxSwapRouter, _amountB);
-            (amountB, amountA, liquidity) = IDXswapRouter(dxSwapRouter).addLiquidityETH{
-                value: _amountA
-            }(_tokenB, _amountB, _minB, _minA, address(this), block.timestamp);
+        if(_tokenA == address(0)){
+          IWETH(WETH).deposit{value: _amountA}();
+          _tokenA = WETH;
         }
+        TransferHelper.safeApprove(_tokenA, dxSwapRouter, _amountA);
+        TransferHelper.safeApprove(_tokenB, dxSwapRouter, _amountB);
+        (amountA, amountB, liquidity) = IDXswapRouter(dxSwapRouter).addLiquidity(
+            _tokenA,
+            _tokenB,
+            _amountA,
+            _amountB,
+            _minA,
+            _minB,
+            address(this),
+            block.timestamp
+        );
     }
 
     function _unpool(
@@ -310,27 +307,21 @@ contract DXswapRelayer {
         uint256 _minA,
         uint256 _minB
     ) internal {
-        if (_tokenA != address(0) && _tokenB != address(0)) {
-            TransferHelper.safeApprove(_pair, dxSwapRouter, _liquidity);
-            IDXswapRouter(dxSwapRouter).removeLiquidity(
-                _tokenA,
-                _tokenB,
-                _liquidity,
-                _minA,
-                _minB,
-                address(this),
-                block.timestamp
-            );
-        } else {
-            TransferHelper.safeApprove(_pair, dxSwapRouter, _liquidity);
-            IDXswapRouter(dxSwapRouter).removeLiquidityETH(
-                _tokenB,
-                _liquidity,
-                _minA,
-                _minB,
-                address(this),
-                block.timestamp
-            );
+        _tokenA = _tokenA == address(0) ? WETH : _tokenA;
+        TransferHelper.safeApprove(_pair, dxSwapRouter, _liquidity);
+        (uint amountA, uint amountB) = IDXswapRouter(dxSwapRouter).removeLiquidity(
+            _tokenA,
+            _tokenB,
+            _liquidity,
+            _minA,
+            _minB,
+            address(this),
+            block.timestamp
+        );
+        if(_tokenA == WETH){
+          IWETH(WETH).withdraw(amountA);
+        } else if (_tokenB == WETH){
+          IWETH(WETH).withdraw(amountB);
         }
     }
 

@@ -35,6 +35,7 @@ describe('DXswapRelayer', () => {
   let uniRouter: Contract
   let oracleCreator: Contract
   let dxRelayer: Contract
+  let tokenPair: Contract
   let owner: String
 
   async function addLiquidity(amount0: BigNumber = defaultAmountA, amount1: BigNumber = defaultAmountB) {
@@ -57,7 +58,7 @@ describe('DXswapRelayer', () => {
     weth = fixture.WETH
     wethPartner = fixture.WETHPartner
     wethPair = fixture.WETHPair
-    dxswapPair = fixture.dxswapPair
+    dxswapPair = fixture.pair
     dxswapFactory = fixture.dxswapFactory
     dxswapRouter = fixture.dxswapRouter
     uniPair = fixture.uniPair
@@ -381,6 +382,37 @@ describe('DXswapRelayer', () => {
 
       expect(await wethPair.balanceOf(dxRelayer.address)).to.eq(expectedLiquidity.add(liquidityBalance))
     })
+
+    it('withdraws an order after expiration', async () => {
+      await addLiquidity(expandTo18Decimals(10), expandTo18Decimals(40))
+      const startBalance0 = await token0.balanceOf(owner)
+      const startBalance1 = await token1.balanceOf(owner)
+
+      await expect(
+        dxRelayer.orderLiquidityProvision(
+          token0.address,
+          token1.address,
+          defaultAmountA,
+          defaultAmountB,
+          defaultPriceTolerance,
+          0,
+          0,
+          defaultMaxWindowTime,
+          defaultDeadline,
+          dxswapFactory.address
+        )
+      )
+        .to.emit(dxRelayer, 'NewOrder')
+        .withArgs(0, 1)
+
+      await mineBlock(provider, startTime + 10)
+      await dxRelayer.updateOracle(0)
+      await expect(dxRelayer.withdrawExpiredOrder(0)).to.be.revertedWith('DXswapRelayer: DEADLINE_NOT_REACHED')
+      await mineBlock(provider, defaultDeadline + 500)
+      await dxRelayer.withdrawExpiredOrder(0)
+      expect(await token0.balanceOf(owner)).to.eq(startBalance0.add(defaultAmountA))
+      expect(await token1.balanceOf(owner)).to.eq(startBalance1.add(defaultAmountB))
+    })
   })
 
   describe('Liquidity removal', () => {
@@ -591,11 +623,9 @@ describe('DXswapRelayer', () => {
         .to.emit(wethPair, 'Transfer')
         .withArgs(wethPair.address, AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
         .to.emit(wethPartner, 'Transfer')
-        .withArgs(wethPair.address, dxswapRouter.address, expandTo18Decimals(4).sub(2000))
-        .to.emit(wethPartner, 'Transfer')
-        .withArgs(dxswapRouter.address, dxRelayer.address, expandTo18Decimals(4).sub(2000))
+        .withArgs(wethPair.address, dxRelayer.address, expandTo18Decimals(4).sub(2000))
         .to.emit(weth, 'Transfer')
-        .withArgs(wethPair.address, dxswapRouter.address, expandTo18Decimals(1).sub(500))
+        .withArgs(wethPair.address, dxRelayer.address, expandTo18Decimals(1).sub(500))
         .to.emit(wethPair, 'Sync')
         .withArgs(expandTo18Decimals(36).add(2000), expandTo18Decimals(9).add(500))
         .to.emit(wethPair, 'Burn')
@@ -603,7 +633,7 @@ describe('DXswapRelayer', () => {
           dxswapRouter.address,
           expandTo18Decimals(4).sub(2000),
           expandTo18Decimals(1).sub(500),
-          dxswapRouter.address
+          dxRelayer.address
         )
 
       expect(await wethPair.balanceOf(dxRelayer.address)).to.eq(expandTo18Decimals(18))
@@ -685,13 +715,13 @@ describe('DXswapRelayer', () => {
     it('provides the liquidity with the correct price based on uniswap price', async () => {
       let timestamp = startTime
 
-      // DXswap price of 1:4
+      /* DXswap price of 1:4 */
       await token0.transfer(dxswapPair.address, expandTo18Decimals(100))
       await token1.transfer(dxswapPair.address, expandTo18Decimals(400))
       await dxswapPair.mint(wallet.address, overrides)
       await mineBlock(provider, (timestamp += 100))
 
-      // Uniswap starting price of 1:2
+      /* Uniswap starting price of 1:2 */
       await token0.transfer(uniPair.address, expandTo18Decimals(100))
       await token1.transfer(uniPair.address, expandTo18Decimals(200))
       await uniPair.mint(wallet.address, overrides)
