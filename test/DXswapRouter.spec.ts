@@ -298,7 +298,7 @@ describe('DXswapRouter', () => {
     const token0Amount = expandTo18Decimals(5)
     const token1Amount = expandTo18Decimals(10)
     const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('1664582812369759106')
+    const expectedOutputAmount = bigNumberify('1663192997082117548')
 
     beforeEach(async () => {
       await addLiquidity(token0Amount, token1Amount)
@@ -366,7 +366,7 @@ describe('DXswapRouter', () => {
   describe('swapTokensForExactTokens', () => {
     const token0Amount = expandTo18Decimals(5)
     const token1Amount = expandTo18Decimals(10)
-    const expectedSwapAmount = bigNumberify('556390140766705614')
+    const expectedSwapAmount = bigNumberify('556947925368978001')
     const outputAmount = expandTo18Decimals(1)
 
     beforeEach(async () => {
@@ -417,7 +417,7 @@ describe('DXswapRouter', () => {
     const WETHPartnerAmount = expandTo18Decimals(10)
     const ETHAmount = expandTo18Decimals(5)
     const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('1664582812369759106')
+    const expectedOutputAmount = bigNumberify('1663192997082117548')
 
     beforeEach(async () => {
       await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
@@ -510,7 +510,7 @@ describe('DXswapRouter', () => {
   describe('swapTokensForExactETH', () => {
     const WETHPartnerAmount = expandTo18Decimals(5)
     const ETHAmount = expandTo18Decimals(10)
-    const expectedSwapAmount = bigNumberify('556390140766705614')
+    const expectedSwapAmount = bigNumberify('556947925368978001')
     const outputAmount = expandTo18Decimals(1)
 
     beforeEach(async () => {
@@ -579,7 +579,7 @@ describe('DXswapRouter', () => {
     const WETHPartnerAmount = expandTo18Decimals(5)
     const ETHAmount = expandTo18Decimals(10)
     const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('1664582812369759106')
+    const expectedOutputAmount = bigNumberify('1663192997082117548')
 
     beforeEach(async () => {
       await WETHPartner.transfer(WETHPair.address, WETHPartnerAmount)
@@ -646,7 +646,7 @@ describe('DXswapRouter', () => {
   describe('swapETHForExactTokens', () => {
     const WETHPartnerAmount = expandTo18Decimals(10)
     const ETHAmount = expandTo18Decimals(5)
-    const expectedSwapAmount = bigNumberify('556390140766705614')
+    const expectedSwapAmount = bigNumberify('556947925368978001')
     const outputAmount = expandTo18Decimals(1)
 
     beforeEach(async () => {
