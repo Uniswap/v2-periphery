@@ -208,10 +208,8 @@ contract DXswapRelayer {
         
         /* Maximize token inputs */ 
         if(amountA <= order.amountA){
-            amountA = amountA;
             amountB = order.amountB;
         } else {
-            amountB = amountB;
             amountA = order.amountA;
         }
         uint256 minA = amountA.sub(amountA.mul(order.priceTolerance) / PARTS_PER_MILLION);
@@ -240,14 +238,16 @@ contract DXswapRelayer {
         require(block.timestamp <= order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
         require(!oracleCreator.isOracleFinalized(order.oracleId) , 'DXswapRelayer: OBSERVATION_ENDED');
         uint256 amountBounty = GAS_ORACLE_UPDATE.mul(tx.gasprice).add(BOUNTY);
-        require(address(this).balance >= amountBounty, 'DXswapRelayer: INSUFFICIENT_BALANCE');
+        
         (uint reserveA, uint reserveB,) = IDXswapPair(order.oraclePair).getReserves();
         require(
             reserveA >= order.minReserveA && reserveB >= order.minReserveB,
             'DXswapRelayer: RESERVE_TO_LOW'
         );
         oracleCreator.update(order.oracleId);
-        TransferHelper.safeTransferETH(msg.sender, amountBounty);
+        if(address(this).balance >= amountBounty){
+            TransferHelper.safeTransferETH(msg.sender, amountBounty);
+        }
     }
 
     function withdrawExpiredOrder(uint256 orderIndex) external {

@@ -687,7 +687,7 @@ describe('DXswapRelayer', () => {
       await dxRelayer.updateOracle(0)
     })
 
-    it('consumes 168343 to update the price oracle', async () => {
+    it('consumes 168339 to update the price oracle', async () => {
       await addLiquidity(expandTo18Decimals(10), expandTo18Decimals(40))
       await mineBlock(provider, startTime + 10)
       await expect(
@@ -709,7 +709,7 @@ describe('DXswapRelayer', () => {
 
       let tx = await dxRelayer.updateOracle(0)
       let receipt = await provider.getTransactionReceipt(tx.hash)
-      expect(receipt.gasUsed).to.eq(bigNumberify('168343'))
+      expect(receipt.gasUsed).to.eq(bigNumberify('168339'))
     })
 
     it('provides the liquidity with the correct price based on uniswap price', async () => {
