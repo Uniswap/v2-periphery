@@ -100,11 +100,11 @@ contract DXswapRelayer {
         require(block.timestamp <= deadline, 'DXswapRelayer: DEADLINE_REACHED');
         
         if (tokenA == address(0)) {
-            require(address(this).balance >= amountA, 'DXswapRelayer: INSUFFIENT_ETH');
+            require(address(this).balance >= amountA, 'DXswapRelayer: INSUFFICIENT_ETH');
         } else {
-            require(IERC20(tokenA).balanceOf(address(this)) >= amountA, 'DXswapRelayer: INSUFFIENT_TOKEN_A');
+            require(IERC20(tokenA).balanceOf(address(this)) >= amountA, 'DXswapRelayer: INSUFFICIENT_TOKEN_A');
         }
-        require(IERC20(tokenB).balanceOf(address(this)) >= amountB, 'DXswapRelayer: INSUFFIENT_TOKEN_B');
+        require(IERC20(tokenB).balanceOf(address(this)) >= amountB, 'DXswapRelayer: INSUFFICIENT_TOKEN_B');
 
         address pair = _pair(tokenA, tokenB, factory);
         orderIndex = _OrderIndex();
