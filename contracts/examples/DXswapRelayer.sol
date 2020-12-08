@@ -98,6 +98,7 @@ contract DXswapRelayer {
         require(amountA > 0 && amountB > 0, 'DXswapRelayer: INVALID_TOKEN_AMOUNT');
         require(priceTolerance <= PARTS_PER_MILLION, 'DXswapRelayer: INVALID_TOLERANCE');
         require(block.timestamp <= deadline, 'DXswapRelayer: DEADLINE_REACHED');
+        require(maxWindowTime > 0, 'DXswapRelayer: INVALID_WINDOWTIME');
         
         if (tokenA == address(0)) {
             require(address(this).balance >= amountA, 'DXswapRelayer: INSUFFICIENT_ETH');
@@ -160,6 +161,7 @@ contract DXswapRelayer {
         require(amountA > 0 && amountB > 0 && liquidity > 0, 'DXswapRelayer: INVALID_LIQUIDITY_AMOUNT');
         require(priceTolerance <= PARTS_PER_MILLION, 'DXswapRelayer: INVALID_TOLERANCE');
         require(block.timestamp <= deadline, 'DXswapRelayer: DEADLINE_REACHED');
+        require(maxWindowTime > 0, 'DXswapRelayer: INVALID_WINDOWTIME');
 
         address pair = _pair(tokenA, tokenB, factory);
         orderIndex = _OrderIndex();
