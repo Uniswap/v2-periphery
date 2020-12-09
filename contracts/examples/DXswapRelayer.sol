@@ -299,8 +299,6 @@ contract DXswapRelayer {
             address(this),
             block.timestamp
         );
-        TransferHelper.safeApprove(_tokenA, dxSwapRouter, 0);
-        TransferHelper.safeApprove(_tokenB, dxSwapRouter, 0);
     }
 
     function _unpool(
@@ -322,7 +320,6 @@ contract DXswapRelayer {
             address(this),
             block.timestamp
         );
-        TransferHelper.safeApprove(_pair, dxSwapRouter, 0);
         if(_tokenA == WETH){
           IWETH(WETH).withdraw(amountA);
         } else if (_tokenB == WETH){
