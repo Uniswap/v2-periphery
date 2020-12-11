@@ -193,7 +193,7 @@ contract DXswapRelayer {
 
     function executeOrder(uint256 orderIndex) external {
         Order storage order = orders[orderIndex];
-        require(orderIndex <= orderCount, 'DXswapRelayer: INVALID_ORDER');
+        require(orderIndex < orderCount, 'DXswapRelayer: INVALID_ORDER');
         require(!order.executed, 'DXswapRelayer: ORDER_EXECUTED');
         require(oracleCreator.isOracleFinalized(order.oracleId) , 'DXswapRelayer: OBSERVATION_RUNNING');
         require(block.timestamp <= order.deadline, 'DXswapRelayer: DEADLINE_REACHED');
