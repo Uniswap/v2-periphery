@@ -189,6 +189,17 @@ describe('ExampleComputeLiquidityValue', () => {
       expect(reserveA).to.eq('500721601459041764285')
       expect(reserveB).to.eq('20030067669194168064')
     })
+    it('works with large numbers for the price', async () => {
+      const [reserveA, reserveB] = await computeLiquidityValue.getReservesAfterArbitrage(
+        token0.address,
+        token1.address,
+        MaxUint256.div(1000),
+        MaxUint256.div(1000)
+      )
+      // diff of 30 bips
+      expect(reserveA).to.eq('100120248075158403008')
+      expect(reserveB).to.eq('100150338345970840319')
+    })
   })
 
   describe('#getLiquidityValue', () => {
