@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/lib/contracts/libraries/Babylonian.sol';
+import '@uniswap/lib/contracts/libraries/FullMath.sol';
 
 import './SafeMath.sol';
 import './UniswapV2Library.sol';
@@ -19,13 +20,16 @@ library UniswapV2LiquidityMathLibrary {
         uint256 reserveA,
         uint256 reserveB
     ) pure internal returns (bool aToB, uint256 amountIn) {
-        aToB = reserveA.mul(truePriceTokenB) / reserveB < truePriceTokenA;
+        aToB = FullMath.mulDiv(reserveA, truePriceTokenB, reserveB) < truePriceTokenA;
 
         uint256 invariant = reserveA.mul(reserveB);
 
         uint256 leftSide = Babylonian.sqrt(
-            invariant.mul(aToB ? truePriceTokenA : truePriceTokenB).mul(1000) /
-            uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+            FullMath.mulDiv(
+                invariant * 1000,
+                aToB ? truePriceTokenA : truePriceTokenB,
+                uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+            )
         );
         uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
 
@@ -80,9 +84,10 @@ library UniswapV2LiquidityMathLibrary {
             uint rootK = Babylonian.sqrt(reservesA.mul(reservesB));
             uint rootKLast = Babylonian.sqrt(kLast);
             if (rootK > rootKLast) {
-                uint numerator = totalSupply.mul(rootK.sub(rootKLast));
+                uint numerator1 = totalSupply;
+                uint numerator2 = rootK.sub(rootKLast);
                 uint denominator = rootK.mul(5).add(rootKLast);
-                uint feeLiquidity = numerator / denominator;
+                uint feeLiquidity = FullMath.mulDiv(numerator1, numerator2, denominator);
                 totalSupply = totalSupply.add(feeLiquidity);
             }
         }

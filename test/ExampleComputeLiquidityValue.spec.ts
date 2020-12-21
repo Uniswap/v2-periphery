@@ -239,7 +239,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('19953')
+        ).to.eq('12581')
         // higher price
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
@@ -249,7 +249,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('20716')
+        ).to.eq('13354')
         // lower price
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
@@ -259,7 +259,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('19932')
+        ).to.eq('13399')
       })
 
       describe('after a swap', () => {
@@ -367,7 +367,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('39061')
+        ).to.eq('16814')
         // higher price
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
@@ -377,7 +377,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('40400')
+        ).to.eq('18351')
         // lower price
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
@@ -387,7 +387,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('39616')
+        ).to.eq('18282')
       })
 
       describe('after a swap', () => {
