@@ -26,9 +26,9 @@ library UniswapV2LiquidityMathLibrary {
 
         uint256 leftSide = Babylonian.sqrt(
             FullMath.mulDiv(
-                invariant * 1000,
+                invariant.mul(1000),
                 aToB ? truePriceTokenA : truePriceTokenB,
-                uint256(aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+                (aToB ? truePriceTokenB : truePriceTokenA).mul(997)
             )
         );
         uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;

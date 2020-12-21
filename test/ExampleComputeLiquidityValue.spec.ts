@@ -229,8 +229,7 @@ describe('ExampleComputeLiquidityValue', () => {
         expect(token1Amount).to.eq('50000000000000000000')
       })
 
-      it('gas', async () => {
-        // current price
+      it('gas current price', async () => {
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
             token0.address,
@@ -239,8 +238,10 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('12581')
-        // higher price
+        ).to.eq('12705')
+      })
+
+      it('gas higher price', async () => {
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
             token0.address,
@@ -249,8 +250,10 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('13354')
-        // lower price
+        ).to.eq('13478')
+      })
+
+      it('gas lower price', async () => {
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
             token0.address,
@@ -259,7 +262,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('13399')
+        ).to.eq('13523')
       })
 
       describe('after a swap', () => {
@@ -357,8 +360,7 @@ describe('ExampleComputeLiquidityValue', () => {
         })
       })
 
-      it('gas', async () => {
-        // current price
+      it('gas current price', async () => {
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
             token0.address,
@@ -367,8 +369,10 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('16814')
-        // higher price
+        ).to.eq('16938')
+      })
+
+      it('gas higher price', async () => {
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
             token0.address,
@@ -377,8 +381,10 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('18351')
-        // lower price
+        ).to.eq('18475')
+      })
+
+      it('gas lower price', async () => {
         expect(
           await computeLiquidityValue.getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
             token0.address,
@@ -387,7 +393,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('18282')
+        ).to.eq('18406')
       })
 
       describe('after a swap', () => {
