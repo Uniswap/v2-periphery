@@ -38,7 +38,7 @@ describe('ExampleSwapToPrice', () => {
     swapToPriceExample = await deployContract(
       wallet,
       ExampleSwapToPrice,
-      [fixture.dxswapFeactory.address, fixture.router.address],
+      [fixture.dxswapFactory.address, fixture.router.address],
       overrides
     )
   })

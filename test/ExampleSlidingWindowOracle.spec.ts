@@ -62,7 +62,7 @@ describe('ExampleSlidingWindowOracle', () => {
     token1 = fixture.token1
     pair = fixture.pair
     weth = fixture.WETH
-    factory = fixture.dxswapFeactory
+    factory = fixture.dxswapFactory
   })
 
   // 1/1/2020 @ 12:00 am UTC
@@ -137,7 +137,7 @@ describe('ExampleSlidingWindowOracle', () => {
 
     it('sets the appropriate epoch slot', async () => {
       const blockTimestamp = (await pair.getReserves())[2]
-      expect(blockTimestamp).to.eq(startTime+1)
+      expect(blockTimestamp).to.eq(startTime + 1)
       await slidingWindowOracle.update(token0.address, token1.address, overrides)
       expect(await slidingWindowOracle.pairObservations(pair.address, observationIndexOf(blockTimestamp))).to.deep.eq([
         bigNumberify(blockTimestamp),
