@@ -47,7 +47,7 @@ describe('ExampleOracleSimple', () => {
     exampleOracleSimple = await deployContract(
       wallet,
       ExampleOracleSimple,
-      [fixture.dxswapFeactory.address, token0.address, token1.address],
+      [fixture.dxswapFactory.address, token0.address, token1.address],
       overrides
     )
   })
