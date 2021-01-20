@@ -1,4 +1,5 @@
-const HDWalletProvider = require('truffle-hdwallet-provider')	
+const HDWalletProvider = require('truffle-hdwallet-provider')
+const { wrapProvider } = require('arb-ethers-web3-bridge')
 require('dotenv').config();
 
 mnemonic = process.env.KEY_MNEMONIC;
@@ -51,7 +52,15 @@ module.exports = {
       network_id: '42',	
       gas: 9000000,	
       gasPrice: 10000000000 //10 Gwei	
-    }	
+    },
+    arbitrumTestnetV3: {
+      provider: function() {
+        return wrapProvider(new HDWalletProvider(mnemonic, 'https://kovan3.arbitrum.io/rpc'))
+      },
+      network_id: '79377087078960',
+      gas: 9000000,
+      gasPrice: 10000000000 //10 Gwei
+    }
   },	
   build: {},	
   compilers: {	
