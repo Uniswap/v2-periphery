@@ -31,6 +31,7 @@ describe('ExampleComputeLiquidityValue', () => {
   let router: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
+    console.log("🚀 ~ file: ExampleComputeLiquidityValue.spec.ts ~ line 34 ~ beforeEach ~ fixture", fixture)
     token0 = fixture.token0
     token1 = fixture.token1
     pair = fixture.pair
@@ -42,6 +43,7 @@ describe('ExampleComputeLiquidityValue', () => {
       [fixture.factoryV2.address],
       overrides
     )
+
   })
 
   beforeEach('mint some liquidity for the pair at 1:100 (100 shares minted)', async () => {
@@ -52,6 +54,7 @@ describe('ExampleComputeLiquidityValue', () => {
   })
 
   it('correct factory address', async () => {
+    console.log("🚀 ~ file: ExampleComputeLiquidityValue.spec.ts ~ line 40 ~ beforeEach ~ computeLiquidityValue", computeLiquidityValue)
     expect(await computeLiquidityValue.factory()).to.eq(factory.address)
   })
 

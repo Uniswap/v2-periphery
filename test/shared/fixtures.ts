@@ -11,9 +11,9 @@ import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
 import UniswapV1Exchange from '../../build/UniswapV1Exchange.json'
 import UniswapV1Factory from '../../build/UniswapV1Factory.json'
-import UniswapV2Router01 from '../../build/UniswapV2Router01.json'
-import UniswapV2Migrator from '../../build/UniswapV2Migrator.json'
-import UniswapV2Router02 from '../../build/UniswapV2Router02.json'
+import IZeroRouter01 from '../../build/IZeroRouter01.json'
+import ZeroMigrator from '../../build/ZeroMigrator.json'
+import ZeroRouter02 from '../../build/ZeroRouter02.json'
 import RouterEventEmitter from '../../build/RouterEventEmitter.json'
 
 const overrides = {
@@ -52,14 +52,14 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   const factoryV2 = await deployContract(wallet, UniswapV2Factory, [wallet.address])
 
   // deploy routers
-  const router01 = await deployContract(wallet, UniswapV2Router01, [factoryV2.address, WETH.address], overrides)
-  const router02 = await deployContract(wallet, UniswapV2Router02, [factoryV2.address, WETH.address], overrides)
+  const router01 = await deployContract(wallet, IZeroRouter01, [factoryV2.address, WETH.address], overrides)
+  const router02 = await deployContract(wallet, ZeroRouter02, [factoryV2.address, WETH.address], overrides)
 
   // event emitter for testing
   const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
 
   // deploy migrator
-  const migrator = await deployContract(wallet, UniswapV2Migrator, [factoryV1.address, router01.address], overrides)
+  const migrator = await deployContract(wallet, ZeroMigrator, [factoryV1.address, router01.address], overrides)
 
   // initialize V1
   await factoryV1.createExchange(WETHPartner.address, overrides)
