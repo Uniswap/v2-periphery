@@ -1,0 +1,171 @@
+pragma solidity =0.6.6;
+
+import 'https://raw.githubusercontent.com/Uniswap/uniswap-lib/master/contracts/libraries/TransferHelper.sol';
+
+interface IERC20 {
+    event Approval(address indexed owner, address indexed spender, uint value);
+    event Transfer(address indexed from, address indexed to, uint value);
+
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function decimals() external view returns (uint8);
+    function totalSupply() external view returns (uint);
+    function balanceOf(address owner) external view returns (uint);
+    function allowance(address owner, address spender) external view returns (uint);
+
+    function approve(address spender, uint value) external returns (bool);
+    function transfer(address to, uint value) external returns (bool);
+    function transferFrom(address from, address to, uint value) external returns (bool);
+}
+
+interface IZeroRouter01 {
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
+
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity);
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB);
+    function removeLiquidityETH(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountToken, uint amountETH);
+    function removeLiquidityWithPermit(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountA, uint amountB);
+    function removeLiquidityETHWithPermit(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountToken, uint amountETH);
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts);
+    function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
+    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
+    function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts);
+
+    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
+    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
+}
+
+
+interface IUniswapV1Exchange {
+    function balanceOf(address owner) external view returns (uint);
+    function transferFrom(address from, address to, uint value) external returns (bool);
+    function removeLiquidity(uint, uint, uint, uint) external returns (uint, uint);
+    function tokenToEthSwapInput(uint, uint, uint) external returns (uint);
+    function ethToTokenSwapInput(uint, uint) external payable returns (uint);
+}
+
+interface IUniswapV1Factory {
+    function getExchange(address) external view returns (address);
+}
+
+interface IZeroMigrator {
+    function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external;
+}
+
+
+contract ZeroMigrator is IZeroMigrator {
+    IUniswapV1Factory immutable factoryV1;
+    IZeroRouter01 immutable router;
+
+    constructor(address _factoryV1, address _router) public {
+        factoryV1 = IUniswapV1Factory(_factoryV1);
+        router = IZeroRouter01(_router);
+    }
+
+    // needs to accept ETH from any v1 exchange and the router. ideally this could be enforced, as in the router,
+    // but it's not possible because it requires a call to the v1 factory, which takes too much gas
+    receive() external payable {}
+
+    function migrate(address token, uint amountTokenMin, uint amountETHMin, address to, uint deadline)
+        external
+        override
+    {
+        IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(token));
+        uint liquidityV1 = exchangeV1.balanceOf(msg.sender);
+        require(exchangeV1.transferFrom(msg.sender, address(this), liquidityV1), 'TRANSFER_FROM_FAILED');
+        (uint amountETHV1, uint amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, uint(-1));
+        TransferHelper.safeApprove(token, address(router), amountTokenV1);
+        (uint amountTokenV2, uint amountETHV2,) = router.addLiquidityETH{value: amountETHV1}(
+            token,
+            amountTokenV1,
+            amountTokenMin,
+            amountETHMin,
+            to,
+            deadline
+        );
+        if (amountTokenV1 > amountTokenV2) {
+            TransferHelper.safeApprove(token, address(router), 0); // be a good blockchain citizen, reset allowance to 0
+            TransferHelper.safeTransfer(token, msg.sender, amountTokenV1 - amountTokenV2);
+        } else if (amountETHV1 > amountETHV2) {
+            // addLiquidityETH guarantees that all of amountETHV1 or amountTokenV1 will be used, hence this else is safe
+            TransferHelper.safeTransferETH(msg.sender, amountETHV1 - amountETHV2);
+        }
+    }
+}
