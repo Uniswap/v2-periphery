@@ -21,7 +21,7 @@ library ZeroLibrary {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
+                hex'4b5b254233f8aba1e01c0538653d54036e3c9f7873daf99623bb358f1cf33188' // init code hash
             ))));
     }
 

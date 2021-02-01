@@ -15,6 +15,7 @@
     "contracts"
   ],
   "dependencies": {
+    "@poanet/solidity-flattener": "^3.0.6",
     "@uniswap/lib": "4.0.1-alpha",
     "@uniswap/v2-core": "1.0.0"
   },
