@@ -7,5 +7,8 @@
   },
   "arbitrumTestnetV3": {
     "router": "0x825552d3A5893081711C711847bab6b51B1987e3"
+  },
+  "sokol": {
+    "router": "0x882A796B6f1f1679BBa1dd127EcE41Fd4f7aEacc"
   }
 }
