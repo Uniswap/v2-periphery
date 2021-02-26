@@ -49,15 +49,15 @@ contract DXswapRelayer {
     uint256 public immutable BOUNTY = 0.01 ether; // To be decided
     uint8 public immutable PROVISION = 1;
     uint8 public immutable REMOVAL = 2;
-
-    address payable public immutable owner;
+    
     address public immutable dxSwapFactory;
     address public immutable dxSwapRouter;
     address public immutable uniswapFactory;
     address public immutable uniswapRouter;
     address public immutable WETH;
+    address payable public owner;
 
-    OracleCreator oracleCreator;
+    OracleCreator public oracleCreator;
     uint256 public orderCount;
     mapping(uint256 => Order) orders;
 
@@ -319,15 +319,10 @@ contract DXswapRelayer {
             _liquidity,
             _minA,
             _minB,
-            address(this),
+            owner,
             block.timestamp
         );
         TransferHelper.safeApprove(_pair, dxSwapRouter, 0);
-        if(_tokenA == WETH){
-          IWETH(WETH).withdraw(amountA);
-        } else if (_tokenB == WETH){
-          IWETH(WETH).withdraw(amountB);
-        }
     }
 
     // Internal function to calculate the optimal time window for price observation
@@ -386,6 +381,11 @@ contract DXswapRelayer {
     // Returns the data of one specific order
     function GetOrderDetails(uint256 orderIndex) external view returns (Order memory) {
       return orders[orderIndex];
+    }
+
+    function changeOwner(address payable _newOwner) external {
+      require(msg.sender == owner, 'DXswapRelayer: CALLER_NOT_OWNER');
+      owner = _newOwner;
     }
 
     receive() external payable {}
