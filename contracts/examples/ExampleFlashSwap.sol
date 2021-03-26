@@ -28,7 +28,7 @@ contract ExampleFlashSwap is IUniswapV2Callee {
     function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external override {
         address[] memory path = new address[](2);
         uint amountToken;
-        uint amountETH;
+        uint amountWETH;
         { // scope for token{0,1}, avoids stack too deep errors
         address token0 = IUniswapV2Pair(msg.sender).token0();
         address token1 = IUniswapV2Pair(msg.sender).token1();
@@ -56,9 +56,9 @@ contract ExampleFlashSwap is IUniswapV2Callee {
             assert(success);
         } else {
             (uint minTokens) = abi.decode(data, (uint)); // slippage parameter for V1, passed in by caller
-            WETH.withdraw(amountETH);
-            uint amountReceived = exchangeV1.ethToTokenSwapInput{value: amountETH}(minTokens, uint(-1));
-            uint amountRequired = UniswapV2Library.getAmountsIn(factory, amountETH, path)[0];
+            WETH.withdraw(amountWETH);
+            uint amountReceived = exchangeV1.ethToTokenSwapInput{value: amountWETH}(minTokens, uint(-1));
+            uint amountRequired = UniswapV2Library.getAmountsIn(factory, amountWETH, path)[0];
             assert(amountReceived > amountRequired); // fail if we didn't get enough tokens back to repay our flash loan
             assert(token.transfer(msg.sender, amountRequired)); // return tokens to V2 pair
             assert(token.transfer(sender, amountReceived - amountRequired)); // keep the rest! (tokens)
