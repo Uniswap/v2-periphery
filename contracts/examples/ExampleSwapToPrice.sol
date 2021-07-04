@@ -1,4 +1,4 @@
-pragma solidity =0.6.6;
+pragma solidity =0.8.3;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/Babylonian.sol';

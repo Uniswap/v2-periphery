@@ -1,4 +1,4 @@
-pragma solidity =0.6.6;
+pragma solidity =0.8.3;
 
 // a library for performing overflow-safe math, courtesy of DappHub (https://github.com/dapphub/ds-math)
 

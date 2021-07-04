@@ -1,4 +1,4 @@
-pragma solidity =0.6.6;
+pragma solidity =0.8.3;
 
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
@@ -28,7 +28,7 @@ contract UniswapV2Migrator is IUniswapV2Migrator {
         IUniswapV1Exchange exchangeV1 = IUniswapV1Exchange(factoryV1.getExchange(token));
         uint liquidityV1 = exchangeV1.balanceOf(msg.sender);
         require(exchangeV1.transferFrom(msg.sender, address(this), liquidityV1), 'TRANSFER_FROM_FAILED');
-        (uint amountETHV1, uint amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, uint(-1));
+        (uint amountETHV1, uint amountTokenV1) = exchangeV1.removeLiquidity(liquidityV1, 1, 1, type(uint).max);
         TransferHelper.safeApprove(token, address(router), amountTokenV1);
         (uint amountTokenV2, uint amountETHV2,) = router.addLiquidityETH{value: amountETHV1}(
             token,

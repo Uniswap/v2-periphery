@@ -1,4 +1,4 @@
-pragma solidity =0.6.6;
+pragma solidity =0.8.3;
 
 import '../libraries/SafeMath.sol';
 
@@ -21,16 +21,13 @@ contract ERC20 {
     event Transfer(address indexed from, address indexed to, uint value);
 
     constructor(uint _totalSupply) public {
-        uint chainId;
-        assembly {
-            chainId := chainid()
-        }
+       
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
                 keccak256(bytes(name)),
                 keccak256(bytes('1')),
-                chainId,
+                block.chainid,
                 address(this)
             )
         );
@@ -71,7 +68,7 @@ contract ERC20 {
     }
 
     function transferFrom(address from, address to, uint value) external returns (bool) {
-        if (allowance[from][msg.sender] != uint(-1)) {
+        if (allowance[from][msg.sender] != type(uint256).max) {
             allowance[from][msg.sender] = allowance[from][msg.sender].sub(value);
         }
         _transfer(from, to, value);
