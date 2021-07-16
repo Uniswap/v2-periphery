@@ -181,7 +181,7 @@ describe('fee-on-transfer tokens', () => {
     DTT = await (await ethers.getContractFactory("DeflatingERC20")).deploy(expandTo18Decimals(10000))
     wallet = fixture.wallet
     // make a DTT<>WETH pair
-    await fixture.factoryV2.createPair(DTT.address, WETH.address,200000)
+    await fixture.factoryV2.createPair(DTT.address, WETH.address,0)
     const pairAddress = await fixture.factoryV2.getPair(DTT.address, WETH.address)
     pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
   })
@@ -282,7 +282,7 @@ describe('fee-on-transfer tokens', () => {
         [DTT.address, WETH.address],
         wallet.address,
         ethers.constants.MaxUint256,
-        overrides
+        
       )
     })
 
@@ -297,7 +297,7 @@ describe('fee-on-transfer tokens', () => {
         [WETH.address, DTT.address],
         wallet.address,
         ethers.constants.MaxUint256,
-        overrides
+        
       )
     })
   })
@@ -317,7 +317,6 @@ describe('fee-on-transfer tokens', () => {
       wallet.address,
       ethers.constants.MaxUint256,
       {
-        ...overrides,
         value: swapAmount
       }
     )
@@ -339,8 +338,7 @@ describe('fee-on-transfer tokens', () => {
       0,
       [DTT.address, WETH.address],
       wallet.address,
-      ethers.constants.MaxUint256,
-      overrides
+      ethers.constants.MaxUint256
     )
   })
 })
@@ -349,24 +347,23 @@ describe('fee-on-transfer tokens: reloaded', () => {
   const provider = ethers.getDefaultProvider();
   const loadFixture = waffle.createFixtureLoader(waffle.provider.getWallets(), waffle.provider)
 	async function v2Fixture([wallet, other]: Wallet[], provider: MockProvider) {
-		const uniswapV2ContractFactory = new ethers.ContractFactory(UniswapV2Factory.abi,UniswapV2Factory.bytecode)
-		const factoryV2 = await uniswapV2ContractFactory.deploy(wallet.address)
-    console.log("factory deployed")
-
-		const tokenA = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
-		const tokenB = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
-
-		await factoryV2.createPair(tokenA.address, tokenB.address, 200000)
-		const pair = (await ethers.getContractFactory('ContangoPair')).attach(
-			await factoryV2.getPair(tokenA.address, tokenB.address)
-		)
-		const token0Address = await pair.token0()
-    const weth = await(await ethers.getContractFactory('WETH9')).deploy()
-		const token0 = tokenA.address === token0Address ? tokenA : tokenB
-		const token1 = tokenA.address === token0Address ? tokenB : tokenA
-    const router02 = await(await ethers.getContractFactory('UniswapV2Router02')).deploy(factoryV2.address,weth.address)
-		return { pair, token0, token1, wallet, other, factoryV2, provider,router02 }
-	}
+  
+    const factoryV2 = await deployContract(wallet,UniswapV2Factory,[wallet.address])
+    const tokenA = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+    const tokenB = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+  
+    await factoryV2.createPair(tokenA.address, tokenB.address, 200000)
+  
+    const contangoPairFactory = new ethers.ContractFactory(ContangoPair.abi,ContangoPair.bytecode)
+    const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
+    const pair = await ethers.getContractAt(ContangoPair.abi,pairAddress)
+    const token0Address = await pair.token0()
+    const WETH = await(await ethers.getContractFactory('WETH9')).deploy()
+    const token0 = tokenA.address === token0Address ? tokenA : tokenB
+    const token1 = tokenA.address === token0Address ? tokenB : tokenA
+    const router02 = await(await ethers.getContractFactory('UniswapV2Router02')).deploy(factoryV2.address,WETH.address)
+    return { pair, token0, token1, wallet, other, factoryV2, provider,router02 ,WETH}
+  }
 
   let DTT: Contract
   let DTT2: Contract
@@ -381,7 +378,8 @@ describe('fee-on-transfer tokens: reloaded', () => {
     DTT2 =await (await ethers.getContractFactory("DeflatingERC20")).deploy(expandTo18Decimals(10000))
 
     // make a DTT<>WETH pair
-    await fixture.factoryV2.createPair(DTT.address, DTT2.address)
+    await fixture.factoryV2.createPair(DTT.address, DTT2.address,0)
+    wallet = fixture.wallet
     const pairAddress = await fixture.factoryV2.getPair(DTT.address, DTT2.address)
   })
 

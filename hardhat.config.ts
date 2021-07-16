@@ -4,7 +4,7 @@ import '@nomiclabs/hardhat-waffle'
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
-      
+      chainId: 1,
       blockGasLimit: 20000000
     }
   },
