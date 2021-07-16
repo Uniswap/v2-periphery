@@ -8,8 +8,6 @@ import { ecsign } from 'ethereumjs-util'
 import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
-chai.use(solidity)
-
 const overrides = {
   gasLimit: 9999999
 }

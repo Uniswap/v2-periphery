@@ -1,149 +1,187 @@
 import chai, { expect } from 'chai'
-import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 import { Contract } from 'ethers'
-import { BigNumber, bigNumberify } from 'ethers/utils'
-import { MaxUint256 } from 'ethers/constants'
-import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
+import { solidity, MockProvider, createFixtureLoader,deployContract } from 'ethereum-waffle'
+import { BigNumber, constants as ethconst, Wallet } from 'ethers'
+import { ethers, waffle } from 'hardhat'
 
-import { v2Fixture } from './shared/fixtures'
-import { expandTo18Decimals, getApprovalDigest, MINIMUM_LIQUIDITY } from './shared/utilities'
+import IUniswapV2Pair from '../buildV1/UniswapV2Pair.json'
 
-import DeflatingERC20 from '../build/DeflatingERC20.json'
+import UniswapV2Factory from '../buildV1/UniswapV2Factory.json'
+import ContangoPair from '../buildV1/ContangoPair.json'
+import { expandTo18Decimals, getApprovalDigest, MINIMUM_LIQUIDITY ,getCreate2Address} from './shared/utilities'
+import { utils as ethutil } from 'ethers'
+
+const {  keccak256,  } = ethutil
+
 import { ecsign } from 'ethereumjs-util'
 
-chai.use(solidity)
+
 
 const overrides = {
   gasLimit: 9999999
 }
-
+const BN = BigNumber;
 describe('UniswapV2Router02', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
-  const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+
+  const loadFixture = waffle.createFixtureLoader(waffle.provider.getWallets(), waffle.provider)
+	async function v2Fixture([wallet, other]: Wallet[], provider: MockProvider) {
+  
+		const factoryV2 = await deployContract(wallet,UniswapV2Factory,[wallet.address])
+		const tokenA = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+		const tokenB = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+
+		await factoryV2.createPair(tokenA.address, tokenB.address, 200000)
+
+    const contangoPairFactory = new ethers.ContractFactory(ContangoPair.abi,ContangoPair.bytecode)
+    const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
+		const pair = await ethers.getContractAt(ContangoPair.abi,pairAddress)
+		const token0Address = await pair.token0()
+    const weth = await(await ethers.getContractFactory('WETH9')).deploy()
+		const token0 = tokenA.address === token0Address ? tokenA : tokenB
+		const token1 = tokenA.address === token0Address ? tokenB : tokenA
+    const router02 = await(await ethers.getContractFactory('UniswapV2Router02')).deploy(factoryV2.address,weth.address)
+		return { pair, token0, token1, wallet, other, factoryV2, provider,router02 }
+	}
 
   let token0: Contract
   let token1: Contract
   let router: Contract
+  let wallet:Wallet
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
     token0 = fixture.token0
     token1 = fixture.token1
     router = fixture.router02
+    wallet = fixture.wallet
   })
 
   it('quote', async () => {
-    expect(await router.quote(bigNumberify(1), bigNumberify(100), bigNumberify(200))).to.eq(bigNumberify(2))
-    expect(await router.quote(bigNumberify(2), bigNumberify(200), bigNumberify(100))).to.eq(bigNumberify(1))
-    await expect(router.quote(bigNumberify(0), bigNumberify(100), bigNumberify(200))).to.be.revertedWith(
+    
+    expect(await router.quote(BN.from(1), BN.from(100), BN.from(200))).to.eq(BN.from(2))
+    expect(await router.quote(BN.from(2), BN.from(200), BN.from(100))).to.eq(BN.from(1))
+    await expect(router.quote(BN.from(0), BN.from(100), BN.from(200))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_AMOUNT'
     )
-    await expect(router.quote(bigNumberify(1), bigNumberify(0), bigNumberify(200))).to.be.revertedWith(
+    await expect(router.quote(BN.from(1), BN.from(0), BN.from(200))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_LIQUIDITY'
     )
-    await expect(router.quote(bigNumberify(1), bigNumberify(100), bigNumberify(0))).to.be.revertedWith(
+    await expect(router.quote(BN.from(1), BN.from(100), BN.from(0))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_LIQUIDITY'
     )
   })
 
   it('getAmountOut', async () => {
-    expect(await router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(100))).to.eq(bigNumberify(1))
-    await expect(router.getAmountOut(bigNumberify(0), bigNumberify(100), bigNumberify(100))).to.be.revertedWith(
+    
+    expect(await router.getAmountOut(BN.from(2), BN.from(100), BN.from(100))).to.eq(BN.from(1))
+    await expect(router.getAmountOut(BN.from(0), BN.from(100), BN.from(100))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_INPUT_AMOUNT'
     )
-    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(0), bigNumberify(100))).to.be.revertedWith(
+    await expect(router.getAmountOut(BN.from(2), BN.from(0), BN.from(100))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_LIQUIDITY'
     )
-    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(0))).to.be.revertedWith(
+    await expect(router.getAmountOut(BN.from(2), BN.from(100), BN.from(0))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_LIQUIDITY'
     )
   })
 
   it('getAmountIn', async () => {
-    expect(await router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(100))).to.eq(bigNumberify(2))
-    await expect(router.getAmountIn(bigNumberify(0), bigNumberify(100), bigNumberify(100))).to.be.revertedWith(
+    
+    expect(await router.getAmountIn(BN.from(1), BN.from(100), BN.from(100))).to.eq(BN.from(2))
+    await expect(router.getAmountIn(BN.from(0), BN.from(100), BN.from(100))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_OUTPUT_AMOUNT'
     )
-    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(0), bigNumberify(100))).to.be.revertedWith(
+    await expect(router.getAmountIn(BN.from(1), BN.from(0), BN.from(100))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_LIQUIDITY'
     )
-    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(0))).to.be.revertedWith(
+    await expect(router.getAmountIn(BN.from(1), BN.from(100), BN.from(0))).to.be.revertedWith(
       'UniswapV2Library: INSUFFICIENT_LIQUIDITY'
     )
   })
 
   it('getAmountsOut', async () => {
-    await token0.approve(router.address, MaxUint256)
-    await token1.approve(router.address, MaxUint256)
+    
+    await token0.approve(router.address, ethers.constants.MaxUint256)
+    await token1.approve(router.address, ethers.constants.MaxUint256)
     await router.addLiquidity(
       token0.address,
       token1.address,
-      bigNumberify(10000),
-      bigNumberify(10000),
+      BN.from(10000),
+      BN.from(10000),
       0,
       0,
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       overrides
     )
 
-    await expect(router.getAmountsOut(bigNumberify(2), [token0.address])).to.be.revertedWith(
+    await expect(router.getAmountsOut(BN.from(2), [token0.address])).to.be.revertedWith(
       'UniswapV2Library: INVALID_PATH'
     )
     const path = [token0.address, token1.address]
-    expect(await router.getAmountsOut(bigNumberify(2), path)).to.deep.eq([bigNumberify(2), bigNumberify(1)])
+    expect(await router.getAmountsOut(BN.from(2), path)).to.deep.eq([BN.from(2), BN.from(1)])
   })
 
   it('getAmountsIn', async () => {
-    await token0.approve(router.address, MaxUint256)
-    await token1.approve(router.address, MaxUint256)
+    
+    await token0.approve(router.address, ethers.constants.MaxUint256)
+    await token1.approve(router.address, ethers.constants.MaxUint256)
     await router.addLiquidity(
       token0.address,
       token1.address,
-      bigNumberify(10000),
-      bigNumberify(10000),
+      BN.from(10000),
+      BN.from(10000),
       0,
       0,
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       overrides
     )
 
-    await expect(router.getAmountsIn(bigNumberify(1), [token0.address])).to.be.revertedWith(
+    await expect(router.getAmountsIn(BN.from(1), [token0.address])).to.be.revertedWith(
       'UniswapV2Library: INVALID_PATH'
     )
     const path = [token0.address, token1.address]
-    expect(await router.getAmountsIn(bigNumberify(1), path)).to.deep.eq([bigNumberify(2), bigNumberify(1)])
+    expect(await router.getAmountsIn(BN.from(1), path)).to.deep.eq([BN.from(2), BN.from(1)])
   })
 })
 
 describe('fee-on-transfer tokens', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
-  const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  const provider = ethers.getDefaultProvider();
+ const loadFixture = waffle.createFixtureLoader(waffle.provider.getWallets(), waffle.provider)
+ async function v2Fixture([wallet, other]: Wallet[], provider: MockProvider) {
+  
+  const factoryV2 = await deployContract(wallet,UniswapV2Factory,[wallet.address])
+  const tokenA = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+  const tokenB = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+
+  await factoryV2.createPair(tokenA.address, tokenB.address, 200000)
+
+  const contangoPairFactory = new ethers.ContractFactory(ContangoPair.abi,ContangoPair.bytecode)
+  const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
+  const pair = await ethers.getContractAt(ContangoPair.abi,pairAddress)
+  const token0Address = await pair.token0()
+  const WETH = await(await ethers.getContractFactory('WETH9')).deploy()
+  const token0 = tokenA.address === token0Address ? tokenA : tokenB
+  const token1 = tokenA.address === token0Address ? tokenB : tokenA
+  const router02 = await(await ethers.getContractFactory('UniswapV2Router02')).deploy(factoryV2.address,WETH.address)
+  return { pair, token0, token1, wallet, other, factoryV2, provider,router02 ,WETH}
+}
 
   let DTT: Contract
   let WETH: Contract
   let router: Contract
   let pair: Contract
+  let wallet :Wallet
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
     WETH = fixture.WETH
     router = fixture.router02
 
-    DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
-
+    DTT = await (await ethers.getContractFactory("DeflatingERC20")).deploy(expandTo18Decimals(10000))
+    wallet = fixture.wallet
     // make a DTT<>WETH pair
-    await fixture.factoryV2.createPair(DTT.address, WETH.address)
+    await fixture.factoryV2.createPair(DTT.address, WETH.address,200000)
     const pairAddress = await fixture.factoryV2.getPair(DTT.address, WETH.address)
     pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
   })
@@ -153,9 +191,8 @@ describe('fee-on-transfer tokens', () => {
   })
 
   async function addLiquidity(DTTAmount: BigNumber, WETHAmount: BigNumber) {
-    await DTT.approve(router.address, MaxUint256)
-    await router.addLiquidityETH(DTT.address, DTTAmount, DTTAmount, WETHAmount, wallet.address, MaxUint256, {
-      ...overrides,
+    await DTT.approve(router.address, ethers.constants.MaxUint256)
+    await router.addLiquidityETH(DTT.address, DTTAmount, DTTAmount, WETHAmount, wallet.address, ethers.constants.MaxUint256, {
       value: WETHAmount
     })
   }
@@ -172,14 +209,14 @@ describe('fee-on-transfer tokens', () => {
     const NaiveDTTExpected = DTTInPair.mul(liquidity).div(totalSupply)
     const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply)
 
-    await pair.approve(router.address, MaxUint256)
+    await pair.approve(router.address, ethers.constants.MaxUint256)
     await router.removeLiquidityETHSupportingFeeOnTransferTokens(
       DTT.address,
       liquidity,
       NaiveDTTExpected,
       WETHExpected,
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       overrides
     )
   })
@@ -198,7 +235,7 @@ describe('fee-on-transfer tokens', () => {
       pair,
       { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
       nonce,
-      MaxUint256
+      ethers.constants.MaxUint256
     )
     const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
 
@@ -209,14 +246,14 @@ describe('fee-on-transfer tokens', () => {
     const NaiveDTTExpected = DTTInPair.mul(liquidity).div(totalSupply)
     const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply)
 
-    await pair.approve(router.address, MaxUint256)
+    await pair.approve(router.address, ethers.constants.MaxUint256)
     await router.removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
       DTT.address,
       liquidity,
       NaiveDTTExpected,
       WETHExpected,
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       false,
       v,
       r,
@@ -237,14 +274,14 @@ describe('fee-on-transfer tokens', () => {
     })
 
     it('DTT -> WETH', async () => {
-      await DTT.approve(router.address, MaxUint256)
+      await DTT.approve(router.address, ethers.constants.MaxUint256)
 
       await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
         amountIn,
         0,
         [DTT.address, WETH.address],
         wallet.address,
-        MaxUint256,
+        ethers.constants.MaxUint256,
         overrides
       )
     })
@@ -252,14 +289,14 @@ describe('fee-on-transfer tokens', () => {
     // WETH -> DTT
     it('WETH -> DTT', async () => {
       await WETH.deposit({ value: amountIn }) // mint WETH
-      await WETH.approve(router.address, MaxUint256)
+      await WETH.approve(router.address, ethers.constants.MaxUint256)
 
       await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
         amountIn,
         0,
         [WETH.address, DTT.address],
         wallet.address,
-        MaxUint256,
+        ethers.constants.MaxUint256,
         overrides
       )
     })
@@ -278,7 +315,7 @@ describe('fee-on-transfer tokens', () => {
       0,
       [WETH.address, DTT.address],
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       {
         ...overrides,
         value: swapAmount
@@ -295,38 +332,53 @@ describe('fee-on-transfer tokens', () => {
     const swapAmount = expandTo18Decimals(1)
 
     await addLiquidity(DTTAmount, ETHAmount)
-    await DTT.approve(router.address, MaxUint256)
+    await DTT.approve(router.address, ethers.constants.MaxUint256)
 
     await router.swapExactTokensForETHSupportingFeeOnTransferTokens(
       swapAmount,
       0,
       [DTT.address, WETH.address],
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       overrides
     )
   })
 })
 
 describe('fee-on-transfer tokens: reloaded', () => {
-  const provider = new MockProvider({
-    hardfork: 'istanbul',
-    mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-    gasLimit: 9999999
-  })
-  const [wallet] = provider.getWallets()
-  const loadFixture = createFixtureLoader(provider, [wallet])
+  const provider = ethers.getDefaultProvider();
+  const loadFixture = waffle.createFixtureLoader(waffle.provider.getWallets(), waffle.provider)
+	async function v2Fixture([wallet, other]: Wallet[], provider: MockProvider) {
+		const uniswapV2ContractFactory = new ethers.ContractFactory(UniswapV2Factory.abi,UniswapV2Factory.bytecode)
+		const factoryV2 = await uniswapV2ContractFactory.deploy(wallet.address)
+    console.log("factory deployed")
+
+		const tokenA = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+		const tokenB = await (await ethers.getContractFactory('ERC20')).deploy(expandTo18Decimals(1000000))
+
+		await factoryV2.createPair(tokenA.address, tokenB.address, 200000)
+		const pair = (await ethers.getContractFactory('ContangoPair')).attach(
+			await factoryV2.getPair(tokenA.address, tokenB.address)
+		)
+		const token0Address = await pair.token0()
+    const weth = await(await ethers.getContractFactory('WETH9')).deploy()
+		const token0 = tokenA.address === token0Address ? tokenA : tokenB
+		const token1 = tokenA.address === token0Address ? tokenB : tokenA
+    const router02 = await(await ethers.getContractFactory('UniswapV2Router02')).deploy(factoryV2.address,weth.address)
+		return { pair, token0, token1, wallet, other, factoryV2, provider,router02 }
+	}
 
   let DTT: Contract
   let DTT2: Contract
   let router: Contract
+  let wallet :Wallet
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
     router = fixture.router02
 
-    DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
-    DTT2 = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
+    DTT =await (await ethers.getContractFactory("DeflatingERC20")).deploy(expandTo18Decimals(10000))
+    DTT2 =await (await ethers.getContractFactory("DeflatingERC20")).deploy(expandTo18Decimals(10000))
 
     // make a DTT<>WETH pair
     await fixture.factoryV2.createPair(DTT.address, DTT2.address)
@@ -338,8 +390,8 @@ describe('fee-on-transfer tokens: reloaded', () => {
   })
 
   async function addLiquidity(DTTAmount: BigNumber, DTT2Amount: BigNumber) {
-    await DTT.approve(router.address, MaxUint256)
-    await DTT2.approve(router.address, MaxUint256)
+    await DTT.approve(router.address, ethers.constants.MaxUint256)
+    await DTT2.approve(router.address, ethers.constants.MaxUint256)
     await router.addLiquidity(
       DTT.address,
       DTT2.address,
@@ -348,7 +400,7 @@ describe('fee-on-transfer tokens: reloaded', () => {
       DTTAmount,
       DTT2Amount,
       wallet.address,
-      MaxUint256,
+      ethers.constants.MaxUint256,
       overrides
     )
   }
@@ -365,14 +417,14 @@ describe('fee-on-transfer tokens: reloaded', () => {
     })
 
     it('DTT -> DTT2', async () => {
-      await DTT.approve(router.address, MaxUint256)
+      await DTT.approve(router.address, ethers.constants.MaxUint256)
 
       await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
         amountIn,
         0,
         [DTT.address, DTT2.address],
         wallet.address,
-        MaxUint256,
+        ethers.constants.MaxUint256,
         overrides
       )
     })
