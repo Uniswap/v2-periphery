@@ -1,22 +1,22 @@
 pragma solidity =0.6.6;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-import '@uniswap/lib/contracts/libraries/Babylonian.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import '@delioswap/core/contracts/interfaces/IDelioswapPair.sol';
+import '@delioswap/lib/contracts/libraries/Babylonian.sol';
+import '@delioswap/lib/contracts/libraries/TransferHelper.sol';
 
-import '../libraries/UniswapV2LiquidityMathLibrary.sol';
+import '../libraries/DelioswapLiquidityMathLibrary.sol';
 import '../interfaces/IERC20.sol';
-import '../interfaces/IUniswapV2Router01.sol';
+import '../interfaces/IDelioswapRouter01.sol';
 import '../libraries/SafeMath.sol';
-import '../libraries/UniswapV2Library.sol';
+import '../libraries/DelioswapLibrary.sol';
 
 contract ExampleSwapToPrice {
     using SafeMath for uint256;
 
-    IUniswapV2Router01 public immutable router;
+    IDelioswapRouter01 public immutable router;
     address public immutable factory;
 
-    constructor(address factory_, IUniswapV2Router01 router_) public {
+    constructor(address factory_, IDelioswapRouter01 router_) public {
         factory = factory_;
         router = router_;
     }
@@ -42,8 +42,8 @@ contract ExampleSwapToPrice {
         bool aToB;
         uint256 amountIn;
         {
-            (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
-            (aToB, amountIn) = UniswapV2LiquidityMathLibrary.computeProfitMaximizingTrade(
+            (uint256 reserveA, uint256 reserveB) = DelioswapLibrary.getReserves(factory, tokenA, tokenB);
+            (aToB, amountIn) = DelioswapLiquidityMathLibrary.computeProfitMaximizingTrade(
                 truePriceTokenA, truePriceTokenB,
                 reserveA, reserveB
             );

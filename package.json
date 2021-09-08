@@ -1,22 +1,22 @@
 {
-  "name": "@uniswap/v2-periphery",
-  "version": "1.1.0-beta.0",
-  "description": "🎚 Peripheral smart contracts for interacting with Uniswap V2",
+  "name": "@delioswap/periphery",
+  "version": "1.0.0",
+  "description": "🎚 Peripheral smart contracts for interacting with Delioswap",
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://uniswap.org",
+  "homepage": "https://delioswap.finance.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
+    "url": "https://github.com/Delioswap/contracts-periphery.git"
   },
   "files": [
     "build",
     "contracts"
   ],
   "dependencies": {
-    "@uniswap/lib": "4.0.1-alpha",
-    "@uniswap/v2-core": "1.0.0"
+    "@delioswap/lib": "1.0.0",
+    "@deiloswap/core": "1.0.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
@@ -44,5 +44,8 @@
     "test": "mocha",
     "prepublishOnly": "yarn test"
   },
-  "license": "GPL-3.0-or-later"
+  "license": "GPL-3.0-or-later",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
 }
