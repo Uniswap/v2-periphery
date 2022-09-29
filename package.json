@@ -11,37 +11,33 @@
     "url": "https://github.com/Uniswap/uniswap-v2-periphery"
   },
   "files": [
-    "build",
+    "artifacts",
     "contracts"
   ],
   "dependencies": {
-    "@uniswap/lib": "4.0.1-alpha",
-    "@uniswap/v2-core": "1.0.0"
+    "quasar-v1-core": "^1.0.1"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.6",
-    "@types/mocha": "^5.2.7",
+    "@nomiclabs/hardhat-ethers": "^2.1.1",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@nomiclabs/hardhat-truffle5": "^2.0.7",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/contracts": "^4.7.3",
     "chai": "^4.2.0",
     "ethereum-waffle": "^2.4.1",
-    "ethereumjs-util": "^6.2.0",
+    "ethers": "^5.7.1",
+    "hardhat": "^2.11.2",
     "mocha": "^6.2.2",
-    "ncp": "^2.0.0",
-    "prettier": "^1.19.1",
-    "rimraf": "^3.0.0",
-    "solc": "0.6.6",
-    "ts-node": "^8.5.4",
-    "typescript": "^3.7.3"
+    "prettier": "^2.7.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.24"
   },
   "scripts": {
-    "lint": "yarn prettier ./test/*.ts --check",
-    "lint:fix": "yarn prettier ./test/*.ts --write",
-    "clean": "rimraf ./build/",
-    "copy-v1-artifacts": "ncp ./buildV1 ./build",
+    "format": "prettier --write **/**/*.{js,json,sol}",
+    "clean": "rm -rf ./artifacts",
     "precompile": "yarn clean",
-    "compile": "waffle .waffle.json",
-    "postcompile": "yarn copy-v1-artifacts",
+    "compile": "npx hardhat compile",
     "pretest": "yarn compile",
-    "test": "mocha",
     "prepublishOnly": "yarn test"
   },
   "license": "GPL-3.0-or-later"
