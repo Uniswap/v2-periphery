@@ -14,12 +14,13 @@ library UniswapV2LiquidityMathLibrary {
     using SafeMath for uint256;
 
     // computes the direction and magnitude of the profit-maximizing trade
+    // 用来计算利润最大化的交易链路与交易幅度
     function computeProfitMaximizingTrade(
         uint256 truePriceTokenA,
         uint256 truePriceTokenB,
         uint256 reserveA,
         uint256 reserveB
-    ) pure internal returns (bool aToB, uint256 amountIn) {
+    ) pure internal returns (bool aToB, uint256 amountIn) {// 是否是从a到b，要输入多少a或者b
         aToB = FullMath.mulDiv(reserveA, truePriceTokenB, reserveB) < truePriceTokenA;
 
         uint256 invariant = reserveA.mul(reserveB);
