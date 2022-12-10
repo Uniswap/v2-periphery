@@ -55,7 +55,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         } else {
             // 使用希望放入的A代币数量，计算出最优B代币放入的数量
             uint amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);
-            // 最优B代币放入的数量 要小于希望B放入的数量，否则就超过用于心里预期了
+            // 最优B代币放入的数量 要小于希望B放入的数量，否则就超过用户心里预期了
             if (amountBOptimal <= amountBDesired) {
                 // 要求最优放入的数量要高于最低投入B的数量，否则交易回滚
                 require(amountBOptimal >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
@@ -158,6 +158,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
     }
+    // 由授权的合约进行自动调用来去除流动性
     function removeLiquidityWithPermit(
         address tokenA,
         address tokenB,
