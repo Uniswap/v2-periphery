@@ -35,6 +35,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     }
 
     // **** ADD LIQUIDITY ****
+    // 只用来计算最优的流动性投入数量，并不进行真实的流动性交易
     function _addLiquidity(
         address tokenA,
         address tokenB,
@@ -47,15 +48,21 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
             IUniswapV2Factory(factory).createPair(tokenA, tokenB);
         }
+        // 获取流动性池中的乘数
         (uint reserveA, uint reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
+            // 使用希望放入的A代币数量，计算出最优B代币放入的数量
             uint amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);
+            // 最优B代币放入的数量 要小于希望B放入的数量，否则就超过用于心里预期了
             if (amountBOptimal <= amountBDesired) {
+                // 要求最优放入的数量要高于最低投入B的数量，否则交易回滚
                 require(amountBOptimal >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
+                // 如果B代币最优放入数量不符合用户预期放入的数量条件，则尝试用希望放入的B数量，进行计算最优放入的A数量
+                // 接下来同样进行A的一些条件校验，不符合要求则进行交易回滚
                 uint amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
                 require(amountAOptimal >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
@@ -75,6 +82,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint deadline
     ) external virtual override ensure(deadline) returns (uint amountA, uint amountB, uint liquidity) {// override 重写修饰符
     // ensure(deadline) 这个被函数修饰符修饰过的函数，可以用这种方式作用于addLiquidity函数，在函数执行前检查ensure函数里面设置的条件
+        // 计算实际要增加的流动性数量
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
         address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
