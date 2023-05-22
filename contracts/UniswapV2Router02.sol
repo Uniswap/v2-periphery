@@ -424,7 +424,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         return UniswapV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
-    function getAmountsOut(uint amountIn, address[] memory path)
+    function getAmountsOut(uint amountIn, address[] calldata path)
         public
         view
         virtual
@@ -434,7 +434,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         return UniswapV2Library.getAmountsOut(factory, amountIn, path);
     }
 
-    function getAmountsIn(uint amountOut, address[] memory path)
+    function getAmountsIn(uint amountOut, address[] calldata path)
         public
         view
         virtual
