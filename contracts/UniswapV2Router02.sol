@@ -332,10 +332,6 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         IUniswapV2Pair pair;
         uint amountInput;
         uint amountOutput;
-        uint reserve0; 
-        uint reserve1;
-        uint reserveInput; 
-        uint reserveOutput;
         uint amount0Out; 
         uint amount1Out;
         uint256 len = path.length;
@@ -345,8 +341,8 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
             pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, input, output));
             
             { // scope to avoid stack too deep errors
-            (reserve0, reserve1,) = pair.getReserves();
-            (reserveInput, reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
+            (uint reserve0, uint reserve1,) = pair.getReserves();
+            (uint reserveInput, uint reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
             amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
             amountOutput = UniswapV2Library.getAmountOut(amountInput, reserveInput, reserveOutput);
             }
