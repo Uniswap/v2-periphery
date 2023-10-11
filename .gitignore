@@ -1,2 +1,5 @@
 build/
 node_modules/
+.env.local
+artifacts/
+cache/

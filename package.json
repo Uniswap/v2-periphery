@@ -16,14 +16,19 @@
   ],
   "dependencies": {
     "@uniswap/lib": "4.0.1-alpha",
-    "@uniswap/v2-core": "1.0.0"
+    "@uniswap/v2-core": "1.0.0",
+    "dotenv": "^16.3.1",
+    "ethers": "5.7.2"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
     "ethereum-waffle": "^2.4.1",
     "ethereumjs-util": "^6.2.0",
+    "hardhat": "^2.18.1",
     "mocha": "^6.2.2",
     "ncp": "^2.0.0",
     "prettier": "^1.19.1",
