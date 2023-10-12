@@ -5,10 +5,11 @@ async function main() {
   
   console.log("Deploying contracts with the account:", deployer.address);
 
-  const factoryAddress = "0xc7a91efdD0f90A420fcAF11433C63B2cd59222FA";
+  const FACTORY_ADDRESS = "0xc7a91efdD0f90A420fcAF11433C63B2cd59222FA";
+  const WETH_ADDRESS = "0xb8f2E6a025C3dA0f8D14D20B8Ed0d1d7ac35E64c";
 
   const UniswapV2Router01 = await hre.ethers.getContractFactory("UniswapV2Router01");
-  const router = await UniswapV2Router01.deploy(factoryAddress, deployer.address);
+  const router = await UniswapV2Router01.deploy(FACTORY_ADDRESS, WETH_ADDRESS);
   
   await router.deployed();
   
@@ -17,7 +18,7 @@ async function main() {
   // Verify the contract on Etherscan
   await hre.run("verify:verify", {
     address: router.address,
-    constructorArguments: [factoryAddress, deployer.address],
+    constructorArguments: [FACTORY_ADDRESS, deployer.address],
   });
 }
 

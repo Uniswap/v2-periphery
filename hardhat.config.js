@@ -1,8 +1,9 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
-
 require("dotenv").config({ path: ".env.local" });
 
+
+// Existing configuration
 module.exports = {
   solidity: "0.6.6",
   networks: {
