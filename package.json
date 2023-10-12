@@ -18,7 +18,8 @@
     "@uniswap/lib": "4.0.1-alpha",
     "@uniswap/v2-core": "1.0.0",
     "dotenv": "^16.3.1",
-    "ethers": "5.7.2"
+    "ethers": "5.7.2",
+    "hardhat-contract-sizer": "^2.10.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
